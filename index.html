@@ -20,11 +20,11 @@
   /* LOGIN SCREEN */
   #login-screen {
     position: fixed; inset: 0; background: var(--darker);
-    display: flex; align-items: center; justify-content: center; z-index: 999;
+    display: flex; align-items: center; justify-content: center; z-index: 999; pointer-events: all;
   }
   .login-box {
     background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-    padding: 40px; width: 100%; max-width: 420px; text-align: center;
+    padding: 40px; width: 100%; max-width: 420px; text-align: center; position: relative; z-index: 1;
   }
   .login-logo { font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; color: var(--gold); letter-spacing: 4px; margin-bottom: 4px; }
   .login-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 28px; }
@@ -212,26 +212,32 @@
 <!-- ═══ LOGIN SCREEN ═══ -->
 <div id="login-screen">
   <div class="login-box">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130" style="width:110px;height:auto;display:block;margin:0 auto 12px">
-  <!-- Trophy cup body -->
-  <ellipse cx="50" cy="52" rx="28" ry="30" fill="none" stroke="#C8102E" stroke-width="4"/>
-  <!-- Inner swirl red -->
-  <path d="M30 38 Q50 20 70 38 Q80 55 65 68 Q50 78 35 68 Q20 55 30 38Z" fill="#C8102E" opacity="0.85"/>
-  <!-- Blue arc -->
-  <path d="M26 42 Q50 15 74 42" fill="none" stroke="#002868" stroke-width="5" stroke-linecap="round"/>
-  <!-- Green bottom -->
-  <path d="M35 75 Q50 82 65 75 L62 90 L38 90 Z" fill="#006847"/>
-  <!-- Maple leaf base -->
-  <path d="M42 90 L42 95 Q50 92 58 95 L58 90 Z" fill="#C8102E"/>
-  <!-- Stem -->
-  <rect x="46" y="90" width="8" height="12" rx="2" fill="#006847"/>
-  <!-- Base -->
-  <rect x="36" y="102" width="28" height="6" rx="3" fill="#002868"/>
-  <!-- Ball -->
-  <circle cx="50" cy="54" r="7" fill="white" stroke="#002868" stroke-width="1.5"/>
-  <path d="M44 52 Q50 48 56 52 Q53 58 50 59 Q47 58 44 52Z" fill="#002868" opacity="0.4"/>
-  <!-- 2026 text -->
-  <text x="50" y="122" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="10" font-weight="900" fill="#002868">2026</text>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260" style="width:120px;height:auto;display:block;margin:0 auto 10px">
+  <!-- Red outer swirl/trophy body -->
+  <path d="M100 8 C58 8 26 36 26 72 C26 102 44 124 62 140 C72 149 78 162 76 178 L124 178 C122 162 128 149 138 140 C156 124 174 102 174 72 C174 36 142 8 100 8Z" fill="#C8102E"/>
+  <!-- Blue eagle/arc overlay -->
+  <path d="M100 8 C72 8 50 28 44 55 C38 80 48 102 64 116 C76 127 82 143 82 160 L118 160 C118 143 124 127 136 116 C152 102 162 80 156 55 C150 28 128 8 100 8Z" fill="#002868"/>
+  <!-- Red inner fill -->
+  <path d="M100 22 C76 22 56 40 52 64 C48 86 58 106 72 118 C82 128 87 143 87 158 L113 158 C113 143 118 128 128 118 C142 106 152 86 148 64 C144 40 124 22 100 22Z" fill="#C8102E"/>
+  <!-- Blue 20 text area circle -->
+  <circle cx="100" cy="78" r="26" fill="#002868"/>
+  <!-- 20 over 26 in ball -->
+  <text x="100" y="72" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="14" font-weight="900" fill="white">20</text>
+  <text x="100" y="88" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="14" font-weight="900" fill="#C8102E">26</text>
+  <!-- Thin white lines across middle (stripes) -->
+  <line x1="74" y1="110" x2="126" y2="110" stroke="white" stroke-width="2" opacity="0.5"/>
+  <line x1="76" y1="118" x2="124" y2="118" stroke="white" stroke-width="2" opacity="0.4"/>
+  <line x1="78" y1="126" x2="122" y2="126" stroke="white" stroke-width="2" opacity="0.3"/>
+  <!-- Green lower body -->
+  <path d="M80 155 C70 165 68 175 76 178 L124 178 C132 175 130 165 120 155 Z" fill="#006847"/>
+  <!-- Neck -->
+  <rect x="88" y="178" width="24" height="18" rx="3" fill="#002868"/>
+  <!-- Maple leaf -->
+  <path d="M100 196 L105 204 L114 202 L111 210 L117 215 L109 213 L107 224 L100 219 L93 224 L91 213 L83 215 L89 210 L86 202 L95 204 Z" fill="#C8102E"/>
+  <!-- Green stadium base -->
+  <path d="M78 228 L84 228 L86 244 L114 244 L116 228 L122 228 L125 252 L75 252 Z" fill="#006847"/>
+  <!-- Dark blue base -->
+  <rect x="70" y="252" width="60" height="8" rx="3" fill="#002868"/>
 </svg>
     <div class="login-logo" style="font-size:1.6rem;margin-bottom:2px">PORRA MUNDIAL 2026</div>
     <div class="login-sub">México · USA · Canadá</div>
@@ -263,26 +269,32 @@
 <div id="app" style="display:none">
 
 <header>
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130" style="height:42px;width:auto;flex-shrink:0">
-  <!-- Trophy cup body -->
-  <ellipse cx="50" cy="52" rx="28" ry="30" fill="none" stroke="#C8102E" stroke-width="4"/>
-  <!-- Inner swirl red -->
-  <path d="M30 38 Q50 20 70 38 Q80 55 65 68 Q50 78 35 68 Q20 55 30 38Z" fill="#C8102E" opacity="0.85"/>
-  <!-- Blue arc -->
-  <path d="M26 42 Q50 15 74 42" fill="none" stroke="#002868" stroke-width="5" stroke-linecap="round"/>
-  <!-- Green bottom -->
-  <path d="M35 75 Q50 82 65 75 L62 90 L38 90 Z" fill="#006847"/>
-  <!-- Maple leaf base -->
-  <path d="M42 90 L42 95 Q50 92 58 95 L58 90 Z" fill="#C8102E"/>
-  <!-- Stem -->
-  <rect x="46" y="90" width="8" height="12" rx="2" fill="#006847"/>
-  <!-- Base -->
-  <rect x="36" y="102" width="28" height="6" rx="3" fill="#002868"/>
-  <!-- Ball -->
-  <circle cx="50" cy="54" r="7" fill="white" stroke="#002868" stroke-width="1.5"/>
-  <path d="M44 52 Q50 48 56 52 Q53 58 50 59 Q47 58 44 52Z" fill="#002868" opacity="0.4"/>
-  <!-- 2026 text -->
-  <text x="50" y="122" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="10" font-weight="900" fill="#002868">2026</text>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260" style="height:46px;width:auto;flex-shrink:0">
+  <!-- Red outer swirl/trophy body -->
+  <path d="M100 8 C58 8 26 36 26 72 C26 102 44 124 62 140 C72 149 78 162 76 178 L124 178 C122 162 128 149 138 140 C156 124 174 102 174 72 C174 36 142 8 100 8Z" fill="#C8102E"/>
+  <!-- Blue eagle/arc overlay -->
+  <path d="M100 8 C72 8 50 28 44 55 C38 80 48 102 64 116 C76 127 82 143 82 160 L118 160 C118 143 124 127 136 116 C152 102 162 80 156 55 C150 28 128 8 100 8Z" fill="#002868"/>
+  <!-- Red inner fill -->
+  <path d="M100 22 C76 22 56 40 52 64 C48 86 58 106 72 118 C82 128 87 143 87 158 L113 158 C113 143 118 128 128 118 C142 106 152 86 148 64 C144 40 124 22 100 22Z" fill="#C8102E"/>
+  <!-- Blue 20 text area circle -->
+  <circle cx="100" cy="78" r="26" fill="#002868"/>
+  <!-- 20 over 26 in ball -->
+  <text x="100" y="72" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="14" font-weight="900" fill="white">20</text>
+  <text x="100" y="88" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="14" font-weight="900" fill="#C8102E">26</text>
+  <!-- Thin white lines across middle (stripes) -->
+  <line x1="74" y1="110" x2="126" y2="110" stroke="white" stroke-width="2" opacity="0.5"/>
+  <line x1="76" y1="118" x2="124" y2="118" stroke="white" stroke-width="2" opacity="0.4"/>
+  <line x1="78" y1="126" x2="122" y2="126" stroke="white" stroke-width="2" opacity="0.3"/>
+  <!-- Green lower body -->
+  <path d="M80 155 C70 165 68 175 76 178 L124 178 C132 175 130 165 120 155 Z" fill="#006847"/>
+  <!-- Neck -->
+  <rect x="88" y="178" width="24" height="18" rx="3" fill="#002868"/>
+  <!-- Maple leaf -->
+  <path d="M100 196 L105 204 L114 202 L111 210 L117 215 L109 213 L107 224 L100 219 L93 224 L91 213 L83 215 L89 210 L86 202 L95 204 Z" fill="#C8102E"/>
+  <!-- Green stadium base -->
+  <path d="M78 228 L84 228 L86 244 L114 244 L116 228 L122 228 L125 252 L75 252 Z" fill="#006847"/>
+  <!-- Dark blue base -->
+  <rect x="70" y="252" width="60" height="8" rx="3" fill="#002868"/>
 </svg>
   <h1>PORRA MUNDIAL 2026</h1>
   <div class="header-user">
