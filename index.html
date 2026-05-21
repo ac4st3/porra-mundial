@@ -517,17 +517,54 @@ function renderMatches(){
   document.getElementById('c-matches').innerHTML=html;
 }
 function mrowHTML(m,u,locked){
-  const bet=u?(BETS[u]?.matches?.[m.id]??null):null;
-  const real=getReal().matches?.[m.id]??null;
-  const bc=v=>{
-    const k=v==='X'?'x':v.toLowerCase();
-    let c='bbtn';
-    if(bet===v){c+=` bs${k}`;if(real)c+=bet===real.result?' bcor':' bwrg';}
+  const bet = u ? (BETS[u]?.matches?.[m.id] ?? null) : null;
+  const realRaw = getReal().matches?.[m.id] ?? null;
+
+  // Resultado oficial:
+  // - Formato nuevo admin/autofill: { result:"1", home:2, away:0 }
+  // - Formato antiguo compatible: "1", "X" o "2"
+  const realResult = realRaw && typeof realRaw === 'object'
+    ? realRaw.result
+    : realRaw;
+
+  const bc = v => {
+    const k = v === 'X' ? 'x' : v.toLowerCase();
+    let c = 'bbtn';
+
+    // Admin: marcamos el resultado oficial.
+    // Participante: marcamos su apuesta.
+    const selected = ses.isAdmin ? realResult : bet;
+
+    if(selected === v){
+      c += ` bs${k}`;
+
+      // Solo para participantes: marcar acierto/error contra el resultado oficial.
+      if(!ses.isAdmin && realResult){
+        c += bet === realResult ? ' bcor' : ' bwrg';
+      }
+    }
+
     return c;
   };
-  const dis=locked?'disabled':'';
-  const rd=real?`${real.home}-${real.away}`:'–';
-  const pts=real&&bet?(bet===real.result?'+10':''):'';
+
+  const dis = locked ? 'disabled' : '';
+
+  let rd = '–';
+
+  if(realRaw && typeof realRaw === 'object'){
+    if(realRaw.home !== null && realRaw.home !== undefined && realRaw.away !== null && realRaw.away !== undefined){
+      rd = `${realRaw.home}-${realRaw.away}`;
+    }else if(realRaw.result){
+      rd = realRaw.result;
+    }
+  }else if(realResult){
+    rd = realResult;
+  }
+
+  const pts = !ses.isAdmin && realResult && bet
+    ? (bet === realResult ? '+10' : '')
+    : '';
+
   return `<div class="mrow">
     <div class="mdate">${m.time} <span style="color:var(--gold);font-size:.7rem">GRP ${m.group}</span></div>
     <div class="tname thome">${m.home}</div>
@@ -635,7 +672,10 @@ function renderQuestions(){
 function calcScore(name){
   const bet=BETS[name]||{};const real=getReal();
   let tot=0,m=0,g=0,k=0,q=0;
-  Object.entries(real.matches||{}).forEach(([id,r])=>{if(r&&bet.matches?.[id]===r.result){m+=10;tot+=10;}});
+  Object.entries(real.matches||{}).forEach(([id,r])=>{
+    const realResult = r && typeof r === 'object' ? r.result : r;
+    if(realResult && bet.matches?.[id]===realResult){m+=10;tot+=10;}
+  });
   Object.entries(real.groups||{}).forEach(([grp,rk])=>{(rk||[]).forEach((t,i)=>{if(bet.groups?.[grp]?.[i]===t){g+=20;tot+=20;}});});
   Object.entries(real.knockout||{}).forEach(([sid,r])=>{
     const b=bet.knockout?.[sid]||{};
@@ -742,9 +782,8 @@ async function autofill(){
   const lu=document.getElementById('s-lastupdate');
   if(lu)lu.textContent='🔄 Actualizando...';
   const URL2='https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
-  const PROXY='https://api.allorigins.win/raw?url='+encodeURIComponent(URL2);
   try{
-    const res=await fetch(PROXY);if(!res.ok)throw new Error('HTTP '+res.status);
+    const res=await fetch(URL2);if(!res.ok)throw new Error('HTTP '+res.status);
     const data=await res.json();
     ensureBet('__admin__');
     const adminBet=BETS['__admin__'];
@@ -794,7 +833,34 @@ document.addEventListener('click',e=>{
   if(t.dataset.mid&&t.dataset.val){
     if(!ses.user||!canEdit())return toast(CONFIG.betsLocked?'🔒 Cerradas':'Sin sesión',true);
     ensureBet(ses.user);
-    BETS[ses.user].matches[t.dataset.mid]=t.dataset.val;
+
+    const mid = t.dataset.mid;
+    const val = t.dataset.val;
+
+    if(ses.isAdmin){
+      const prev = BETS[ses.user].matches[mid];
+
+      // El admin introduce el resultado oficial 1/X/2.
+      // Si el resultado venía de autorellenar y tenía marcador real, conservamos el marcador.
+      if(prev && typeof prev === 'object'){
+        BETS[ses.user].matches[mid] = {
+          ...prev,
+          result: val,
+          manual: true
+        };
+      }else{
+        BETS[ses.user].matches[mid] = {
+          result: val,
+          home: null,
+          away: null,
+          manual: true
+        };
+      }
+    }else{
+      // Los participantes solo guardan su apuesta.
+      BETS[ses.user].matches[mid] = val;
+    }
+
     saveBet(ses.user,BETS[ses.user]);
     renderMatches();return;
   }
