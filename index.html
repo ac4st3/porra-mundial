@@ -619,6 +619,31 @@ async function persistPath(path,data,label='datos'){
     return false;
   }
 }
+
+function captureFocusedInputState(){
+  const el=document.activeElement;
+  if(!el)return null;
+  if(el.dataset?.qid){
+    return {type:'question',qid:el.dataset.qid,start:el.selectionStart,end:el.selectionEnd};
+  }
+  if(el.dataset?.koscore){
+    return {type:'koscore',sid:el.dataset.koscore,side:el.dataset.side,start:el.selectionStart,end:el.selectionEnd};
+  }
+  return null;
+}
+function restoreFocusedInputState(state){
+  if(!state)return;
+  setTimeout(()=>{
+    let el=null;
+    if(state.type==='question')el=document.querySelector(`.qinput[data-qid="${state.qid}"]`);
+    if(state.type==='koscore')el=document.querySelector(`.bscore[data-koscore="${state.sid}"][data-side="${state.side}"]`);
+    if(!el)return;
+    el.focus();
+    try{
+      if(typeof state.start==='number')el.setSelectionRange(state.start,state.end ?? state.start);
+    }catch(_e){}
+  },0);
+}
 async function handleGroupSelectChange(t){
   if(!t || t.dataset.grp===undefined || t.dataset.pos===undefined)return false;
   const user=writableUser();
@@ -671,8 +696,18 @@ async function handleQuestionInputChange(t){
 
   ensureBet(user);
   if(!BETS[user].questions)BETS[user].questions={};
-  BETS[user].questions[t.dataset.qid]=t.value || '';
-  await persistBetChild(user,`questions/${t.dataset.qid}`,BETS[user].questions[t.dataset.qid] || '','pregunta');
+  const qid=t.dataset.qid;
+  BETS[user].questions[qid]=t.value || '';
+
+  // No guardamos en Firebase en cada pulsación, porque el listener en tiempo real
+  // redibuja la pantalla y en algunos navegadores hace perder el foco del campo.
+  // Se guarda automáticamente tras una pequeña pausa al escribir.
+  const key=`${user}_${qid}`;
+  clearTimeout(QUESTION_SAVE_TIMERS[key]);
+  QUESTION_SAVE_TIMERS[key]=setTimeout(async()=>{
+    await persistBetChild(user,`questions/${qid}`,BETS[user]?.questions?.[qid] || '','pregunta');
+  },650);
+
   updateTabStatus();
   recalc();
   return true;
@@ -727,10 +762,12 @@ async function boot(){
 
     // Listen for real-time changes from other users
     onValue(ref(db,'bets'), snap=>{
+      const focused=captureFocusedInputState();
       BETS = snap.exists() ? snap.val() : {};
       ensureBet('__admin__');
       if(ses.user)ensureBet(ses.user);
       renderAll();
+      restoreFocusedInputState(focused);
     });
     onValue(ref(db,'config'), snap=>{ if(snap.exists()){CONFIG={...CONFIG,...snap.val()};lockUI();autoLockUI();renderAll();} });
     onValue(ref(db,'users'), snap=>{
@@ -1029,6 +1066,11 @@ function renderQuestions(){
 }
 
 // ── SCORING ───────────────────────────────────────
+function scoreNumber(v){
+  if(v === '' || v === null || v === undefined)return null;
+  const n=Number(v);
+  return Number.isFinite(n)?n:null;
+}
 function calcScore(name){
   const bet=BETS[name]||{};const real=getReal();
   let tot=0,m=0,g=0,k=0,q=0;
@@ -1043,8 +1085,25 @@ function calcScore(name){
   });
   Object.entries(real.knockout||{}).forEach(([sid,r])=>{
     const b=bet.knockout?.[sid]||{};
-    if(r.winner&&b.winner===r.winner){k+=10;tot+=10;}
-    if(r.scoreA!==undefined&&b.scoreA===r.scoreA&&b.scoreB===r.scoreB){k+=20;tot+=20;}
+
+    // 10 pts por cada equipo acertado en su posición exacta dentro del cruce.
+    if(r.teamA && b.teamA === r.teamA){k += 10; tot += 10;}
+    if(r.teamB && b.teamB === r.teamB){k += 10; tot += 10;}
+
+    // 20 pts por resultado exacto. Normalizamos números porque Firebase puede
+    // devolverlos como número o como texto según cómo se hayan introducido.
+    const rsA = scoreNumber(r.scoreA);
+    const rsB = scoreNumber(r.scoreB);
+    const bsA = scoreNumber(b.scoreA);
+    const bsB = scoreNumber(b.scoreB);
+
+    const realHasTeams = !!(r.teamA || r.teamB);
+    const sameTeamsForScore = !realHasTeams || ((r.teamA ? b.teamA === r.teamA : true) && (r.teamB ? b.teamB === r.teamB : true));
+
+    if(sameTeamsForScore && rsA !== null && rsB !== null && bsA === rsA && bsB === rsB){
+      k += 20;
+      tot += 20;
+    }
   });
   Object.entries(real.questions||{}).forEach(([qid,r])=>{
     const a=bet.questions?.[qid]||'';
