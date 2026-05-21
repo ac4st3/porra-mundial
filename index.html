@@ -563,7 +563,7 @@ async function saveBetSection(user,section){
 }
 async function saveGroupBet(user,grp){
   ensureBet(user);
-  try{ await fbSet(`bets/${user}/groups/${grp}`, BETS[user].groups?.[grp] || [null,null,null,null]); }
+  try{ await fbSet(`bets/${user}/groups/${grp}`, groupArrayToFirebaseObject(BETS[user].groups?.[grp] || ['', '', '', ''])); }
   catch(e){ toast('Error guardando grupo '+grp+': '+e.message,true); }
 }
 async function saveKnockoutBet(user,sid){
@@ -573,7 +573,7 @@ async function saveKnockoutBet(user,sid){
 }
 async function saveQuestionBet(user,qid){
   ensureBet(user);
-  try{ await fbSet(`bets/${user}/questions/${qid}`, BETS[user].questions?.[qid] || null); }
+  try{ await fbSet(`bets/${user}/questions/${qid}`, BETS[user].questions?.[qid] || ''); }
   catch(e){ toast('Error guardando pregunta: '+e.message,true); }
 }
 
@@ -585,8 +585,29 @@ function writableUser(){
 }
 function normalizeGroupArray(arr){
   const base=['','','',''];
-  (arr||[]).forEach((v,i)=>{if(i<4)base[i]=v||'';});
+  if(Array.isArray(arr)){
+    arr.forEach((v,i)=>{if(i<4)base[i]=v||'';});
+  }else if(arr && typeof arr === 'object'){
+    [0,1,2,3].forEach(i=>{
+      const v = arr[i] ?? arr[String(i)];
+      base[i]=v||'';
+    });
+  }
   return base;
+}
+function groupArrayToFirebaseObject(arr){
+  const a=normalizeGroupArray(arr);
+  return {'0':a[0]||'', '1':a[1]||'', '2':a[2]||'', '3':a[3]||''};
+}
+async function persistBetChild(user,childPath,data,label='datos'){
+  try{
+    await update(ref(db,`bets/${user}`),{[childPath]:data});
+    return true;
+  }catch(e){
+    console.error('Firebase save error',`bets/${user}/${childPath}`,e);
+    toast('Error guardando '+label+': '+e.message,true);
+    return false;
+  }
 }
 async function persistPath(path,data,label='datos'){
   try{
@@ -621,7 +642,7 @@ async function handleGroupSelectChange(t){
 
   arr[pos]=val;
   BETS[user].groups[grp]=arr;
-  await persistPath(`bets/${user}/groups/${grp}`,arr,'clasificación del Grupo '+grp);
+  await persistBetChild(user,`groups/${grp}`,groupArrayToFirebaseObject(arr),'clasificación del Grupo '+grp);
   renderGroups();
   updateTabStatus();
   recalc();
@@ -638,7 +659,7 @@ async function handleKnockoutTeamChange(t){
   if(!BETS[user].knockout)BETS[user].knockout={};
   if(!BETS[user].knockout[sid])BETS[user].knockout[sid]={};
   BETS[user].knockout[sid][side==='A'?'teamA':'teamB']=t.value || '';
-  await persistPath(`bets/${user}/knockout/${sid}`,BETS[user].knockout[sid],'eliminatoria');
+  await persistBetChild(user,`knockout/${sid}`,BETS[user].knockout[sid],'eliminatoria');
   updateTabStatus();
   recalc();
   return true;
@@ -651,7 +672,7 @@ async function handleQuestionInputChange(t){
   ensureBet(user);
   if(!BETS[user].questions)BETS[user].questions={};
   BETS[user].questions[t.dataset.qid]=t.value || '';
-  await persistPath(`bets/${user}/questions/${t.dataset.qid}`,BETS[user].questions[t.dataset.qid],'pregunta');
+  await persistBetChild(user,`questions/${t.dataset.qid}`,BETS[user].questions[t.dataset.qid] || '','pregunta');
   updateTabStatus();
   recalc();
   return true;
@@ -667,7 +688,7 @@ async function handleKnockoutScoreInput(t){
   if(!BETS[user].knockout)BETS[user].knockout={};
   if(!BETS[user].knockout[sid])BETS[user].knockout[sid]={};
   BETS[user].knockout[sid][side==='A'?'scoreA':'scoreB']=t.value===''?'':(parseInt(t.value,10)||0);
-  await persistPath(`bets/${user}/knockout/${sid}`,BETS[user].knockout[sid],'eliminatoria');
+  await persistBetChild(user,`knockout/${sid}`,BETS[user].knockout[sid],'eliminatoria');
   updateTabStatus();
   recalc();
   return true;
@@ -942,6 +963,7 @@ function renderGroups(){
     return `<div class="gcard"><div class="gtitle">GRUPO ${g}</div>${rows}${warn}</div>`;
   }).join('');
   document.getElementById('c-groups').innerHTML=html;
+  bindBetControls();
 }
 
 // ── RENDER KNOCKOUT ───────────────────────────────
@@ -980,6 +1002,7 @@ function renderKnockout(){
     }).join('');
     return `<div class="bround br-${round.id}"><div class="brtitle">${round.label}</div>${items}</div>`;
   }).join('');
+  bindBetControls();
 }
 
 // ── RENDER QUESTIONS ──────────────────────────────
@@ -1002,6 +1025,7 @@ function renderQuestions(){
     </div>`;
   }).join('');
   document.getElementById('c-questions').innerHTML=html;
+  bindBetControls();
 }
 
 // ── SCORING ───────────────────────────────────────
@@ -1012,7 +1036,11 @@ function calcScore(name){
     const realResult = r && typeof r === 'object' ? r.result : r;
     if(realResult && bet.matches?.[id]===realResult){m+=10;tot+=10;}
   });
-  Object.entries(real.groups||{}).forEach(([grp,rk])=>{(rk||[]).forEach((t,i)=>{if(bet.groups?.[grp]?.[i]===t){g+=20;tot+=20;}});});
+  Object.entries(real.groups||{}).forEach(([grp,rk])=>{
+    const realArr=normalizeGroupArray(rk);
+    const betArr=normalizeGroupArray(bet.groups?.[grp]);
+    realArr.forEach((t,i)=>{if(t && betArr[i]===t){g+=20;tot+=20;}});
+  });
   Object.entries(real.knockout||{}).forEach(([sid,r])=>{
     const b=bet.knockout?.[sid]||{};
     if(r.winner&&b.winner===r.winner){k+=10;tot+=10;}
@@ -1227,6 +1255,24 @@ async function clearAdminResults(){
 function fmtDate(d){return new Date(d+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'long'});}
 function fmtDeadline(d){return new Date(d).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
 function toast(msg,err=false){const e=document.getElementById('toast');e.textContent=msg;e.style.borderColor=err?'var(--red)':'var(--gold)';e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3200);}
+function bindBetControls(){
+  // En algunos navegadores móviles el change/input delegado puede fallar con selects
+  // renderizados dinámicamente. Atamos los eventos directamente a cada control visible.
+  document.querySelectorAll('.gsel').forEach(el=>{
+    el.onchange=async ev=>{ev.__betHandled=true;await handleGroupSelectChange(el);};
+  });
+  document.querySelectorAll('.kosel').forEach(el=>{
+    el.onchange=async ev=>{ev.__betHandled=true;await handleKnockoutTeamChange(el);};
+  });
+  document.querySelectorAll('.bscore').forEach(el=>{
+    el.oninput=async ev=>{ev.__betHandled=true;await handleKnockoutScoreInput(el);};
+    el.onchange=async ev=>{ev.__betHandled=true;await handleKnockoutScoreInput(el);};
+  });
+  document.querySelectorAll('.qinput').forEach(el=>{
+    el.oninput=async ev=>{ev.__betHandled=true;await handleQuestionInputChange(el);};
+    el.onchange=async ev=>{ev.__betHandled=true;await handleQuestionInputChange(el);};
+  });
+}
 function officialResultOf(v){return v&&typeof v==='object'?v.result:v;}
 function isGroupsCompleteFor(u){
   const b=BETS[u]?.matches||{};
@@ -1236,8 +1282,7 @@ function isGroupsCompleteFor(u){
 function isClassifCompleteFor(u){
   const g=BETS[u]?.groups||{};
   return Object.entries(GROUPS).every(([grp,teams])=>{
-    const arr=g[grp]||[];
-    if(arr.length<4)return false;
+    const arr=normalizeGroupArray(g[grp]);
     if(arr.some(v=>!v))return false;
     if(new Set(arr).size!==4)return false;
     return arr.every(v=>teams.includes(v));
@@ -1355,7 +1400,7 @@ function updateDeadlineHeader(){
 }
 function openRulesModal(){document.getElementById('rules-modal').classList.add('on');}
 function closeRulesModal(){document.getElementById('rules-modal').classList.remove('on');}
-function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();recalc();updateTabStatus();updatePreviewBar();}
+function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();recalc();updateTabStatus();updatePreviewBar();bindBetControls();}
 
 // ── EVENT DELEGATION ──────────────────────────────
 document.addEventListener('click',async e=>{
@@ -1424,7 +1469,7 @@ document.addEventListener('click',async e=>{
     if(!BETS[user].knockout)BETS[user].knockout={};
     if(!BETS[user].knockout[sid])BETS[user].knockout[sid]={};
     BETS[user].knockout[sid].winner=side;
-    await persistPath(`bets/${user}/knockout/${sid}`,BETS[user].knockout[sid],'eliminatoria');
+    await persistBetChild(user,`knockout/${sid}`,BETS[user].knockout[sid],'eliminatoria');
     renderKnockout();updateTabStatus();recalc();return;
   }
   if(t.id==='b-addpart'){addPart();return;}
@@ -1437,6 +1482,7 @@ document.addEventListener('click',async e=>{
 });
 
 document.addEventListener('change',async e=>{
+  if(e.__betHandled)return;
   const t=e.target;
   if(t.id==='i-admin-user'){ADMIN_VIEW_USER=t.value;renderSelectedUserBets();return;}
   if(await handleGroupSelectChange(t))return;
@@ -1446,6 +1492,7 @@ document.addEventListener('change',async e=>{
 
 // input cubre preguntas al escribir y algunos navegadores móviles que no disparan change igual en selects.
 document.addEventListener('input',async e=>{
+  if(e.__betHandled)return;
   const t=e.target;
   if(await handleKnockoutScoreInput(t))return;
   if(await handleQuestionInputChange(t))return;
