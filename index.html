@@ -34,6 +34,7 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .huser{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:.88rem;display:flex;align-items:center;gap:7px}
 .uname{color:var(--gold);font-weight:600}
 .abadge{background:var(--red);color:#fff;font-size:.68rem;padding:2px 6px;border-radius:4px;font-family:'Bebas Neue',sans-serif}
+.ubadge{background:rgba(230,57,70,.18);color:#fca5a5;border:1px solid rgba(230,57,70,.45);font-size:.68rem;padding:2px 6px;border-radius:4px;font-family:'Bebas Neue',sans-serif;letter-spacing:.8px}
 .hright{margin-left:auto;display:flex;gap:9px;align-items:center}
 /* BUTTONS */
 .btn{background:var(--gold);color:var(--darker);border:none;padding:7px 15px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.92rem;letter-spacing:1px;cursor:pointer;transition:background .2s}
@@ -56,6 +57,10 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .tab.incomplete .tab-status::before{content:'';display:none;position:absolute;left:50%;top:20px;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid var(--gold);z-index:10000;pointer-events:none}
 .tab.incomplete .tab-status:hover::after,.tab.incomplete .tab-status:hover::before{display:block}
 .tab.done .tab-status{color:#042f1f;background:var(--win);border-color:var(--win)}
+.tab.blocked .tab-status{color:#fff;background:#6b7280;border-color:#9ca3af;box-shadow:0 0 0 2px rgba(156,163,175,.14)}
+.tab.blocked .tab-status::after{content:attr(data-tip);display:none;position:absolute;left:50%;top:26px;transform:translateX(-50%);width:max-content;max-width:280px;background:var(--card);border:1px solid var(--gold);color:var(--text);border-radius:10px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:.8rem;font-weight:600;line-height:1.25;letter-spacing:0;text-transform:none;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:9999;white-space:normal;text-align:center;pointer-events:none}
+.tab.blocked .tab-status::before{content:'';display:none;position:absolute;left:50%;top:20px;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid var(--gold);z-index:10000;pointer-events:none}
+.tab.blocked .tab-status:hover::after,.tab.blocked .tab-status:hover::before{display:block}
 .deadline-pill{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:.78rem;color:var(--muted);white-space:nowrap}
 .deadline-pill.has-date{border-color:var(--gold);color:var(--gold)}
 .rules-body{text-align:left;color:var(--text);font-size:.88rem;line-height:1.45}
@@ -147,6 +152,13 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .stable td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:.86rem}
 .stable tr:hover td{background:rgba(255,255,255,.03)}
 .r1{color:#FFD700}.r2{color:#C0C0C0}.r3{color:#CD7F32}
+.pot-card{background:linear-gradient(135deg,rgba(201,168,76,.16),rgba(46,196,182,.08));border:1px solid rgba(201,168,76,.55);border-radius:12px;padding:13px 15px;margin-bottom:16px;display:grid;grid-template-columns:1.2fr repeat(3,.8fr);gap:10px;align-items:center}
+.pot-main{font-family:'Bebas Neue',sans-serif;letter-spacing:2px;color:var(--gold);font-size:1.15rem}
+.pot-sub{color:var(--muted);font-size:.78rem;margin-top:2px}
+.pot-prize{background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:9px 10px}
+.pot-prize b{display:block;color:var(--text);font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:.9rem}
+.pot-prize span{color:var(--gold);font-weight:700}
+@media(max-width:760px){.pot-card{grid-template-columns:1fr}.pot-prize{display:flex;align-items:center;justify-content:space-between;gap:10px}}
 /* ADMIN */
 .ainput{background:var(--darker);border:1px solid var(--border);color:var(--text);padding:7px 11px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:.88rem}
 .ainput:focus{outline:none;border-color:var(--gold)}
@@ -174,7 +186,7 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 
 /* RESPONSIVE + TOOLTIP FIX */
 html,body{width:100%;max-width:100%;overflow-x:hidden}
-.tab.incomplete .tab-status::after,.tab.incomplete .tab-status::before{display:none!important}
+.tab.incomplete .tab-status::after,.tab.incomplete .tab-status::before,.tab.blocked .tab-status::after,.tab.blocked .tab-status::before{display:none!important}
 .tab-tooltip{display:none;position:fixed;z-index:200000;background:var(--card);border:1px solid var(--gold);color:var(--text);border-radius:10px;padding:9px 12px;font-size:.8rem;font-weight:700;line-height:1.25;box-shadow:0 12px 30px rgba(0,0,0,.55);max-width:min(280px,calc(100vw - 16px));text-align:center;pointer-events:none}
 .preview-bar{background:rgba(201,168,76,.12);border-bottom:1px solid var(--gold);padding:9px 18px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;color:var(--gold);font-size:.86rem;font-weight:700;position:sticky;top:70px;z-index:95}
 .preview-bar .btn{padding:4px 10px;font-size:.78rem}
@@ -329,10 +341,19 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
         <li><strong>Fase 1:</strong> para los participantes están activas Fase de grupos, Clasificaciones y Preguntas. La pestaña Eliminatoria permanece bloqueada para jugadores hasta que el admin la active.</li>
         <li><strong>Fase 2:</strong> el admin activa la Eliminatoria cuando ya se conocen los cruces de dieciseisavos.</li>
       </ul>
-      <h3>6) Cierre de apuestas</h3>
+      <h3>6) Precio y premios</h3>
+      <ul>
+        <li>Participar cuesta <strong>20€</strong> por persona.</li>
+        <li>El bote total se calcula automáticamente: <strong>20€ × número de participantes</strong>.</li>
+        <li><strong>1º clasificado:</strong> 60% del bote.</li>
+        <li><strong>2º clasificado:</strong> 30% del bote.</li>
+        <li><strong>3º clasificado:</strong> 10% del bote.</li>
+      </ul>
+      <h3>7) Cierre de apuestas</h3>
       <ul>
         <li>El admin puede establecer una fecha límite. Cuando llegue esa fecha, las apuestas quedan cerradas.</li>
         <li>Después del cierre, los participantes pueden consultar sus apuestas, pero no modificarlas.</li>
+        <li>El admin también puede bloquear manualmente la porra de un jugador concreto cuando ya la haya completado. Ese jugador podrá verla, pero no editarla salvo que el admin la desbloquee.</li>
         <li>El admin puede cargar resultados con <strong>Autorellenar</strong> o corregirlos manualmente.</li>
       </ul>
     </div>
@@ -396,6 +417,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
     </div>
 
     <div id="p-marca" class="panel">
+      <div class="pot-card" id="c-pot"></div>
       <div class="card">
         <div class="ch">
           <span class="ctitle">🏆 CLASIFICACIÓN GENERAL</span>
@@ -439,13 +461,14 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
                 <option value="">— Elige participante —</option>
               </select>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="btn sec" id="b-view-userbets">Ver apuestas</button>
+                <button class="btn sec" id="b-view-userbets">Editar como jugador</button>
                 <button class="btn red" id="b-clear-userbets">Borrar apuestas</button>
+                <button class="btn sec" id="b-lock-userbets">Bloquear/desbloquear</button>
               </div>
             </div>
             <div class="admin-mini">
               <h4>PIN del jugador</h4>
-              <p style="color:var(--muted);font-size:.82rem;margin-bottom:9px">Restablece el PIN a 1234 y fuerza el cambio en el próximo inicio de sesión.</p>
+              <p style="color:var(--muted);font-size:.82rem;margin-bottom:9px">Restablece el PIN a 1234 y fuerza el cambio en el próximo inicio de sesión. También puedes bloquear/desbloquear manualmente su porra cuando ya esté completa.</p>
               <button class="btn sec" id="b-reset-userpin">🔑 Resetear PIN a 1234</button>
             </div>
           </div>
@@ -609,19 +632,39 @@ const POINTS_MATCH=10;
 const POINTS_GROUP=25;
 const POINTS_QUESTION=50;
 const POINTS_KO_TEAM=20;
+const PARTICIPATION_FEE=20;
 let BETS={};     // {username: {matches,groups,knockout,questions}}
 const DEFAULT_USER_PIN='1234';
 let ses={user:null,isAdmin:false};
 let forcePinChange=false;
 let ADMIN_VIEW_USER='';
-let ADMIN_PREVIEW_USER='';
+let ADMIN_PREVIEW_USER=''; // Admin editando la porra de un jugador
+let PUBLIC_VIEW_USER='';   // Participante viendo la porra de otro jugador en solo lectura
 let _saveTimer=null;
 let QUESTION_SAVE_TIMERS={};
 
 function getReal(){return normalizeBet(BETS['__admin__']);}
-function isAdminPreview(){return !!(ses.isAdmin && ADMIN_PREVIEW_USER);}
-function activeUser(){return isAdminPreview()?ADMIN_PREVIEW_USER:ses.user;}
-function canEdit(){return isAdminPreview()?false:(ses.isAdmin||!CONFIG.betsLocked);}
+function getUserObj(name){return USERS.find(x=>x.name===name)||null;}
+function isUserBetLocked(name){return !!getUserObj(name)?.betLocked;}
+function isAdminPlayerEdit(){return !!(ses.isAdmin && ADMIN_PREVIEW_USER);}
+function isReadOnlyPreview(){return !!(!ses.isAdmin && PUBLIC_VIEW_USER);}
+function isAdminPreview(){return isReadOnlyPreview();}
+function activeUser(){
+  if(isAdminPlayerEdit())return ADMIN_PREVIEW_USER;
+  if(isReadOnlyPreview())return PUBLIC_VIEW_USER;
+  return ses.user;
+}
+function canEdit(){
+  if(isReadOnlyPreview())return false;
+  if(isAdminPlayerEdit())return true;
+  if(ses.isAdmin)return true;
+  return !CONFIG.betsLocked && !isUserBetLocked(ses.user);
+}
+function lockMessage(){
+  if(isReadOnlyPreview())return `👁️ Vista solo lectura de la porra de ${PUBLIC_VIEW_USER}. No puedes modificarla.`;
+  if(!ses.isAdmin && isUserBetLocked(ses.user))return '🔒 Tu porra está bloqueada por el admin. Puedes consultarla, pero no modificarla.';
+  return '🔒 Apuestas cerradas. No puedes modificar pronósticos.';
+}
 
 // ── FIREBASE R/W ──────────────────────────────────
 async function fbGet(path){
@@ -677,7 +720,8 @@ function ensureBet(u){
 }
 
 function writableUser(){
-  if(isAdminPreview())return null;
+  if(isReadOnlyPreview())return null;
+  if(isAdminPlayerEdit())return ADMIN_PREVIEW_USER;
   return ses.user;
 }
 function normalizeGroupArray(arr){
@@ -744,7 +788,7 @@ function restoreFocusedInputState(state){
 async function handleGroupSelectChange(t){
   if(!t || t.dataset.grp===undefined || t.dataset.pos===undefined)return false;
   const user=writableUser();
-  if(!user||!canEdit()){toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);return true;}
+  if(!user||!canEdit()){toast(isReadOnlyPreview()?'👁️ Vista solo lectura: no se modifica':'🔒 Cerradas',true);return true;}
 
   ensureBet(user);
   const grp=t.dataset.grp;
@@ -774,7 +818,7 @@ async function handleKnockoutTeamChange(t){
   if(!t || !t.dataset.koteam)return false;
   if(!isKnockoutEnabled() && !ses.isAdmin){toast('🔒 Eliminatoria todavía bloqueada',true);return true;}
   const user=writableUser();
-  if(!user||!canEdit()){toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);return true;}
+  if(!user||!canEdit()){toast(isReadOnlyPreview()?'👁️ Vista solo lectura: no se modifica':'🔒 Cerradas',true);return true;}
 
   ensureBet(user);
   const sid=t.dataset.koteam;
@@ -790,7 +834,7 @@ async function handleKnockoutTeamChange(t){
 async function handleQuestionInputChange(t){
   if(!t || !t.dataset.qid)return false;
   const user=writableUser();
-  if(!user||!canEdit()){toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);return true;}
+  if(!user||!canEdit()){toast(isReadOnlyPreview()?'👁️ Vista solo lectura: no se modifica':'🔒 Cerradas',true);return true;}
 
   ensureBet(user);
   if(!BETS[user].questions)BETS[user].questions={};
@@ -886,6 +930,7 @@ async function boot(){
       fillSelect();
       renderParts();
       renderAdminUserTools();
+      updateTabStatus();
     });
 
   }catch(e){
@@ -1003,7 +1048,7 @@ async function doChangePin(){
 // ── TABS ──────────────────────────────────────────
 function showTab(tab){
   if(tab==='elim' && !isKnockoutEnabled() && !ses.isAdmin){
-    toast('🔒 Eliminatoria bloqueada hasta la segunda fase',true);
+    toast('🔒 De momento la Eliminatoria no está abierta. Se activará cuando se conozcan los cruces de dieciseisavos.',true);
     return;
   }
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
@@ -1014,10 +1059,10 @@ function showTab(tab){
 
 // ── RENDER MATCHES ────────────────────────────────
 function renderMatches(){
-  const u=activeUser(),locked=isAdminPreview()||(CONFIG.betsLocked&&!ses.isAdmin);
+  const u=activeUser(),locked=!canEdit();
   const byDate={};
   ALL.forEach(m=>{if(!byDate[m.date])byDate[m.date]=[];byDate[m.date].push(m);});
-  let html=locked?'<div class="lbanner">🔒 Apuestas cerradas. No puedes modificar pronósticos.</div>':'';
+  let html=locked?`<div class="lbanner">${lockMessage()}</div>`:'';
   html+=Object.entries(byDate).map(([date,ms])=>`
     <div class="card">
       <div class="ch"><span class="ctitle">📅 ${fmtDate(date)}</span></div>
@@ -1042,7 +1087,7 @@ function mrowHTML(m,u,locked){
 
     // Admin: marcamos el resultado oficial.
     // Participante: marcamos su apuesta.
-    const selected = (ses.isAdmin && !isAdminPreview()) ? realResult : bet;
+    const selected = (ses.isAdmin && !isAdminPlayerEdit()) ? realResult : bet;
 
     if(selected === v){
       c += ` bs${k}`;
@@ -1070,7 +1115,7 @@ function mrowHTML(m,u,locked){
     rd = realResult;
   }
 
-  const pts = (!ses.isAdmin || isAdminPreview()) && realResult && bet
+  const pts = (!(ses.isAdmin && !isAdminPlayerEdit())) && realResult && bet
     ? (bet === realResult ? '+10' : '')
     : '';
 
@@ -1090,9 +1135,9 @@ function mrowHTML(m,u,locked){
 
 // ── RENDER GROUPS ─────────────────────────────────
 function renderGroups(){
-  const u=activeUser(),dis=isAdminPreview()||(!canEdit()&&!ses.isAdmin);
-  const showPlayerPts = !!u && (!ses.isAdmin || isAdminPreview());
-  let html=dis?'<div class="lbanner">🔒 Apuestas cerradas.</div>':'';
+  const u=activeUser(),dis=!canEdit();
+  const showPlayerPts = !!u && !(ses.isAdmin && !isAdminPlayerEdit());
+  let html=dis?`<div class="lbanner">${lockMessage()}</div>`:'';
   html+=Object.entries(GROUPS).map(([g,teams])=>{
     const br=u?normalizeGroupArray(BETS[u]?.groups?.[g]):['','','',''];
     const rr=getReal().groups?.[g]??null;
@@ -1128,13 +1173,13 @@ function renderKnockout(){
 
   if(!isKnockoutEnabled() && !ses.isAdmin){
     c.innerHTML=`<div class="lbanner" style="width:100%;margin:0">
-      🔒 La Eliminatoria todavía no está activada. Se abrirá cuando termine la fase de grupos y se conozcan los cruces de dieciseisavos.
+      🔒 De momento la Eliminatoria no está abierta. Se activará cuando termine la fase de grupos y se conozcan los cruces de dieciseisavos.
     </div>`;
     return;
   }
 
-  const u=activeUser(),dis=isAdminPreview()||(!canEdit()&&!ses.isAdmin);
-  const showPlayerPts = !!u && (!ses.isAdmin || isAdminPreview());
+  const u=activeUser(),dis=!canEdit();
+  const showPlayerPts = !!u && !(ses.isAdmin && !isAdminPlayerEdit());
 
   c.innerHTML=KO_ROUNDS.map(round=>{
     const items=round.matches.map((match,idx)=>{
@@ -1172,9 +1217,9 @@ function questionCompare(a,b){
   return (a||'').toString().toLowerCase().trim() === (b||'').toString().toLowerCase().trim();
 }
 function renderQuestions(){
-  const u=activeUser(),dis=isAdminPreview()||(!canEdit()&&!ses.isAdmin);
-  const showPlayerPts = !!u && (!ses.isAdmin || isAdminPreview());
-  let html=dis?'<div class="lbanner">🔒 Apuestas cerradas.</div>':'';
+  const u=activeUser(),dis=!canEdit();
+  const showPlayerPts = !!u && !(ses.isAdmin && !isAdminPlayerEdit());
+  let html=dis?`<div class="lbanner">${lockMessage()}</div>`:'';
   html+=QUESTIONS.map(q=>{
     const bv=u?(BETS[u]?.questions?.[q.id]??''):'';
     const rv=getReal().questions?.[q.id]??'';
@@ -1196,7 +1241,7 @@ function renderQuestions(){
 }
 function updateQuestionPointsUI(){
   const u=activeUser();
-  const showPlayerPts = !!u && (!ses.isAdmin || isAdminPreview());
+  const showPlayerPts = !!u && !(ses.isAdmin && !isAdminPlayerEdit());
   QUESTIONS.forEach(q=>{
     const qid=q.id;
     const input=document.querySelector(`.qinput[data-qid="${qid}"]`);
@@ -1248,14 +1293,34 @@ function calcScore(name){
   });
   return{tot,m,g,k,q};
 }
+function fmtMoney(n){return `${Number(n||0).toFixed(2).replace('.',',')}€`;}
+function potInfo(){
+  const participants=USERS.length;
+  const total=participants*PARTICIPATION_FEE;
+  return {participants,total,first:total*0.60,second:total*0.30,third:total*0.10};
+}
+function renderPot(){
+  const el=document.getElementById('c-pot');if(!el)return;
+  const p=potInfo();
+  el.innerHTML=`
+    <div>
+      <div class="pot-main">💰 Bote actual: ${fmtMoney(p.total)}</div>
+      <div class="pot-sub">${p.participants} participantes × ${fmtMoney(PARTICIPATION_FEE)} por persona</div>
+    </div>
+    <div class="pot-prize"><b>🥇 1º · 60%</b><span>${fmtMoney(p.first)}</span></div>
+    <div class="pot-prize"><b>🥈 2º · 30%</b><span>${fmtMoney(p.second)}</span></div>
+    <div class="pot-prize"><b>🥉 3º · 10%</b><span>${fmtMoney(p.third)}</span></div>`;
+}
 function recalc(){
+  renderPot();
   const rows=USERS.map(p=>({name:p.name,...calcScore(p.name)})).sort((a,b)=>b.tot-a.tot);
   document.getElementById('c-scores').innerHTML=`<thead><tr>
-    <th>#</th><th>Participante</th><th>Partidos</th><th>Grupos</th><th>Eliminatoria</th><th>Preguntas</th><th>TOTAL</th>
+    <th>#</th><th>Participante</th><th>Partidos</th><th>Grupos</th><th>Eliminatoria</th><th>Preguntas</th><th>TOTAL</th><th>Porra</th>
   </tr></thead><tbody>${rows.map((s,i)=>`<tr>
     <td class="${i===0?'r1':i===1?'r2':i===2?'r3':''}">${['🥇','🥈','🥉'][i]||i+1}</td>
     <td style="font-weight:600">${s.name}</td><td>${s.m}</td><td>${s.g}</td><td>${s.k}</td><td>${s.q}</td>
     <td style="font-family:'Bebas Neue';font-size:1.05rem;color:var(--gold)">${s.tot}</td>
+    <td><button class="btn sec" style="padding:3px 8px;font-size:.72rem" data-viewscore="${s.name}">Ver</button></td>
   </tr>`).join('')}</tbody>`;
   const ts=document.getElementById('s-marca-ts');
   if(ts)ts.textContent='Actualizado: '+new Date().toLocaleString('es-ES');
@@ -1270,8 +1335,9 @@ function renderParts(){
     const total=Object.keys(bet.matches||{}).length+Object.keys(bet.groups||{}).length+Object.keys(bet.knockout||{}).length+Object.keys(bet.questions||{}).length;
     return `<div class="prow">
       <span style="font-weight:600;flex:1">${u.name}</span>
-      <span style="color:var(--muted);font-size:.78rem;margin-right:8px">${total} bloques${u.mustChangePin?' · PIN inicial':''}</span>
-      <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-viewpart="${u.name}">Vista</button>
+      <span style="color:var(--muted);font-size:.78rem;margin-right:8px">${total} bloques${u.mustChangePin?' · PIN inicial':''}${u.betLocked?' · 🔒 bloqueado':''}</span>
+      <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-viewpart="${u.name}">Editar porra</button>
+      <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-lockbets="${u.name}" data-lockstate="${u.betLocked?'0':'1'}">${u.betLocked?'Desbloquear':'Bloquear'}</button>
       <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-resetpin="${u.name}">PIN 1234</button>
       <button class="btn red" style="padding:3px 8px;font-size:.75rem" data-clearbets="${u.name}">Borrar apuestas</button>
       <button class="btn red" style="padding:3px 8px;font-size:.75rem" data-delpart="${u.name}">🗑️</button>
@@ -1305,7 +1371,7 @@ function renderSelectedUserBets(){
   const qLines=QUESTIONS.filter(q=>bet.questions?.[q.id]).map(q=>`<div class="bet-line"><span>${q.label}</span><span>${bet.questions[q.id]}</span></div>`).join('') || '<div style="color:var(--muted)">Sin preguntas respondidas.</div>';
   c.innerHTML=`
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px">
-      <strong style="color:var(--gold)">Apuestas de ${ADMIN_VIEW_USER}</strong>
+      <strong style="color:var(--gold)">Apuestas de ${ADMIN_VIEW_USER} ${isUserBetLocked(ADMIN_VIEW_USER)?'<span class="ubadge">BLOQUEADA</span>':''}</strong>
       <span style="color:var(--muted);font-size:.78rem">Partidos: ${formatObjCount(bet.matches)} · Grupos: ${formatObjCount(bet.groups)} · Eliminatoria: ${formatObjCount(bet.knockout)} · Preguntas: ${formatObjCount(bet.questions)}</span>
     </div>
     <h4>Partidos 1-X-2</h4>${matchLines}
@@ -1323,11 +1389,30 @@ async function resetUserPin(name){
     toast(`🔑 PIN de ${name} reseteado a 1234`);
   }catch(e){toast('Error: '+e.message,true);}
 }
+
+async function setUserBetLock(name,locked){
+  const u=USERS.find(x=>x.name===name);
+  if(!u)return toast('Selecciona un usuario válido',true);
+  const msg=locked
+    ? `¿Bloquear la porra de ${name}? Podrá consultarla, pero no modificarla.`
+    : `¿Desbloquear la porra de ${name}? Podrá volver a modificarla si las apuestas generales están abiertas.`;
+  if(!confirm(msg))return;
+  try{
+    const next={...u,betLocked:!!locked};
+    await fbSet(`users/${name}`,next);
+    USERS=USERS.map(x=>x.name===name?next:x);
+    renderAll();
+    toast(locked?`🔒 Porra de ${name} bloqueada`:`🔓 Porra de ${name} desbloqueada`);
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
 async function clearUserBets(name){
   if(!USERS.some(u=>u.name===name))return toast('Selecciona un usuario válido',true);
   if(!confirm(`¿Borrar TODAS las apuestas de ${name}? Tendrá que rellenarlas otra vez.`))return;
   try{
     await fbSet(`bets/${name}`,null);
+    const u=USERS.find(x=>x.name===name);
+    if(u){await fbSet(`users/${name}`,{...u,betLocked:false});USERS=USERS.map(x=>x.name===name?{...u,betLocked:false}:x);}
     BETS[name]={matches:{},groups:{},knockout:{},questions:{}};
     renderAll();
     toast(`🗑️ Apuestas de ${name} borradas`);
@@ -1488,7 +1573,7 @@ function bindBetControls(){
 function officialResultOf(v){return v&&typeof v==='object'?v.result:v;}
 function isGroupsCompleteFor(u){
   const b=BETS[u]?.matches||{};
-  if(ses.isAdmin)return ALL.every(m=>!!officialResultOf(getReal().matches?.[m.id]));
+  if(ses.isAdmin && !isAdminPlayerEdit())return ALL.every(m=>!!officialResultOf(getReal().matches?.[m.id]));
   return ALL.every(m=>['1','X','2'].includes(b[m.id]));
 }
 function isClassifCompleteFor(u){
@@ -1516,11 +1601,11 @@ function updateTabStatus(){
   const managedTabs=['grupos','clasif','elim','preg'];
 
   // El admin gestiona resultados confirmados: no mostramos avisos de pendiente/OK.
-  if(!ses.user || (ses.isAdmin && !isAdminPreview())){
+  if(!ses.user || (ses.isAdmin && !isAdminPlayerEdit())){
     managedTabs.forEach(tab=>{
       const el=document.querySelector(`.tab[data-tab="${tab}"]`);if(!el)return;
       const st=el.querySelector('.tab-status');
-      el.classList.remove('done','incomplete');
+      el.classList.remove('done','incomplete','blocked');
       if(st){st.textContent='';st.removeAttribute('data-tip');st.setAttribute('aria-label','');}
     });
     return;
@@ -1529,19 +1614,21 @@ function updateTabStatus(){
   const status={
     grupos:{ok:isGroupsCompleteFor(activeUser()),tip:'Faltan partidos por apostar'},
     clasif:{ok:isClassifCompleteFor(activeUser()),tip:'Faltan clasificaciones por completar'},
-    elim:{ok:isKnockoutCompleteFor(activeUser()),tip:isKnockoutEnabled()?'Faltan equipos por completar':'Eliminatoria todavía bloqueada'},
+    elim:{ok:isKnockoutEnabled()?isKnockoutCompleteFor(activeUser()):false,tip:isKnockoutEnabled()?'Faltan equipos por completar':'De momento no se abrirá esta sección hasta saber cómo quedan los cruces de dieciseisavos'},
     preg:{ok:isQuestionsCompleteFor(activeUser()),tip:'Faltan preguntas por responder'},
   };
 
   Object.entries(status).forEach(([tab,info])=>{
     const el=document.querySelector(`.tab[data-tab="${tab}"]`);if(!el)return;
     const st=el.querySelector('.tab-status');
-    el.classList.toggle('done',info.ok);
-    el.classList.toggle('incomplete',!info.ok);
+    const blocked = tab==='elim' && !isKnockoutEnabled();
+    el.classList.toggle('done',info.ok && !blocked);
+    el.classList.toggle('incomplete',!info.ok && !blocked);
+    el.classList.toggle('blocked',blocked);
     if(st){
-      st.textContent=info.ok?'✓':'!';
-      st.setAttribute('data-tip',info.ok?'Completo':info.tip);
-      st.setAttribute('aria-label',info.ok?'Completo':info.tip);
+      st.textContent = info.ok && !blocked ? '✓' : blocked ? '⛔' : '⚠️';
+      st.setAttribute('data-tip',info.ok && !blocked?'Completo':info.tip);
+      st.setAttribute('aria-label',info.ok && !blocked?'Completo':info.tip);
       st.removeAttribute('title');
     }
   });
@@ -1575,24 +1662,39 @@ document.addEventListener('scroll',hideTabTooltip,true);
 function enterUserPreview(name){
   if(!ses.isAdmin)return;
   if(!USERS.some(u=>u.name===name))return toast('Selecciona un usuario válido',true);
+  PUBLIC_VIEW_USER='';
   ADMIN_PREVIEW_USER=name;
   ensureBet(name);
   document.getElementById('h-user').textContent='Admin';
   showTab('grupos');
   renderAll();
+  toast(`✏️ Editando la porra de ${name}`);
+}
+function enterPublicUserView(name){
+  if(!ses.user || ses.isAdmin)return;
+  if(!USERS.some(u=>u.name===name))return toast('Usuario no encontrado',true);
+  PUBLIC_VIEW_USER=name;
+  ensureBet(name);
+  showTab('grupos');
+  renderAll();
   toast(`👁️ Viendo la porra de ${name}`);
 }
 function exitUserPreview(){
+  const wasAdmin=!!ADMIN_PREVIEW_USER;
   ADMIN_PREVIEW_USER='';
+  PUBLIC_VIEW_USER='';
   document.getElementById('h-user').textContent=ses.isAdmin?'Admin':ses.user;
   renderAll();
-  showTab('admin');
+  showTab(wasAdmin?'admin':'marca');
 }
 function updatePreviewBar(){
   const el=document.getElementById('preview-bar');if(!el)return;
-  if(isAdminPreview()){
+  if(isAdminPlayerEdit()){
     el.style.display='flex';
-    el.innerHTML=`<span>👁️ Vista previa como <strong>${ADMIN_PREVIEW_USER}</strong>. Los campos están bloqueados para no modificar su porra.</span><button class="btn sec" id="b-exit-preview">Salir de vista ${ADMIN_PREVIEW_USER}</button>`;
+    el.innerHTML=`<span>✏️ Editando la porra de <strong>${ADMIN_PREVIEW_USER}</strong> como admin. Los cambios se guardan en su apuesta.</span><button class="btn sec" id="b-exit-preview">Salir de edición ${ADMIN_PREVIEW_USER}</button>`;
+  }else if(isReadOnlyPreview()){
+    el.style.display='flex';
+    el.innerHTML=`<span>👁️ Vista solo lectura de la porra de <strong>${PUBLIC_VIEW_USER}</strong>.</span><button class="btn sec" id="b-exit-preview">Salir de vista ${PUBLIC_VIEW_USER}</button>`;
   }else{
     el.style.display='none';
     el.innerHTML='';
@@ -1623,7 +1725,7 @@ document.addEventListener('click',async e=>{
   if(t.id==='b-mypin'){openPinModal();return;}
   if(t.id==='b-out'){doLogout();return;}
   if(t.id==='b-hdr-fill'){autofill();return;}
-  if(t.id==='b-admin-settings'){if(isAdminPreview())ADMIN_PREVIEW_USER='';renderAll();showTab('admin');return;}
+  if(t.id==='b-admin-settings'){if(isAdminPlayerEdit())ADMIN_PREVIEW_USER='';renderAll();showTab('admin');return;}
   if(t.id==='b-exit-preview'){exitUserPreview();return;}
   if(t.id==='b-rules'){openRulesModal();return;}
   if(t.id==='b-rules-close'){closeRulesModal();return;}
@@ -1632,20 +1734,23 @@ document.addEventListener('click',async e=>{
   const tabTarget=t.closest('[data-tab]');
   if(tabTarget){showTab(tabTarget.dataset.tab);return;}
   if(t.dataset.viewpart){ADMIN_VIEW_USER=t.dataset.viewpart;renderAdminUserTools();enterUserPreview(t.dataset.viewpart);return;}
+  if(t.dataset.viewscore){ses.isAdmin?enterUserPreview(t.dataset.viewscore):enterPublicUserView(t.dataset.viewscore);return;}
+  if(t.dataset.lockbets){setUserBetLock(t.dataset.lockbets,t.dataset.lockstate==='1');return;}
   if(t.dataset.resetpin){resetUserPin(t.dataset.resetpin);return;}
   if(t.dataset.clearbets){clearUserBets(t.dataset.clearbets);return;}
   if(t.id==='b-view-userbets'){ADMIN_VIEW_USER=document.getElementById('i-admin-user').value;renderSelectedUserBets();enterUserPreview(ADMIN_VIEW_USER);return;}
   if(t.id==='b-clear-userbets'){clearUserBets(document.getElementById('i-admin-user').value);return;}
   if(t.id==='b-reset-userpin'){resetUserPin(document.getElementById('i-admin-user').value);return;}
+  if(t.id==='b-lock-userbets'){const name=document.getElementById('i-admin-user').value;const u=getUserObj(name);setUserBetLock(name,!u?.betLocked);return;}
   if(t.dataset.mid&&t.dataset.val){
     const userToWrite = writableUser();
-    if(!userToWrite||!canEdit())return toast(CONFIG.betsLocked?'🔒 Cerradas':'Sin sesión',true);
+    if(!userToWrite||!canEdit())return toast(userToWrite?lockMessage():'Sin sesión',true);
     ensureBet(userToWrite);
 
     const mid = t.dataset.mid;
     const val = t.dataset.val;
 
-    if(ses.isAdmin && !isAdminPreview()){
+    if(ses.isAdmin && !isAdminPlayerEdit()){
       const prev = BETS[userToWrite].matches?.[mid];
 
       // El admin introduce el resultado oficial 1/X/2.
