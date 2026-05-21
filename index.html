@@ -1625,7 +1625,7 @@ function updateTabStatus(){
     el.classList.toggle('incomplete',!info.ok && !blocked);
     el.classList.toggle('blocked',blocked);
     if(st){
-      st.textContent = info.ok && !blocked ? '' : blocked ? '⛔' : '⚠️';
+      st.textContent = info.ok && !blocked ? '✅' : blocked ? '⛔' : '⚠️';
       if(info.ok && !blocked){st.removeAttribute('data-tip');st.setAttribute('aria-label','');}
       else{st.setAttribute('data-tip',info.tip);st.setAttribute('aria-label',info.tip);}
       st.removeAttribute('title');
