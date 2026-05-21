@@ -253,7 +253,7 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
           <div id="c-parts" style="margin-bottom:12px"></div>
           <div style="display:flex;gap:9px;flex-wrap:wrap">
             <input class="ainput" id="i-newname" placeholder="Nombre" style="width:145px">
-            <input class="ainput" id="i-newppin" placeholder="PIN" style="width:100px">
+            <input class="ainput" id="i-newppin" placeholder="PIN (1234)" style="width:110px">
             <button class="btn" id="b-addpart">+ Añadir</button>
           </div>
         </div>
@@ -350,7 +350,9 @@ function allTeams(){return Object.values(GROUPS).flat();}
 let USERS=[];    // [{name,pin}] from Firebase
 let CONFIG={adminPin:'admin2026',betsLocked:false,autoLockDate:null};
 let BETS={};     // {username: {matches,groups,knockout,questions}}
+const DEFAULT_USER_PIN='1234';
 let ses={user:null,isAdmin:false};
+let forcePinChange=false;
 let _saveTimer=null;
 
 function getReal(){return BETS['__admin__']||{matches:{},groups:{},knockout:{},questions:{}};}
@@ -392,8 +394,11 @@ async function boot(){
     // First run: seed default users if none exist
     if(!USERS.length){
       USERS=[
-        {name:'Igor',pin:'1234'},{name:'Carlos',pin:'2345'},
-        {name:'María',pin:'3456'},{name:'Pedro',pin:'4567'},{name:'Ana',pin:'5678'},
+        {name:'Igor',pin:DEFAULT_USER_PIN,mustChangePin:true},
+        {name:'Carlos',pin:DEFAULT_USER_PIN,mustChangePin:true},
+        {name:'María',pin:DEFAULT_USER_PIN,mustChangePin:true},
+        {name:'Pedro',pin:DEFAULT_USER_PIN,mustChangePin:true},
+        {name:'Ana',pin:DEFAULT_USER_PIN,mustChangePin:true},
       ];
       await fbSet('users', Object.fromEntries(USERS.map(u=>[u.name,u])));
       toast('Base de datos inicializada con usuarios de ejemplo');
@@ -404,9 +409,16 @@ async function boot(){
     checkAutoLock();
 
     // Listen for real-time changes from other users
-    onValue(ref(db,'bets'), snap=>{ if(snap.exists()){BETS={...BETS,...snap.val()};renderAll();} });
+    onValue(ref(db,'bets'), snap=>{
+      BETS = snap.exists() ? snap.val() : {};
+      renderAll();
+    });
     onValue(ref(db,'config'), snap=>{ if(snap.exists()){CONFIG={...CONFIG,...snap.val()};lockUI();autoLockUI();renderAll();} });
-    onValue(ref(db,'users'), snap=>{ if(snap.exists()){USERS=Object.values(snap.val());fillSelect();renderParts();} });
+    onValue(ref(db,'users'), snap=>{
+      USERS = snap.exists() ? Object.values(snap.val()) : [];
+      fillSelect();
+      renderParts();
+    });
 
   }catch(e){
     console.error('Firebase error:',e);
@@ -448,6 +460,11 @@ function doAdminLogin(){
   ses={user:'__admin__',isAdmin:true};
   enterApp();
 }
+function userMustChangePin(){
+  if(!ses.user||ses.isAdmin)return false;
+  const u=USERS.find(x=>x.name===ses.user);
+  return !!(u && (u.mustChangePin || u.pin===DEFAULT_USER_PIN));
+}
 function enterApp(){
   document.getElementById('login-screen').classList.remove('on');
   document.getElementById('app').style.display='block';
@@ -460,37 +477,56 @@ function enterApp(){
   lockUI();autoLockUI();
   renderAll();
   setInterval(checkAutoLock,60000);
+  if(userMustChangePin()){
+    openPinModal(true);
+  }
 }
 function doLogout(){
+  forcePinChange=false;
   ses={user:null,isAdmin:false};
   document.getElementById('app').style.display='none';
+  document.getElementById('pin-modal').classList.remove('on');
   document.getElementById('login-screen').classList.add('on');
   ['l-pin','l-apin'].forEach(id=>{document.getElementById(id).value='';});
   document.getElementById('l-err').textContent='';
 }
 
 // ── PIN CHANGE ────────────────────────────────────
-function openPinModal(){
+function openPinModal(force=false){
+  forcePinChange=!!force;
   ['pin-cur','pin-new1','pin-new2'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('pin-err').textContent='';
+  const err=document.getElementById('pin-err');
+  err.style.color='var(--red)';
+  err.textContent=forcePinChange?'Primer acceso: cambia tu PIN para poder usar la app.':'';
+  document.getElementById('b-pin-no').style.display=forcePinChange?'none':'';
   document.getElementById('pin-modal').classList.add('on');
 }
-function closePinModal(){document.getElementById('pin-modal').classList.remove('on');}
+function closePinModal(){
+  if(forcePinChange)return;
+  document.getElementById('pin-modal').classList.remove('on');
+}
 async function doChangePin(){
   const cur=document.getElementById('pin-cur').value;
   const n1=document.getElementById('pin-new1').value;
   const n2=document.getElementById('pin-new2').value;
   const errEl=document.getElementById('pin-err');
+  errEl.style.color='var(--red)';
   errEl.textContent='';
   const u=USERS.find(x=>x.name===ses.user);
   if(!u){errEl.textContent='Usuario no encontrado';return;}
   if(u.pin!==cur){errEl.textContent='❌ PIN actual incorrecto';return;}
   if(!n1||n1.length<3){errEl.textContent='Mínimo 3 caracteres';return;}
   if(n1!==n2){errEl.textContent='❌ Los PINs no coinciden';return;}
+  if(n1===cur){errEl.textContent='El nuevo PIN tiene que ser diferente al actual';return;}
+  if(forcePinChange&&n1===DEFAULT_USER_PIN){errEl.textContent='No puedes mantener el PIN inicial 1234';return;}
   errEl.style.color='var(--muted)';errEl.textContent='Guardando...';
   try{
-    await fbSet(`users/${ses.user}`,{...u,pin:n1});
-    closePinModal();
+    const nextUser={...u,pin:n1,mustChangePin:false};
+    await fbSet(`users/${ses.user}`,nextUser);
+    USERS=USERS.map(x=>x.name===ses.user?nextUser:x);
+    forcePinChange=false;
+    document.getElementById('pin-modal').classList.remove('on');
+    document.getElementById('b-pin-no').style.display='';
     toast('✅ PIN actualizado correctamente');
   }catch(e){errEl.style.color='var(--red)';errEl.textContent='❌ Error: '+e.message;}
 }
@@ -707,22 +743,23 @@ function renderParts(){
   if(!USERS.length){c.innerHTML='<div style="color:var(--muted);font-size:.83rem">Sin usuarios.</div>';return;}
   c.innerHTML=USERS.map(u=>`<div class="prow">
     <span style="font-weight:600;flex:1">${u.name}</span>
-    <span style="color:var(--muted);font-size:.78rem;margin-right:8px">${Object.keys(BETS[u.name]?.matches||{}).length} apuestas</span>
+    <span style="color:var(--muted);font-size:.78rem;margin-right:8px">${Object.keys(BETS[u.name]?.matches||{}).length} apuestas${u.mustChangePin?' · PIN inicial':''}</span>
     <button class="btn red" style="padding:3px 8px;font-size:.75rem" data-delpart="${u.name}">🗑️</button>
   </div>`).join('');
 }
 async function addPart(){
   const name=document.getElementById('i-newname').value.trim();
-  const pin=document.getElementById('i-newppin').value.trim();
+  const typedPin=document.getElementById('i-newppin').value.trim();
+  const pin=typedPin||DEFAULT_USER_PIN;
   if(!name)return toast('Introduce un nombre',true);
-  if(!pin||pin.length<3)return toast('PIN mínimo 3 caracteres',true);
+  if(pin.length<3)return toast('PIN mínimo 3 caracteres',true);
   if(USERS.find(u=>u.name===name))return toast('Ya existe ese nombre',true);
   try{
-    await fbSet(`users/${name}`,{name,pin});
+    await fbSet(`users/${name}`,{name,pin,mustChangePin:true});
     await fbSet(`bets/${name}`,{matches:{},groups:{},knockout:{},questions:{}});
     document.getElementById('i-newname').value='';
     document.getElementById('i-newppin').value='';
-    toast(`✅ ${name} añadido`);
+    toast(`✅ ${name} añadido. PIN inicial: ${pin}`);
   }catch(e){toast('Error: '+e.message,true);}
 }
 async function delPart(name){
@@ -807,8 +844,12 @@ async function autofill(){
 async function clearAdminResults(){
   if(!confirm('¿Limpiar todos los resultados del admin?'))return;
   try{
-    await fbSet('bets/__admin__',{matches:{},groups:{},knockout:{},questions:{}});
-    toast('🗑️ Resultados limpiados');
+    // En Firebase Realtime Database los objetos vacíos no se conservan.
+    // Borramos la rama del admin y también limpiamos el estado local para que desaparezca al instante.
+    await fbSet('bets/__admin__',null);
+    BETS['__admin__']={matches:{},groups:{},knockout:{},questions:{}};
+    renderAll();
+    toast('🗑️ Resultados del admin limpiados');
   }catch(e){toast('Error: '+e.message,true);}
 }
 
