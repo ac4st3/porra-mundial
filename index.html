@@ -212,38 +212,18 @@
 <!-- ═══ LOGIN SCREEN ═══ -->
 <div id="login-screen">
   <div class="login-box">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260" style="width:120px;height:auto;display:block;margin:0 auto 10px">
-  <!-- Red outer swirl/trophy body -->
-  <path d="M100 8 C58 8 26 36 26 72 C26 102 44 124 62 140 C72 149 78 162 76 178 L124 178 C122 162 128 149 138 140 C156 124 174 102 174 72 C174 36 142 8 100 8Z" fill="#C8102E"/>
-  <!-- Blue eagle/arc overlay -->
-  <path d="M100 8 C72 8 50 28 44 55 C38 80 48 102 64 116 C76 127 82 143 82 160 L118 160 C118 143 124 127 136 116 C152 102 162 80 156 55 C150 28 128 8 100 8Z" fill="#002868"/>
-  <!-- Red inner fill -->
-  <path d="M100 22 C76 22 56 40 52 64 C48 86 58 106 72 118 C82 128 87 143 87 158 L113 158 C113 143 118 128 128 118 C142 106 152 86 148 64 C144 40 124 22 100 22Z" fill="#C8102E"/>
-  <!-- Blue 20 text area circle -->
-  <circle cx="100" cy="78" r="26" fill="#002868"/>
-  <!-- 20 over 26 in ball -->
-  <text x="100" y="72" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="14" font-weight="900" fill="white">20</text>
-  <text x="100" y="88" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="14" font-weight="900" fill="#C8102E">26</text>
-  <!-- Thin white lines across middle (stripes) -->
-  <line x1="74" y1="110" x2="126" y2="110" stroke="white" stroke-width="2" opacity="0.5"/>
-  <line x1="76" y1="118" x2="124" y2="118" stroke="white" stroke-width="2" opacity="0.4"/>
-  <line x1="78" y1="126" x2="122" y2="126" stroke="white" stroke-width="2" opacity="0.3"/>
-  <!-- Green lower body -->
-  <path d="M80 155 C70 165 68 175 76 178 L124 178 C132 175 130 165 120 155 Z" fill="#006847"/>
-  <!-- Neck -->
-  <rect x="88" y="178" width="24" height="18" rx="3" fill="#002868"/>
-  <!-- Maple leaf -->
-  <path d="M100 196 L105 204 L114 202 L111 210 L117 215 L109 213 L107 224 L100 219 L93 224 L91 213 L83 215 L89 210 L86 202 L95 204 Z" fill="#C8102E"/>
-  <!-- Green stadium base -->
-  <path d="M78 228 L84 228 L86 244 L114 244 L116 228 L122 228 L125 252 L75 252 Z" fill="#006847"/>
-  <!-- Dark blue base -->
-  <rect x="70" y="252" width="60" height="8" rx="3" fill="#002868"/>
-</svg>
+    <div style="text-align:center;margin-bottom:10px">
+  <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png"
+    alt="FIFA World Cup 2026" id="login-logo-img"
+    style="width:120px;height:auto;display:block;margin:0 auto"
+    onerror="document.getElementById('login-logo-img').style.display='none';document.getElementById('login-logo-fallback').style.display='block'">
+  <div id="login-logo-fallback" style="display:none;font-size:3rem;margin:8px 0">🏆</div>
+</div>
     <div class="login-logo" style="font-size:1.6rem;margin-bottom:2px">PORRA MUNDIAL 2026</div>
     <div class="login-sub">México · USA · Canadá</div>
     <div class="login-tabs">
-      <button class="login-tab active" id="tab-participant" onclick="switchLoginTab('participant')">SOY PARTICIPANTE</button>
-      <button class="login-tab" id="tab-admin" onclick="switchLoginTab('admin')">SOY ADMIN</button>
+      <button class="login-tab active" id="tab-participant">SOY PARTICIPANTE</button>
+      <button class="login-tab" id="tab-admin">SOY ADMIN</button>
     </div>
     <div id="login-participant-form">
       <select class="login-field" id="login-select-user">
@@ -251,12 +231,12 @@
       </select>
       <input class="login-field" id="login-pin" type="password" placeholder="Tu PIN personal" maxlength="20"
         onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="login-btn" onclick="doLogin()">ENTRAR</button>
+      <button class="login-btn" id="btn-do-login">ENTRAR</button>
     </div>
     <div id="login-admin-form" style="display:none">
       <input class="login-field" id="login-admin-pin" type="password" placeholder="PIN de administrador" maxlength="20"
         onkeydown="if(event.key==='Enter')doAdminLogin()">
-      <button class="login-btn" onclick="doAdminLogin()">ACCEDER COMO ADMIN</button>
+      <button class="login-btn" id="btn-do-admin-login">ACCEDER COMO ADMIN</button>
     </div>
     <div class="login-error" id="login-error"></div>
     <div style="margin-top:16px;font-size:0.75rem;color:var(--muted)">
@@ -269,33 +249,7 @@
 <div id="app" style="display:none">
 
 <header>
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260" style="height:46px;width:auto;flex-shrink:0">
-  <!-- Red outer swirl/trophy body -->
-  <path d="M100 8 C58 8 26 36 26 72 C26 102 44 124 62 140 C72 149 78 162 76 178 L124 178 C122 162 128 149 138 140 C156 124 174 102 174 72 C174 36 142 8 100 8Z" fill="#C8102E"/>
-  <!-- Blue eagle/arc overlay -->
-  <path d="M100 8 C72 8 50 28 44 55 C38 80 48 102 64 116 C76 127 82 143 82 160 L118 160 C118 143 124 127 136 116 C152 102 162 80 156 55 C150 28 128 8 100 8Z" fill="#002868"/>
-  <!-- Red inner fill -->
-  <path d="M100 22 C76 22 56 40 52 64 C48 86 58 106 72 118 C82 128 87 143 87 158 L113 158 C113 143 118 128 128 118 C142 106 152 86 148 64 C144 40 124 22 100 22Z" fill="#C8102E"/>
-  <!-- Blue 20 text area circle -->
-  <circle cx="100" cy="78" r="26" fill="#002868"/>
-  <!-- 20 over 26 in ball -->
-  <text x="100" y="72" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="14" font-weight="900" fill="white">20</text>
-  <text x="100" y="88" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="14" font-weight="900" fill="#C8102E">26</text>
-  <!-- Thin white lines across middle (stripes) -->
-  <line x1="74" y1="110" x2="126" y2="110" stroke="white" stroke-width="2" opacity="0.5"/>
-  <line x1="76" y1="118" x2="124" y2="118" stroke="white" stroke-width="2" opacity="0.4"/>
-  <line x1="78" y1="126" x2="122" y2="126" stroke="white" stroke-width="2" opacity="0.3"/>
-  <!-- Green lower body -->
-  <path d="M80 155 C70 165 68 175 76 178 L124 178 C132 175 130 165 120 155 Z" fill="#006847"/>
-  <!-- Neck -->
-  <rect x="88" y="178" width="24" height="18" rx="3" fill="#002868"/>
-  <!-- Maple leaf -->
-  <path d="M100 196 L105 204 L114 202 L111 210 L117 215 L109 213 L107 224 L100 219 L93 224 L91 213 L83 215 L89 210 L86 202 L95 204 Z" fill="#C8102E"/>
-  <!-- Green stadium base -->
-  <path d="M78 228 L84 228 L86 244 L114 244 L116 228 L122 228 L125 252 L75 252 Z" fill="#006847"/>
-  <!-- Dark blue base -->
-  <rect x="70" y="252" width="60" height="8" rx="3" fill="#002868"/>
-</svg>
+  <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png" alt="WC26" style="height:46px;width:auto;flex-shrink:0" onerror="this.outerHTML='<span style=&quot;font-size:1.8rem&quot;>🏆</span>'">
   <h1>PORRA MUNDIAL 2026</h1>
   <div class="header-user">
     <span id="header-username" class="user-name"></span>
@@ -1243,6 +1197,25 @@ function toast(msg, isError=false) {
 
 loadData();
 populateLoginSelect();
+
+// Wire up all login buttons with addEventListener (works in all contexts)
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('tab-participant').addEventListener('click', function() { switchLoginTab('participant'); });
+  document.getElementById('tab-admin').addEventListener('click', function() { switchLoginTab('admin'); });
+  document.getElementById('btn-do-login').addEventListener('click', doLogin);
+  document.getElementById('btn-do-admin-login').addEventListener('click', doAdminLogin);
+});
+// Also wire immediately in case DOMContentLoaded already fired
+(function() {
+  var tp = document.getElementById('tab-participant');
+  var ta = document.getElementById('tab-admin');
+  var bl = document.getElementById('btn-do-login');
+  var ba = document.getElementById('btn-do-admin-login');
+  if (tp) tp.addEventListener('click', function() { switchLoginTab('participant'); });
+  if (ta) ta.addEventListener('click', function() { switchLoginTab('admin'); });
+  if (bl) bl.addEventListener('click', doLogin);
+  if (ba) ba.addEventListener('click', doAdminLogin);
+})();
 </script>
 </body>
 </html>
