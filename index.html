@@ -579,6 +579,100 @@ async function saveQuestionBet(user,qid){
 
 function ensureBet(u){if(!BETS[u])BETS[u]={matches:{},groups:{},knockout:{},questions:{}};}
 
+function writableUser(){
+  if(isAdminPreview())return null;
+  return ses.user;
+}
+function normalizeGroupArray(arr){
+  const base=['','','',''];
+  (arr||[]).forEach((v,i)=>{if(i<4)base[i]=v||'';});
+  return base;
+}
+async function persistPath(path,data,label='datos'){
+  try{
+    await fbSet(path,data);
+    return true;
+  }catch(e){
+    console.error('Firebase save error',path,e);
+    toast('Error guardando '+label+': '+e.message,true);
+    return false;
+  }
+}
+async function handleGroupSelectChange(t){
+  if(!t || t.dataset.grp===undefined || t.dataset.pos===undefined)return false;
+  const user=writableUser();
+  if(!user||!canEdit()){toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);return true;}
+
+  ensureBet(user);
+  const grp=t.dataset.grp;
+  const pos=parseInt(t.dataset.pos,10);
+  const val=t.value || '';
+  if(!BETS[user].groups)BETS[user].groups={};
+  const arr=normalizeGroupArray(BETS[user].groups[grp]);
+  const previous=arr[pos]||'';
+
+  if(val && arr.some((x,i)=>i!==pos && x===val)){
+    t.value=previous;
+    toast('⚠️ No puedes repetir el mismo equipo dentro del Grupo '+grp,true);
+    renderGroups();
+    updateTabStatus();
+    return true;
+  }
+
+  arr[pos]=val;
+  BETS[user].groups[grp]=arr;
+  await persistPath(`bets/${user}/groups/${grp}`,arr,'clasificación del Grupo '+grp);
+  renderGroups();
+  updateTabStatus();
+  recalc();
+  return true;
+}
+async function handleKnockoutTeamChange(t){
+  if(!t || !t.dataset.koteam)return false;
+  const user=writableUser();
+  if(!user||!canEdit()){toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);return true;}
+
+  ensureBet(user);
+  const sid=t.dataset.koteam;
+  const side=t.dataset.side;
+  if(!BETS[user].knockout)BETS[user].knockout={};
+  if(!BETS[user].knockout[sid])BETS[user].knockout[sid]={};
+  BETS[user].knockout[sid][side==='A'?'teamA':'teamB']=t.value || '';
+  await persistPath(`bets/${user}/knockout/${sid}`,BETS[user].knockout[sid],'eliminatoria');
+  updateTabStatus();
+  recalc();
+  return true;
+}
+async function handleQuestionInputChange(t){
+  if(!t || !t.dataset.qid)return false;
+  const user=writableUser();
+  if(!user||!canEdit()){toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);return true;}
+
+  ensureBet(user);
+  if(!BETS[user].questions)BETS[user].questions={};
+  BETS[user].questions[t.dataset.qid]=t.value || '';
+  await persistPath(`bets/${user}/questions/${t.dataset.qid}`,BETS[user].questions[t.dataset.qid],'pregunta');
+  updateTabStatus();
+  recalc();
+  return true;
+}
+async function handleKnockoutScoreInput(t){
+  if(!t || !t.dataset.koscore)return false;
+  const user=writableUser();
+  if(!user||!canEdit())return true;
+
+  ensureBet(user);
+  const sid=t.dataset.koscore;
+  const side=t.dataset.side;
+  if(!BETS[user].knockout)BETS[user].knockout={};
+  if(!BETS[user].knockout[sid])BETS[user].knockout[sid]={};
+  BETS[user].knockout[sid][side==='A'?'scoreA':'scoreB']=t.value===''?'':(parseInt(t.value,10)||0);
+  await persistPath(`bets/${user}/knockout/${sid}`,BETS[user].knockout[sid],'eliminatoria');
+  updateTabStatus();
+  recalc();
+  return true;
+}
+
 // ── BOOTSTRAP ─────────────────────────────────────
 async function boot(){
   try{
@@ -826,7 +920,7 @@ function renderGroups(){
   const u=activeUser(),dis=isAdminPreview()||(!canEdit()&&!ses.isAdmin);
   let html=dis?'<div class="lbanner">🔒 Apuestas cerradas.</div>':'';
   html+=Object.entries(GROUPS).map(([g,teams])=>{
-    const br=u?(BETS[u]?.groups?.[g]??[null,null,null,null]):[null,null,null,null];
+    const br=u?normalizeGroupArray(BETS[u]?.groups?.[g]):['','','',''];
     const rr=getReal().groups?.[g]??null;
     const chosen=br.filter(v=>v&&v!=='');
     const dupes=chosen.filter((v,i)=>chosen.indexOf(v)!==i);
@@ -1323,13 +1417,15 @@ document.addEventListener('click',async e=>{
   }
   if(t.closest('[data-ko]')&&!t.closest('select')&&!t.closest('input')){
     const row=t.closest('[data-ko]');if(!row)return;
-    if(!ses.user||!canEdit())return toast('🔒 Cerradas',true);
-    ensureBet(ses.user);
+    const user=writableUser();
+    if(!user||!canEdit())return toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);
+    ensureBet(user);
     const sid=row.dataset.ko,side=row.dataset.side;
-    if(!BETS[ses.user].knockout[sid])BETS[ses.user].knockout[sid]={};
-    BETS[ses.user].knockout[sid].winner=side;
-    await saveKnockoutBet(ses.user,sid);
-    renderKnockout();updateTabStatus();return;
+    if(!BETS[user].knockout)BETS[user].knockout={};
+    if(!BETS[user].knockout[sid])BETS[user].knockout[sid]={};
+    BETS[user].knockout[sid].winner=side;
+    await persistPath(`bets/${user}/knockout/${sid}`,BETS[user].knockout[sid],'eliminatoria');
+    renderKnockout();updateTabStatus();recalc();return;
   }
   if(t.id==='b-addpart'){addPart();return;}
   if(t.dataset.delpart){delPart(t.dataset.delpart);return;}
@@ -1343,42 +1439,19 @@ document.addEventListener('click',async e=>{
 document.addEventListener('change',async e=>{
   const t=e.target;
   if(t.id==='i-admin-user'){ADMIN_VIEW_USER=t.value;renderSelectedUserBets();return;}
-  if(t.dataset.grp!==undefined&&t.dataset.pos!==undefined){
-    if(!ses.user||!canEdit())return toast('🔒 Cerradas',true);
-    ensureBet(ses.user);
-    if(!BETS[ses.user].groups[t.dataset.grp])BETS[ses.user].groups[t.dataset.grp]=[null,null,null,null];
-    BETS[ses.user].groups[t.dataset.grp][parseInt(t.dataset.pos)]=t.value || null;
-    await saveGroupBet(ses.user,t.dataset.grp);
-    renderGroups();updateTabStatus();return;
-  }
-  if(t.dataset.koteam){
-    if(!ses.user||!canEdit())return toast('🔒 Cerradas',true);
-    ensureBet(ses.user);
-    const sid=t.dataset.koteam,side=t.dataset.side;
-    if(!BETS[ses.user].knockout[sid])BETS[ses.user].knockout[sid]={};
-    BETS[ses.user].knockout[sid][side==='A'?'teamA':'teamB']=t.value || null;
-    await saveKnockoutBet(ses.user,sid);
-    updateTabStatus();return;
-  }
-  if(t.dataset.qid){
-    if(!ses.user||isAdminPreview()||(!canEdit()&&!ses.isAdmin))return toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);
-    ensureBet(ses.user);
-    BETS[ses.user].questions[t.dataset.qid]=t.value || null;
-    await saveQuestionBet(ses.user,t.dataset.qid);
-    updateTabStatus();return;
-  }
+  if(await handleGroupSelectChange(t))return;
+  if(await handleKnockoutTeamChange(t))return;
+  if(await handleQuestionInputChange(t))return;
 });
 
+// input cubre preguntas al escribir y algunos navegadores móviles que no disparan change igual en selects.
 document.addEventListener('input',async e=>{
   const t=e.target;
-  if(t.dataset.koscore){
-    if(!ses.user||!canEdit())return;
-    ensureBet(ses.user);
-    const sid=t.dataset.koscore,side=t.dataset.side;
-    if(!BETS[ses.user].knockout[sid])BETS[ses.user].knockout[sid]={};
-    BETS[ses.user].knockout[sid][side==='A'?'scoreA':'scoreB']=t.value===''?null:(parseInt(t.value)||0);
-    await saveKnockoutBet(ses.user,sid);
-    updateTabStatus();
+  if(await handleKnockoutScoreInput(t))return;
+  if(await handleQuestionInputChange(t))return;
+  if(t.matches && t.matches('select')){
+    if(await handleGroupSelectChange(t))return;
+    if(await handleKnockoutTeamChange(t))return;
   }
 });
 
