@@ -618,7 +618,7 @@ let ADMIN_PREVIEW_USER='';
 let _saveTimer=null;
 let QUESTION_SAVE_TIMERS={};
 
-function getReal(){return BETS['__admin__']||{matches:{},groups:{},knockout:{},questions:{}};}
+function getReal(){return normalizeBet(BETS['__admin__']);}
 function isAdminPreview(){return !!(ses.isAdmin && ADMIN_PREVIEW_USER);}
 function activeUser(){return isAdminPreview()?ADMIN_PREVIEW_USER:ses.user;}
 function canEdit(){return isAdminPreview()?false:(ses.isAdmin||!CONFIG.betsLocked);}
@@ -670,7 +670,11 @@ async function saveQuestionBet(user,qid){
   catch(e){ toast('Error guardando pregunta: '+e.message,true); }
 }
 
-function ensureBet(u){if(!BETS[u])BETS[u]={matches:{},groups:{},knockout:{},questions:{}};}
+function ensureBet(u){
+  if(!u)return;
+  if(!BETS[u] || typeof BETS[u] !== 'object') BETS[u]={};
+  BETS[u]=normalizeBet(BETS[u]);
+}
 
 function writableUser(){
   if(isAdminPreview())return null;
@@ -1634,37 +1638,36 @@ document.addEventListener('click',async e=>{
   if(t.id==='b-clear-userbets'){clearUserBets(document.getElementById('i-admin-user').value);return;}
   if(t.id==='b-reset-userpin'){resetUserPin(document.getElementById('i-admin-user').value);return;}
   if(t.dataset.mid&&t.dataset.val){
-    if(!ses.user||!canEdit())return toast(CONFIG.betsLocked?'🔒 Cerradas':'Sin sesión',true);
-    ensureBet(ses.user);
+    const userToWrite = writableUser();
+    if(!userToWrite||!canEdit())return toast(CONFIG.betsLocked?'🔒 Cerradas':'Sin sesión',true);
+    ensureBet(userToWrite);
 
     const mid = t.dataset.mid;
     const val = t.dataset.val;
 
-    if(ses.isAdmin){
-      const prev = BETS[ses.user].matches[mid];
+    if(ses.isAdmin && !isAdminPreview()){
+      const prev = BETS[userToWrite].matches?.[mid];
 
       // El admin introduce el resultado oficial 1/X/2.
       // Si el resultado venía de autorellenar y tenía marcador real, conservamos el marcador.
       if(prev && typeof prev === 'object'){
-        BETS[ses.user].matches[mid] = {
+        BETS[userToWrite].matches[mid] = {
           ...prev,
           result: val,
           manual: true
         };
       }else{
-        BETS[ses.user].matches[mid] = {
+        BETS[userToWrite].matches[mid] = {
           result: val,
-          home: null,
-          away: null,
           manual: true
         };
       }
     }else{
       // Los participantes solo guardan su apuesta.
-      BETS[ses.user].matches[mid] = val;
+      BETS[userToWrite].matches[mid] = val;
     }
 
-    await saveBetSection(ses.user,'matches');
+    await saveBetSection(userToWrite,'matches');
     renderMatches();updateTabStatus();return;
   }
   if(t.id==='b-addpart'){addPart();return;}
