@@ -47,6 +47,18 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .tab{padding:12px 20px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.92rem;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s}
 .tab:hover{color:var(--text)}
 .tab.on{color:var(--gold);border-bottom-color:var(--gold)}
+
+.tab-status{margin-left:8px;font-size:.68rem;padding:2px 6px;border-radius:999px;border:1px solid transparent;vertical-align:middle}
+.tab.incomplete .tab-status{content:'PENDIENTE';color:#fca5a5;background:rgba(230,57,70,.14);border-color:rgba(230,57,70,.45)}
+.tab.done .tab-status{color:#86efac;background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.38)}
+.deadline-pill{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:.78rem;color:var(--muted);white-space:nowrap}
+.deadline-pill.has-date{border-color:var(--gold);color:var(--gold)}
+.rules-body{text-align:left;color:var(--text);font-size:.88rem;line-height:1.45}
+.rules-body h3{font-family:'Bebas Neue',sans-serif;color:var(--gold);letter-spacing:1px;font-size:1rem;margin:13px 0 5px}
+.rules-body ul{margin-left:18px;margin-bottom:8px}
+.rules-body li{margin-bottom:4px}
+.rules-modal{max-width:620px;text-align:left}
+@media(max-width:760px){header{flex-wrap:wrap}.hright{width:100%;justify-content:flex-start;flex-wrap:wrap}.deadline-pill{font-size:.72rem}.tab-status{display:none}}
 /* LAYOUT */
 .main{padding:18px;max-width:1400px;margin:0 auto}
 .panel{display:none}.panel.on{display:block}
@@ -176,6 +188,44 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
   </div>
 </div>
 
+<!-- RULES MODAL -->
+<div class="modal-bg" id="rules-modal">
+  <div class="modal rules-modal">
+    <div class="modal-title" style="text-align:center">📜 REGLAS DE LA PORRA</div>
+    <div class="rules-body">
+      <h3>1) Fase de grupos</h3>
+      <ul>
+        <li>En cada partido se apuesta únicamente el signo: <strong>1</strong> gana el equipo local, <strong>X</strong> empate, <strong>2</strong> gana el equipo visitante.</li>
+        <li>Cada signo acertado suma <strong>10 puntos</strong>.</li>
+      </ul>
+      <h3>2) Clasificaciones de grupo</h3>
+      <ul>
+        <li>Hay que ordenar los 4 equipos de cada grupo del 1º al 4º.</li>
+        <li>Cada posición exacta acertada suma <strong>20 puntos</strong>.</li>
+        <li>No se puede repetir un mismo equipo dentro del mismo grupo.</li>
+      </ul>
+      <h3>3) Eliminatoria</h3>
+      <ul>
+        <li>Hay que seleccionar los equipos de cada cruce, marcar el ganador y rellenar el resultado previsto.</li>
+        <li>Equipo/ganador acertado en la posición exacta: <strong>10 puntos</strong>.</li>
+        <li>Resultado exacto acertado: <strong>20 puntos</strong>.</li>
+      </ul>
+      <h3>4) Preguntas especiales</h3>
+      <ul>
+        <li>Cada pregunta especial acertada suma <strong>30 puntos</strong>.</li>
+        <li>Las respuestas se comparan ignorando mayúsculas/minúsculas y espacios sobrantes.</li>
+      </ul>
+      <h3>5) Cierre de apuestas</h3>
+      <ul>
+        <li>El admin puede establecer una fecha límite. Cuando llegue esa fecha, las apuestas quedan cerradas.</li>
+        <li>Después del cierre, los participantes pueden consultar sus apuestas, pero no modificarlas.</li>
+        <li>El admin puede cargar resultados con <strong>Autorellenar</strong> o corregirlos manualmente.</li>
+      </ul>
+    </div>
+    <button class="lbtn" id="b-rules-close" style="margin-top:14px">ENTENDIDO</button>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app" style="display:none">
   <header>
@@ -187,9 +237,12 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
       <span class="abadge" id="h-badge" style="display:none">ADMIN</span>
     </div>
     <div class="hright">
+      <span class="deadline-pill" id="s-deadline">⏰ Límite: sin establecer</span>
+      <button class="btn sec" id="b-rules">📜 Reglas</button>
       <div id="hdr-fill-zone" style="display:none;align-items:center;gap:8px">
         <span id="s-lastupdate" style="font-size:.72rem;color:var(--muted)"></span>
         <button class="btn grn" id="b-hdr-fill">🔄 Autorellenar</button>
+        <button class="btn sec" id="b-admin-settings">⚙️ Ajustes</button>
       </div>
       <button class="btn sec" id="b-mypin">🔑 Mi PIN</button>
       <button class="btn red" id="b-out">Salir</button>
@@ -197,12 +250,12 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
   </header>
 
   <div class="tabs">
-    <div class="tab on"  data-tab="grupos">FASE DE GRUPOS</div>
-    <div class="tab"     data-tab="clasif">CLASIFICACIONES</div>
-    <div class="tab"     data-tab="elim">ELIMINATORIA</div>
-    <div class="tab"     data-tab="preg">PREGUNTAS</div>
-    <div class="tab"     data-tab="marca">MARCADOR</div>
-    <div class="tab adm" data-tab="admin" style="display:none">⚙️ ADMIN</div>
+    <div class="tab on" data-tab="grupos"><span class="tab-label">FASE DE GRUPOS</span><span class="tab-status"></span></div>
+    <div class="tab" data-tab="clasif"><span class="tab-label">CLASIFICACIONES</span><span class="tab-status"></span></div>
+    <div class="tab" data-tab="elim"><span class="tab-label">ELIMINATORIA</span><span class="tab-status"></span></div>
+    <div class="tab" data-tab="preg"><span class="tab-label">PREGUNTAS</span><span class="tab-status"></span></div>
+    <div class="tab" data-tab="marca"><span class="tab-label">MARCADOR</span></div>
+    <div class="tab adm" data-tab="admin" style="display:none"><span class="tab-label">⚙️ ADMIN</span></div>
   </div>
 
   <div class="main">
@@ -470,7 +523,7 @@ function enterApp(){
   document.getElementById('app').style.display='block';
   document.getElementById('h-user').textContent=ses.isAdmin?'Admin':ses.user;
   document.getElementById('h-badge').style.display=ses.isAdmin?'':'none';
-  document.querySelectorAll('.adm').forEach(el=>el.style.display=ses.isAdmin?'':'none');
+  document.querySelectorAll('.adm').forEach(el=>el.style.display='none');
   document.getElementById('hdr-fill-zone').style.display=ses.isAdmin?'flex':'none';
   document.getElementById('b-mypin').style.display=ses.isAdmin?'none':'';
   ensureBet(ses.user);
@@ -789,12 +842,20 @@ async function unlockBets(){
   catch(e){toast('Error: '+e.message,true);}
 }
 function autoLockUI(){
+  updateDeadlineHeader();
   const el=document.getElementById('s-autolock'),inp=document.getElementById('i-autolock');
   if(!el)return;
   if(CONFIG.autoLockDate){
-    el.textContent='⏰ '+new Date(CONFIG.autoLockDate).toLocaleString('es-ES');
-    if(inp)inp.value=new Date(CONFIG.autoLockDate).toISOString().slice(0,16);
-  }else el.textContent='Sin cierre automático';
+    const d=new Date(CONFIG.autoLockDate);
+    el.textContent='⏰ '+d.toLocaleString('es-ES');
+    if(inp){
+      const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+      inp.value=local.toISOString().slice(0,16);
+    }
+  }else{
+    el.textContent='Sin cierre automático';
+    if(inp)inp.value='';
+  }
 }
 async function setAutoLock(){
   const v=document.getElementById('i-autolock').value;
@@ -855,8 +916,66 @@ async function clearAdminResults(){
 
 // ── UTILS ─────────────────────────────────────────
 function fmtDate(d){return new Date(d+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'long'});}
+function fmtDeadline(d){return new Date(d).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
 function toast(msg,err=false){const e=document.getElementById('toast');e.textContent=msg;e.style.borderColor=err?'var(--red)':'var(--gold)';e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3200);}
-function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();lockUI();recalc();}
+function officialResultOf(v){return v&&typeof v==='object'?v.result:v;}
+function isGroupsCompleteFor(u){
+  const b=BETS[u]?.matches||{};
+  if(ses.isAdmin)return ALL.every(m=>!!officialResultOf(getReal().matches?.[m.id]));
+  return ALL.every(m=>['1','X','2'].includes(b[m.id]));
+}
+function isClassifCompleteFor(u){
+  const g=BETS[u]?.groups||{};
+  return Object.entries(GROUPS).every(([grp,teams])=>{
+    const arr=g[grp]||[];
+    if(arr.length<4)return false;
+    if(arr.some(v=>!v))return false;
+    if(new Set(arr).size!==4)return false;
+    return arr.every(v=>teams.includes(v));
+  });
+}
+function isKnockoutCompleteFor(u){
+  const k=BETS[u]?.knockout||{};
+  return KO_ROUNDS.every(round=>Array.from({length:round.n},(_,i)=>{
+    const sid=`${round.id}_${i}`;
+    const item=k[sid]||{};
+    if(round.id==='winner')return !!item.teamA;
+    return !!item.teamA && !!item.teamB && !!item.winner && item.scoreA!==undefined && item.scoreB!==undefined;
+  }).every(Boolean));
+}
+function isQuestionsCompleteFor(u){
+  const q=BETS[u]?.questions||{};
+  return QUESTIONS.every(x=>(q[x.id]||'').toString().trim()!=='');
+}
+function updateTabStatus(){
+  if(!ses.user)return;
+  const status={
+    grupos:isGroupsCompleteFor(ses.user),
+    clasif:isClassifCompleteFor(ses.user),
+    elim:isKnockoutCompleteFor(ses.user),
+    preg:isQuestionsCompleteFor(ses.user),
+  };
+  Object.entries(status).forEach(([tab,ok])=>{
+    const el=document.querySelector(`.tab[data-tab="${tab}"]`);if(!el)return;
+    const st=el.querySelector('.tab-status');
+    el.classList.toggle('done',ok);
+    el.classList.toggle('incomplete',!ok);
+    if(st)st.textContent=ok?'OK':'PENDIENTE';
+  });
+}
+function updateDeadlineHeader(){
+  const el=document.getElementById('s-deadline');if(!el)return;
+  if(CONFIG.autoLockDate){
+    el.textContent='⏰ Límite: '+fmtDeadline(CONFIG.autoLockDate);
+    el.classList.add('has-date');
+  }else{
+    el.textContent='⏰ Límite: sin establecer';
+    el.classList.remove('has-date');
+  }
+}
+function openRulesModal(){document.getElementById('rules-modal').classList.add('on');}
+function closeRulesModal(){document.getElementById('rules-modal').classList.remove('on');}
+function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();lockUI();autoLockUI();recalc();updateTabStatus();}
 
 // ── EVENT DELEGATION ──────────────────────────────
 document.addEventListener('click',e=>{
@@ -868,6 +987,9 @@ document.addEventListener('click',e=>{
   if(t.id==='b-mypin'){openPinModal();return;}
   if(t.id==='b-out'){doLogout();return;}
   if(t.id==='b-hdr-fill'){autofill();return;}
+  if(t.id==='b-admin-settings'){showTab('admin');return;}
+  if(t.id==='b-rules'){openRulesModal();return;}
+  if(t.id==='b-rules-close'){closeRulesModal();return;}
   if(t.id==='b-pin-ok'){doChangePin();return;}
   if(t.id==='b-pin-no'){closePinModal();return;}
   if(t.dataset.tab){showTab(t.dataset.tab);return;}
@@ -903,7 +1025,7 @@ document.addEventListener('click',e=>{
     }
 
     saveBet(ses.user,BETS[ses.user]);
-    renderMatches();return;
+    renderMatches();updateTabStatus();return;
   }
   if(t.closest('[data-ko]')&&!t.closest('select')&&!t.closest('input')){
     const row=t.closest('[data-ko]');if(!row)return;
@@ -931,7 +1053,7 @@ document.addEventListener('change',e=>{
     ensureBet(ses.user);
     if(!BETS[ses.user].groups[t.dataset.grp])BETS[ses.user].groups[t.dataset.grp]=[null,null,null,null];
     BETS[ses.user].groups[t.dataset.grp][parseInt(t.dataset.pos)]=t.value;
-    renderGroups();saveBet(ses.user,BETS[ses.user]);return;
+    renderGroups();updateTabStatus();saveBet(ses.user,BETS[ses.user]);return;
   }
   if(t.dataset.koteam){
     if(!ses.user||!canEdit())return toast('🔒 Cerradas',true);
@@ -939,13 +1061,13 @@ document.addEventListener('change',e=>{
     const sid=t.dataset.koteam,side=t.dataset.side;
     if(!BETS[ses.user].knockout[sid])BETS[ses.user].knockout[sid]={};
     BETS[ses.user].knockout[sid][side==='A'?'teamA':'teamB']=t.value;
-    saveBet(ses.user,BETS[ses.user]);return;
+    saveBet(ses.user,BETS[ses.user]);updateTabStatus();return;
   }
   if(t.dataset.qid){
     if(!ses.user||(!canEdit()&&!ses.isAdmin))return toast('🔒 Cerradas',true);
     ensureBet(ses.user);
     BETS[ses.user].questions[t.dataset.qid]=t.value;
-    saveBet(ses.user,BETS[ses.user]);return;
+    saveBet(ses.user,BETS[ses.user]);updateTabStatus();return;
   }
 });
 
@@ -958,6 +1080,7 @@ document.addEventListener('input',e=>{
     if(!BETS[ses.user].knockout[sid])BETS[ses.user].knockout[sid]={};
     BETS[ses.user].knockout[sid][side==='A'?'scoreA':'scoreB']=parseInt(t.value)||0;
     saveBet(ses.user,BETS[ses.user]);
+    updateTabStatus();
   }
 });
 
