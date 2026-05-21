@@ -6,6 +6,7 @@
 <title>Porra Mundial 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
+
   :root {
     --gold: #C9A84C; --gold-light: #F0D080;
     --dark: #0A0E1A; --darker: #060910;
@@ -205,20 +206,17 @@
     header h1 { font-size: 1.3rem; }
     .main { padding: 10px; }
   }
+
 </style>
 </head>
 <body>
 
-<!-- ═══ LOGIN SCREEN ═══ -->
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
-    <div style="text-align:center;margin-bottom:10px">
-  <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png"
-    alt="FIFA World Cup 2026" id="login-logo-img"
-    style="width:120px;height:auto;display:block;margin:0 auto"
-    onerror="document.getElementById('login-logo-img').style.display='none';document.getElementById('login-logo-fallback').style.display='block'">
-  <div id="login-logo-fallback" style="display:none;font-size:3rem;margin:8px 0">🏆</div>
-</div>
+    <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png" alt="FIFA World Cup 2026"
+      style="width:120px;height:auto;display:block;margin:0 auto 10px"
+      onerror="this.style.fontSize='3rem';this.style.fontFamily='serif';this.alt='🏆';this.src='';this.removeAttribute('onerror')">
     <div class="login-logo" style="font-size:1.6rem;margin-bottom:2px">PORRA MUNDIAL 2026</div>
     <div class="login-sub">México · USA · Canadá</div>
     <div class="login-tabs">
@@ -229,13 +227,11 @@
       <select class="login-field" id="login-select-user">
         <option value="">— Selecciona tu nombre —</option>
       </select>
-      <input class="login-field" id="login-pin" type="password" placeholder="Tu PIN personal" maxlength="20"
-        onkeydown="if(event.key==='Enter')doLogin()">
+      <input class="login-field" id="login-pin" type="password" placeholder="Tu PIN personal" maxlength="20">
       <button class="login-btn" id="btn-do-login">ENTRAR</button>
     </div>
     <div id="login-admin-form" style="display:none">
-      <input class="login-field" id="login-admin-pin" type="password" placeholder="PIN de administrador" maxlength="20"
-        onkeydown="if(event.key==='Enter')doAdminLogin()">
+      <input class="login-field" id="login-admin-pin" type="password" placeholder="PIN de administrador" maxlength="20">
       <button class="login-btn" id="btn-do-admin-login">ACCEDER COMO ADMIN</button>
     </div>
     <div class="login-error" id="login-error"></div>
@@ -245,67 +241,63 @@
   </div>
 </div>
 
-<!-- ═══ MAIN APP ═══ -->
+<!-- APP -->
 <div id="app" style="display:none">
 
 <header>
-  <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png" alt="WC26" style="height:46px;width:auto;flex-shrink:0" onerror="this.outerHTML='<span style=&quot;font-size:1.8rem&quot;>🏆</span>'">
+  <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png" alt="WC26" style="height:46px;width:auto;flex-shrink:0"
+    onerror="this.outerHTML='<span style=\'font-size:1.6rem\'>🏆</span>'">
   <h1>PORRA MUNDIAL 2026</h1>
   <div class="header-user">
     <span id="header-username" class="user-name"></span>
     <span id="header-admin-badge" class="admin-badge" style="display:none">ADMIN</span>
   </div>
   <div class="header-right">
-    <button class="btn secondary" id="btn-save" onclick="saveData()">💾 Guardar</button>
-    <button class="btn danger" onclick="doLogout()">Salir</button>
+    <button class="btn secondary" id="btn-save">💾 Guardar</button>
+    <button class="btn danger" id="btn-logout">Salir</button>
   </div>
 </header>
 
-<nav class="tabs" id="main-tabs">
-  <div class="tab active" onclick="showTab('fase-grupos')">FASE DE GRUPOS</div>
-  <div class="tab" onclick="showTab('clasificaciones')">CLASIFICACIONES</div>
-  <div class="tab" onclick="showTab('eliminatoria')">ELIMINATORIA</div>
-  <div class="tab" onclick="showTab('preguntas')">PREGUNTAS</div>
-  <div class="tab" onclick="showTab('marcador')">MARCADOR</div>
-  <div class="tab admin-only" onclick="showTab('admin')" style="display:none">⚙️ ADMIN</div>
+<nav class="tabs">
+  <div class="tab active" id="nav-fase-grupos">FASE DE GRUPOS</div>
+  <div class="tab" id="nav-clasificaciones">CLASIFICACIONES</div>
+  <div class="tab" id="nav-eliminatoria">ELIMINATORIA</div>
+  <div class="tab" id="nav-preguntas">PREGUNTAS</div>
+  <div class="tab" id="nav-marcador">MARCADOR</div>
+  <div class="tab admin-only" id="nav-admin" style="display:none">⚙️ ADMIN</div>
 </nav>
 
 <div class="main">
 
-  <!-- FASE DE GRUPOS -->
   <div id="panel-fase-grupos" class="panel active">
     <div class="autofill-bar">
       <div class="autofill-status">🤖 Resultados: <span id="autofill-status">No actualizado</span></div>
-      <button class="btn secondary admin-only" onclick="autofillResults()" id="btn-autofill" style="display:none">🔄 Autorellenar</button>
-      <button class="btn secondary admin-only" onclick="clearResults()" style="display:none">🗑️ Limpiar</button>
+      <button class="btn secondary admin-only" id="btn-autofill" style="display:none">🔄 Autorellenar</button>
+      <button class="btn secondary admin-only" id="btn-clear-results" style="display:none">🗑️ Limpiar</button>
     </div>
     <div id="matches-container"></div>
   </div>
 
-  <!-- CLASIFICACIONES -->
   <div id="panel-clasificaciones" class="panel">
     <div class="info-box">📊 Pronostica el orden final de clasificación de cada grupo. <strong>20 puntos</strong> por cada posición acertada.</div>
     <div class="group-grid" id="groups-container"></div>
   </div>
 
-  <!-- ELIMINATORIA -->
   <div id="panel-eliminatoria" class="panel">
     <div class="info-box">🏆 Pronostica equipos y resultados. <strong>10 pts</strong> equipo acertado en la posición exacta del cuadro · <strong>20 pts</strong> resultado exacto.</div>
     <div class="bracket-container"><div class="bracket" id="bracket-container"></div></div>
   </div>
 
-  <!-- PREGUNTAS -->
   <div id="panel-preguntas" class="panel">
     <div class="info-box">❓ Preguntas especiales — <strong>30 puntos</strong> por acierto.</div>
     <div class="questions-grid" id="questions-container"></div>
   </div>
 
-  <!-- MARCADOR -->
   <div id="panel-marcador" class="panel">
     <div class="card">
       <div class="card-header">
         <span class="card-title">🏆 CLASIFICACIÓN GENERAL</span>
-        <button class="btn secondary" onclick="recalcAll()" style="margin-left:auto;padding:5px 11px;font-size:0.82rem">Recalcular</button>
+        <button class="btn secondary" id="btn-recalc" style="margin-left:auto;padding:5px 11px;font-size:0.82rem">Recalcular</button>
       </div>
       <div class="card-body" style="padding:0">
         <table class="scoreboard-table" id="scoreboard"></table>
@@ -313,67 +305,58 @@
     </div>
   </div>
 
-  <!-- ADMIN -->
   <div id="panel-admin" class="panel">
-
-    <!-- Estado apuestas -->
     <div class="card">
       <div class="card-header"><span class="card-title">🔒 CONTROL DE APUESTAS</span></div>
       <div class="card-body">
-        <div class="info-box">Cuando cierres las apuestas, los participantes ya no podrán modificar sus pronósticos. También puedes fijar una fecha/hora de cierre automático.</div>
+        <div class="info-box">Cuando cierres las apuestas, los participantes no podrán modificar sus pronósticos.</div>
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
-          <button class="btn danger" onclick="lockBets()" id="btn-lock">🔒 CERRAR APUESTAS YA</button>
-          <button class="btn green" onclick="unlockBets()" id="btn-unlock" style="display:none">🔓 ABRIR APUESTAS</button>
+          <button class="btn danger" id="btn-lock">🔒 CERRAR APUESTAS YA</button>
+          <button class="btn green" id="btn-unlock" style="display:none">🔓 ABRIR APUESTAS</button>
           <span id="lock-status" style="color:var(--muted);font-size:0.85rem"></span>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <label style="color:var(--muted);font-size:0.85rem">⏰ Cierre automático:</label>
           <input type="datetime-local" class="admin-input" id="auto-lock-input" style="width:220px">
-          <button class="btn secondary" onclick="setAutoLock()">Guardar fecha</button>
-          <button class="btn secondary" onclick="clearAutoLock()">Quitar</button>
+          <button class="btn secondary" id="btn-set-autolock">Guardar fecha</button>
+          <button class="btn secondary" id="btn-clear-autolock">Quitar</button>
           <span id="auto-lock-status" style="color:var(--gold);font-size:0.82rem"></span>
         </div>
       </div>
     </div>
-
-    <!-- Participantes -->
     <div class="card">
       <div class="card-header"><span class="card-title">👥 PARTICIPANTES</span></div>
       <div class="card-body">
         <div id="participants-list" style="margin-bottom:14px"></div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <input class="admin-input" id="new-name" placeholder="Nombre" style="width:160px" onkeydown="if(event.key==='Enter')addParticipant()">
-          <input class="admin-input" id="new-pin" type="password" placeholder="PIN personal" style="width:140px" onkeydown="if(event.key==='Enter')addParticipant()">
-          <button class="btn" onclick="addParticipant()">Añadir</button>
+          <input class="admin-input" id="new-name" placeholder="Nombre" style="width:160px">
+          <input class="admin-input" id="new-pin" type="password" placeholder="PIN personal" style="width:140px">
+          <button class="btn" id="btn-add-participant">Añadir</button>
         </div>
       </div>
     </div>
-
-    <!-- Resultados reales -->
     <div class="card">
       <div class="card-header"><span class="card-title">📋 RESULTADOS REALES</span></div>
       <div class="card-body">
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn green" onclick="autofillResults()">🤖 Autorellenar con IA</button>
-          <button class="btn secondary" onclick="exportData()">📤 Exportar JSON</button>
-          <button class="btn secondary" onclick="importDataClick()">📥 Importar JSON</button>
-          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+          <button class="btn green" id="btn-autofill2">🤖 Autorellenar con IA</button>
+          <button class="btn secondary" id="btn-export">📤 Exportar JSON</button>
+          <button class="btn secondary" id="btn-import-click">📥 Importar JSON</button>
+          <input type="file" id="import-file" accept=".json" style="display:none">
         </div>
       </div>
     </div>
-
-    <!-- PIN Admin -->
     <div class="card">
       <div class="card-header"><span class="card-title">🔑 PIN DE ADMINISTRADOR</span></div>
       <div class="card-body">
         <div style="display:flex;gap:10px;align-items:center">
           <input class="admin-input" id="new-admin-pin" type="password" placeholder="Nuevo PIN admin" style="width:200px">
-          <button class="btn secondary" onclick="changeAdminPin()">Cambiar PIN</button>
+          <button class="btn secondary" id="btn-change-pin">Cambiar PIN</button>
         </div>
       </div>
     </div>
+  </div>
 
-  </div><!-- /admin -->
 </div><!-- /main -->
 </div><!-- /app -->
 
@@ -1191,31 +1174,65 @@ function toast(msg, isError=false) {
   setTimeout(() => el.classList.remove('show'), 3000);
 }
 
+
+
 // ═══════════════════════════════════════════
-// INIT
+// INIT — all event wiring here, after DOM ready
 // ═══════════════════════════════════════════
 
 loadData();
-populateLoginSelect();
 
-// Wire up all login buttons with addEventListener (works in all contexts)
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('tab-participant').addEventListener('click', function() { switchLoginTab('participant'); });
-  document.getElementById('tab-admin').addEventListener('click', function() { switchLoginTab('admin'); });
+window.addEventListener('load', function() {
+
+  // ── LOGIN ──
+  populateLoginSelect();
+
+  document.getElementById('tab-participant').addEventListener('click', function() {
+    switchLoginTab('participant');
+  });
+  document.getElementById('tab-admin').addEventListener('click', function() {
+    switchLoginTab('admin');
+  });
   document.getElementById('btn-do-login').addEventListener('click', doLogin);
+  document.getElementById('login-pin').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
   document.getElementById('btn-do-admin-login').addEventListener('click', doAdminLogin);
+  document.getElementById('login-admin-pin').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doAdminLogin();
+  });
+
+  // ── HEADER ──
+  document.getElementById('btn-save').addEventListener('click', saveData);
+  document.getElementById('btn-logout').addEventListener('click', doLogout);
+
+  // ── TABS ──
+  ['fase-grupos','clasificaciones','eliminatoria','preguntas','marcador','admin'].forEach(function(tab) {
+    var el = document.getElementById('nav-' + tab);
+    if (el) el.addEventListener('click', function() { showTab(tab); });
+  });
+
+  // ── ADMIN BUTTONS ──
+  document.getElementById('btn-autofill').addEventListener('click', autofillResults);
+  document.getElementById('btn-autofill2').addEventListener('click', autofillResults);
+  document.getElementById('btn-clear-results').addEventListener('click', clearResults);
+  document.getElementById('btn-lock').addEventListener('click', lockBets);
+  document.getElementById('btn-unlock').addEventListener('click', unlockBets);
+  document.getElementById('btn-set-autolock').addEventListener('click', setAutoLock);
+  document.getElementById('btn-clear-autolock').addEventListener('click', clearAutoLock);
+  document.getElementById('btn-add-participant').addEventListener('click', addParticipant);
+  document.getElementById('new-name').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') addParticipant();
+  });
+  document.getElementById('btn-recalc').addEventListener('click', recalcAll);
+  document.getElementById('btn-export').addEventListener('click', exportData);
+  document.getElementById('btn-import-click').addEventListener('click', function() {
+    document.getElementById('import-file').click();
+  });
+  document.getElementById('import-file').addEventListener('change', importData);
+  document.getElementById('btn-change-pin').addEventListener('click', changeAdminPin);
+
 });
-// Also wire immediately in case DOMContentLoaded already fired
-(function() {
-  var tp = document.getElementById('tab-participant');
-  var ta = document.getElementById('tab-admin');
-  var bl = document.getElementById('btn-do-login');
-  var ba = document.getElementById('btn-do-admin-login');
-  if (tp) tp.addEventListener('click', function() { switchLoginTab('participant'); });
-  if (ta) ta.addEventListener('click', function() { switchLoginTab('admin'); });
-  if (bl) bl.addEventListener('click', doLogin);
-  if (ba) ba.addEventListener('click', doAdminLogin);
-})();
 </script>
 </body>
 </html>
