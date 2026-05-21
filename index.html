@@ -150,6 +150,82 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gold);letter-spacing:2px;margin-bottom:18px}
 #toast{position:fixed;bottom:20px;right:20px;background:var(--card2);border:1px solid var(--gold);color:var(--text);padding:10px 16px;border-radius:10px;font-size:.86rem;z-index:99999;transform:translateY(80px);opacity:0;transition:all .3s}
 #toast.show{transform:translateY(0);opacity:1}
+
+
+/* RESPONSIVE + TOOLTIP FIX */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+.tab.incomplete .tab-status::after,.tab.incomplete .tab-status::before{display:none!important}
+.tab-tooltip{display:none;position:fixed;z-index:200000;background:var(--card);border:1px solid var(--gold);color:var(--text);border-radius:10px;padding:9px 12px;font-size:.8rem;font-weight:700;line-height:1.25;box-shadow:0 12px 30px rgba(0,0,0,.55);max-width:min(280px,calc(100vw - 16px));text-align:center;pointer-events:none}
+.preview-bar{background:rgba(201,168,76,.12);border-bottom:1px solid var(--gold);padding:9px 18px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;color:var(--gold);font-size:.86rem;font-weight:700;position:sticky;top:70px;z-index:95}
+.preview-bar .btn{padding:4px 10px;font-size:.78rem}
+
+@media(max-width:900px){
+  header{position:sticky;top:0;z-index:120;display:grid;grid-template-columns:auto 1fr;gap:8px 10px;padding:10px 12px}
+  header img{height:34px!important}
+  header h1{font-size:1.35rem;letter-spacing:2px;align-self:center}
+  .huser{grid-column:1/3;width:max-content;max-width:100%;font-size:.8rem;padding:4px 9px}
+  .hright{grid-column:1/3;margin-left:0;width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;align-items:stretch}
+  .hright .btn,.deadline-pill{width:100%;text-align:center;justify-content:center;display:flex;align-items:center;min-height:36px;padding:7px 8px}
+  #hdr-fill-zone{display:contents!important}
+  #s-lastupdate{grid-column:1/3;text-align:center;min-height:14px}
+  #hdr-fill-zone[style*="none"]{display:none!important}
+  .tabs{position:sticky;top:128px;z-index:90;overflow-x:auto;scroll-snap-type:x proximity;background:var(--card)}
+  .tab{padding:11px 14px;scroll-snap-align:start;font-size:.86rem}
+  .preview-bar{top:128px;padding:8px 12px;font-size:.8rem}
+  .main{padding:12px;max-width:100%}
+  .modal{width:92vw;max-height:88vh;overflow:auto;padding:22px}
+  .rules-modal{max-width:92vw}
+}
+
+@media(max-width:680px){
+  .card{border-radius:10px;margin-bottom:12px}
+  .ch{padding:9px 11px}
+  .cb{padding:10px}
+  .info,.lbanner{font-size:.78rem;padding:9px 10px}
+  .mrow{grid-template-columns:1fr 54px 1fr;grid-template-areas:"date date pts" "home score away" "buttons buttons buttons";gap:7px 8px;padding:11px 0}
+  .mrow .mdate{grid-area:date;text-align:left}
+  .mrow .thome{grid-area:home;text-align:right;font-size:.86rem}
+  .mrow .rreal{grid-area:score;font-size:1rem}
+  .mrow > .tname:not(.thome){grid-area:away;text-align:left;font-size:.86rem}
+  .mrow .bgrp{grid-area:buttons;justify-content:center}
+  .mrow .pts{grid-area:pts;justify-self:end}
+  .bbtn{min-width:44px;padding:7px 12px}
+  .ggrid{grid-template-columns:1fr;gap:10px}
+  .grow{padding:8px 10px}
+  .gsel{min-width:0;width:100%;font-size:.86rem;padding:7px 8px}
+  .qgrid{grid-template-columns:1fr;gap:9px}
+  .qrow{flex-direction:column;align-items:stretch;gap:8px}
+  .qinput{width:100%}
+  .qrow > div:last-child{align-items:stretch!important}
+  .bcon{overflow-x:visible;padding-bottom:0}
+  .bracket{display:block;min-width:0;width:100%}
+  .bround{min-width:0;width:100%;padding:0;margin-bottom:14px}
+  .br-r32 .bmatch,.br-r16 .bmatch,.br-sf .bmatch,.br-final .bmatch{margin-bottom:8px}
+  .br-winner{padding-top:0}
+  .bteam{padding:8px}
+  .bscore{width:42px;padding:6px 2px}
+  .kosel{font-size:.9rem}
+  .stable{min-width:650px}
+  #p-marca .cb{overflow-x:auto}
+  .prow{flex-wrap:wrap;align-items:flex-start;gap:7px}
+  .prow span:first-child{flex-basis:100%}
+  .prow .btn{flex:1 1 46%;padding:7px 8px!important}
+  .admin-tools{grid-template-columns:1fr}
+  .bet-line{flex-direction:column;gap:2px}
+  .bet-line span:last-child{text-align:left}
+}
+
+@media(max-width:420px){
+  header h1{font-size:1.15rem;letter-spacing:1.6px}
+  .hright{grid-template-columns:1fr}
+  #s-lastupdate{grid-column:1}
+  .tabs{top:172px}
+  .preview-bar{top:172px}
+  .tab{font-size:.8rem;padding:10px 12px}
+  .tab-status{width:17px;height:17px;margin-left:5px}
+  .main{padding:10px 8px}
+}
+
 </style>
 </head>
 <body>
@@ -260,6 +336,8 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
       <button class="btn red" id="b-out">Salir</button>
     </div>
   </header>
+
+  <div id="preview-bar" class="preview-bar" style="display:none"></div>
 
   <div class="tabs">
     <div class="tab on" data-tab="grupos"><span class="tab-label">FASE DE GRUPOS</span><span class="tab-status"></span></div>
@@ -444,10 +522,13 @@ const DEFAULT_USER_PIN='1234';
 let ses={user:null,isAdmin:false};
 let forcePinChange=false;
 let ADMIN_VIEW_USER='';
+let ADMIN_PREVIEW_USER='';
 let _saveTimer=null;
 
 function getReal(){return BETS['__admin__']||{matches:{},groups:{},knockout:{},questions:{}};}
-function canEdit(){return ses.isAdmin||!CONFIG.betsLocked;}
+function isAdminPreview(){return !!(ses.isAdmin && ADMIN_PREVIEW_USER);}
+function activeUser(){return isAdminPreview()?ADMIN_PREVIEW_USER:ses.user;}
+function canEdit(){return isAdminPreview()?false:(ses.isAdmin||!CONFIG.betsLocked);}
 
 // ── FIREBASE R/W ──────────────────────────────────
 async function fbGet(path){
@@ -583,6 +664,7 @@ function enterApp(){
 }
 function doLogout(){
   forcePinChange=false;
+  ADMIN_PREVIEW_USER='';
   ses={user:null,isAdmin:false};
   document.getElementById('app').style.display='none';
   document.getElementById('pin-modal').classList.remove('on');
@@ -641,7 +723,7 @@ function showTab(tab){
 
 // ── RENDER MATCHES ────────────────────────────────
 function renderMatches(){
-  const u=ses.user,locked=CONFIG.betsLocked&&!ses.isAdmin;
+  const u=activeUser(),locked=isAdminPreview()||(CONFIG.betsLocked&&!ses.isAdmin);
   const byDate={};
   ALL.forEach(m=>{if(!byDate[m.date])byDate[m.date]=[];byDate[m.date].push(m);});
   let html=locked?'<div class="lbanner">🔒 Apuestas cerradas. No puedes modificar pronósticos.</div>':'';
@@ -669,7 +751,7 @@ function mrowHTML(m,u,locked){
 
     // Admin: marcamos el resultado oficial.
     // Participante: marcamos su apuesta.
-    const selected = ses.isAdmin ? realResult : bet;
+    const selected = (ses.isAdmin && !isAdminPreview()) ? realResult : bet;
 
     if(selected === v){
       c += ` bs${k}`;
@@ -697,7 +779,7 @@ function mrowHTML(m,u,locked){
     rd = realResult;
   }
 
-  const pts = !ses.isAdmin && realResult && bet
+  const pts = (!ses.isAdmin || isAdminPreview()) && realResult && bet
     ? (bet === realResult ? '+10' : '')
     : '';
 
@@ -717,7 +799,7 @@ function mrowHTML(m,u,locked){
 
 // ── RENDER GROUPS ─────────────────────────────────
 function renderGroups(){
-  const u=ses.user,dis=!canEdit()&&!ses.isAdmin;
+  const u=activeUser(),dis=isAdminPreview()||(!canEdit()&&!ses.isAdmin);
   let html=dis?'<div class="lbanner">🔒 Apuestas cerradas.</div>':'';
   html+=Object.entries(GROUPS).map(([g,teams])=>{
     const br=u?(BETS[u]?.groups?.[g]??[null,null,null,null]):[null,null,null,null];
@@ -752,7 +834,7 @@ function koSrc(rid,i){
   return['Ganador Final',''];
 }
 function renderKnockout(){
-  const u=ses.user,dis=!canEdit()&&!ses.isAdmin;
+  const u=activeUser(),dis=isAdminPreview()||(!canEdit()&&!ses.isAdmin);
   document.getElementById('c-bracket').innerHTML=KO_ROUNDS.map(round=>{
     const items=Array.from({length:round.n},(_,i)=>{
       const sid=`${round.id}_${i}`;
@@ -784,7 +866,7 @@ function renderKnockout(){
 
 // ── RENDER QUESTIONS ──────────────────────────────
 function renderQuestions(){
-  const u=ses.user,dis=!canEdit()&&!ses.isAdmin;
+  const u=activeUser(),dis=isAdminPreview()||(!canEdit()&&!ses.isAdmin);
   let html=dis?'<div class="lbanner">🔒 Apuestas cerradas.</div>':'';
   html+=QUESTIONS.map(q=>{
     const bv=u?(BETS[u]?.questions?.[q.id]??''):'';
@@ -847,7 +929,7 @@ function renderParts(){
     return `<div class="prow">
       <span style="font-weight:600;flex:1">${u.name}</span>
       <span style="color:var(--muted);font-size:.78rem;margin-right:8px">${total} bloques${u.mustChangePin?' · PIN inicial':''}</span>
-      <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-viewpart="${u.name}">Ver</button>
+      <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-viewpart="${u.name}">Vista</button>
       <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-resetpin="${u.name}">PIN 1234</button>
       <button class="btn red" style="padding:3px 8px;font-size:.75rem" data-clearbets="${u.name}">Borrar apuestas</button>
       <button class="btn red" style="padding:3px 8px;font-size:.75rem" data-delpart="${u.name}">🗑️</button>
@@ -1060,7 +1142,7 @@ function updateTabStatus(){
   const managedTabs=['grupos','clasif','elim','preg'];
 
   // El admin gestiona resultados confirmados: no mostramos avisos de pendiente/OK.
-  if(!ses.user || ses.isAdmin){
+  if(!ses.user || (ses.isAdmin && !isAdminPreview())){
     managedTabs.forEach(tab=>{
       const el=document.querySelector(`.tab[data-tab="${tab}"]`);if(!el)return;
       const st=el.querySelector('.tab-status');
@@ -1071,10 +1153,10 @@ function updateTabStatus(){
   }
 
   const status={
-    grupos:{ok:isGroupsCompleteFor(ses.user),tip:'Faltan partidos por apostar'},
-    clasif:{ok:isClassifCompleteFor(ses.user),tip:'Faltan clasificaciones por completar'},
-    elim:{ok:isKnockoutCompleteFor(ses.user),tip:'Faltan cruces, ganadores o resultados'},
-    preg:{ok:isQuestionsCompleteFor(ses.user),tip:'Faltan preguntas por responder'},
+    grupos:{ok:isGroupsCompleteFor(activeUser()),tip:'Faltan partidos por apostar'},
+    clasif:{ok:isClassifCompleteFor(activeUser()),tip:'Faltan clasificaciones por completar'},
+    elim:{ok:isKnockoutCompleteFor(activeUser()),tip:'Faltan cruces, ganadores o resultados'},
+    preg:{ok:isQuestionsCompleteFor(activeUser()),tip:'Faltan preguntas por responder'},
   };
 
   Object.entries(status).forEach(([tab,info])=>{
@@ -1097,12 +1179,16 @@ function showTabTooltip(target){
   if(!text)return;
   tip.textContent=text;
   tip.style.display='block';
+  tip.style.left='8px';
+  tip.style.top='8px';
   const r=target.getBoundingClientRect();
   const tr=tip.getBoundingClientRect();
   let left=r.left+(r.width/2)-(tr.width/2);
   left=Math.max(8,Math.min(left,window.innerWidth-tr.width-8));
-  let top=r.bottom+8;
-  if(top+tr.height>window.innerHeight-8)top=r.top-tr.height-8;
+  // Lo mostramos por debajo si cabe; si no, por encima. Nunca pegado al borde.
+  let top=r.bottom+10;
+  if(top+tr.height>window.innerHeight-8)top=r.top-tr.height-10;
+  top=Math.max(8,Math.min(top,window.innerHeight-tr.height-8));
   tip.style.left=left+'px';
   tip.style.top=top+'px';
 }
@@ -1110,6 +1196,34 @@ function hideTabTooltip(){const tip=document.getElementById('tab-tooltip');if(ti
 document.addEventListener('mouseover',e=>{const st=e.target.closest('.tab-status');if(st&&st.textContent==='!')showTabTooltip(st);});
 document.addEventListener('mouseout',e=>{if(e.target.closest('.tab-status'))hideTabTooltip();});
 document.addEventListener('scroll',hideTabTooltip,true);
+
+
+function enterUserPreview(name){
+  if(!ses.isAdmin)return;
+  if(!USERS.some(u=>u.name===name))return toast('Selecciona un usuario válido',true);
+  ADMIN_PREVIEW_USER=name;
+  ensureBet(name);
+  document.getElementById('h-user').textContent='Admin';
+  showTab('grupos');
+  renderAll();
+  toast(`👁️ Viendo la porra de ${name}`);
+}
+function exitUserPreview(){
+  ADMIN_PREVIEW_USER='';
+  document.getElementById('h-user').textContent=ses.isAdmin?'Admin':ses.user;
+  renderAll();
+  showTab('admin');
+}
+function updatePreviewBar(){
+  const el=document.getElementById('preview-bar');if(!el)return;
+  if(isAdminPreview()){
+    el.style.display='flex';
+    el.innerHTML=`<span>👁️ Vista previa como <strong>${ADMIN_PREVIEW_USER}</strong>. Los campos están bloqueados para no modificar su porra.</span><button class="btn sec" id="b-exit-preview">Salir de vista ${ADMIN_PREVIEW_USER}</button>`;
+  }else{
+    el.style.display='none';
+    el.innerHTML='';
+  }
+}
 
 function updateDeadlineHeader(){
   const el=document.getElementById('s-deadline');if(!el)return;
@@ -1123,7 +1237,7 @@ function updateDeadlineHeader(){
 }
 function openRulesModal(){document.getElementById('rules-modal').classList.add('on');}
 function closeRulesModal(){document.getElementById('rules-modal').classList.remove('on');}
-function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();recalc();updateTabStatus();}
+function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();recalc();updateTabStatus();updatePreviewBar();}
 
 // ── EVENT DELEGATION ──────────────────────────────
 document.addEventListener('click',e=>{
@@ -1135,17 +1249,18 @@ document.addEventListener('click',e=>{
   if(t.id==='b-mypin'){openPinModal();return;}
   if(t.id==='b-out'){doLogout();return;}
   if(t.id==='b-hdr-fill'){autofill();return;}
-  if(t.id==='b-admin-settings'){showTab('admin');return;}
+  if(t.id==='b-admin-settings'){if(isAdminPreview())ADMIN_PREVIEW_USER='';renderAll();showTab('admin');return;}
+  if(t.id==='b-exit-preview'){exitUserPreview();return;}
   if(t.id==='b-rules'){openRulesModal();return;}
   if(t.id==='b-rules-close'){closeRulesModal();return;}
   if(t.id==='b-pin-ok'){doChangePin();return;}
   if(t.id==='b-pin-no'){closePinModal();return;}
   const tabTarget=t.closest('[data-tab]');
   if(tabTarget){showTab(tabTarget.dataset.tab);return;}
-  if(t.dataset.viewpart){ADMIN_VIEW_USER=t.dataset.viewpart;renderAdminUserTools();showTab('admin');return;}
+  if(t.dataset.viewpart){ADMIN_VIEW_USER=t.dataset.viewpart;renderAdminUserTools();enterUserPreview(t.dataset.viewpart);return;}
   if(t.dataset.resetpin){resetUserPin(t.dataset.resetpin);return;}
   if(t.dataset.clearbets){clearUserBets(t.dataset.clearbets);return;}
-  if(t.id==='b-view-userbets'){ADMIN_VIEW_USER=document.getElementById('i-admin-user').value;renderSelectedUserBets();return;}
+  if(t.id==='b-view-userbets'){ADMIN_VIEW_USER=document.getElementById('i-admin-user').value;renderSelectedUserBets();enterUserPreview(ADMIN_VIEW_USER);return;}
   if(t.id==='b-clear-userbets'){clearUserBets(document.getElementById('i-admin-user').value);return;}
   if(t.id==='b-reset-userpin'){resetUserPin(document.getElementById('i-admin-user').value);return;}
   if(t.dataset.mid&&t.dataset.val){
@@ -1220,7 +1335,7 @@ document.addEventListener('change',e=>{
     saveBet(ses.user,BETS[ses.user]);updateTabStatus();return;
   }
   if(t.dataset.qid){
-    if(!ses.user||(!canEdit()&&!ses.isAdmin))return toast('🔒 Cerradas',true);
+    if(!ses.user||isAdminPreview()||(!canEdit()&&!ses.isAdmin))return toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);
     ensureBet(ses.user);
     BETS[ses.user].questions[t.dataset.qid]=t.value;
     saveBet(ses.user,BETS[ses.user]);updateTabStatus();return;
