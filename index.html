@@ -149,13 +149,15 @@
   .br-winner { padding-top: 56px; }
   .bracket-match { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 9px; }
   .bracket-team { display: flex; align-items: center; padding: 6px 9px; gap: 7px;
-    border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+    border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; overflow: hidden; }
   .bracket-team:last-child { border-bottom: none; }
   .bracket-team:hover:not(.locked) { background: var(--card2); }
   .bracket-team.winner-selected { background: rgba(201,168,76,0.18); }
   .bracket-team-name { flex: 1; font-size: 0.82rem; font-weight: 600; }
-  .bracket-score { width: 30px; background: var(--darker); border: 1px solid var(--border); color: var(--text);
-    text-align: center; padding: 2px 3px; border-radius: 4px; font-size: 0.82rem; }
+  .bracket-score { width: 34px; background: var(--darker); border: 1px solid var(--border); color: var(--text);
+    text-align: center; padding: 3px 2px; border-radius: 4px; font-size: 0.82rem; -moz-appearance: textfield; }
+  .bracket-score::-webkit-outer-spin-button,
+  .bracket-score::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .bracket-score:focus { outline: none; border-color: var(--gold); }
 
   /* QUESTIONS */
@@ -207,8 +209,27 @@
 <!-- ═══ LOGIN SCREEN ═══ -->
 <div id="login-screen">
   <div class="login-box">
-    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/5/5c/2026_FIFA_World_Cup_emblem.svg/400px-2026_FIFA_World_Cup_emblem.svg.png"
-      alt="FIFA World Cup 2026" style="width:140px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130" style="width:110px;height:auto;display:block;margin:0 auto 12px">
+  <!-- Trophy cup body -->
+  <ellipse cx="50" cy="52" rx="28" ry="30" fill="none" stroke="#C8102E" stroke-width="4"/>
+  <!-- Inner swirl red -->
+  <path d="M30 38 Q50 20 70 38 Q80 55 65 68 Q50 78 35 68 Q20 55 30 38Z" fill="#C8102E" opacity="0.85"/>
+  <!-- Blue arc -->
+  <path d="M26 42 Q50 15 74 42" fill="none" stroke="#002868" stroke-width="5" stroke-linecap="round"/>
+  <!-- Green bottom -->
+  <path d="M35 75 Q50 82 65 75 L62 90 L38 90 Z" fill="#006847"/>
+  <!-- Maple leaf base -->
+  <path d="M42 90 L42 95 Q50 92 58 95 L58 90 Z" fill="#C8102E"/>
+  <!-- Stem -->
+  <rect x="46" y="90" width="8" height="12" rx="2" fill="#006847"/>
+  <!-- Base -->
+  <rect x="36" y="102" width="28" height="6" rx="3" fill="#002868"/>
+  <!-- Ball -->
+  <circle cx="50" cy="54" r="7" fill="white" stroke="#002868" stroke-width="1.5"/>
+  <path d="M44 52 Q50 48 56 52 Q53 58 50 59 Q47 58 44 52Z" fill="#002868" opacity="0.4"/>
+  <!-- 2026 text -->
+  <text x="50" y="122" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="10" font-weight="900" fill="#002868">2026</text>
+</svg>
     <div class="login-logo" style="font-size:1.6rem;margin-bottom:2px">PORRA MUNDIAL 2026</div>
     <div class="login-sub">México · USA · Canadá</div>
     <div class="login-tabs">
@@ -239,8 +260,27 @@
 <div id="app" style="display:none">
 
 <header>
-  <img src="https://upload.wikimedia.org/wikipedia/en/thumb/5/5c/2026_FIFA_World_Cup_emblem.svg/400px-2026_FIFA_World_Cup_emblem.svg.png"
-    alt="WC26" style="height:44px;width:auto">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130" style="height:42px;width:auto;flex-shrink:0">
+  <!-- Trophy cup body -->
+  <ellipse cx="50" cy="52" rx="28" ry="30" fill="none" stroke="#C8102E" stroke-width="4"/>
+  <!-- Inner swirl red -->
+  <path d="M30 38 Q50 20 70 38 Q80 55 65 68 Q50 78 35 68 Q20 55 30 38Z" fill="#C8102E" opacity="0.85"/>
+  <!-- Blue arc -->
+  <path d="M26 42 Q50 15 74 42" fill="none" stroke="#002868" stroke-width="5" stroke-linecap="round"/>
+  <!-- Green bottom -->
+  <path d="M35 75 Q50 82 65 75 L62 90 L38 90 Z" fill="#006847"/>
+  <!-- Maple leaf base -->
+  <path d="M42 90 L42 95 Q50 92 58 95 L58 90 Z" fill="#C8102E"/>
+  <!-- Stem -->
+  <rect x="46" y="90" width="8" height="12" rx="2" fill="#006847"/>
+  <!-- Base -->
+  <rect x="36" y="102" width="28" height="6" rx="3" fill="#002868"/>
+  <!-- Ball -->
+  <circle cx="50" cy="54" r="7" fill="white" stroke="#002868" stroke-width="1.5"/>
+  <path d="M44 52 Q50 48 56 52 Q53 58 50 59 Q47 58 44 52Z" fill="#002868" opacity="0.4"/>
+  <!-- 2026 text -->
+  <text x="50" y="122" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="10" font-weight="900" fill="#002868">2026</text>
+</svg>
   <h1>PORRA MUNDIAL 2026</h1>
   <div class="header-user">
     <span id="header-username" class="user-name"></span>
@@ -281,7 +321,7 @@
 
   <!-- ELIMINATORIA -->
   <div id="panel-eliminatoria" class="panel">
-    <div class="info-box">🏆 Pronostica equipos y resultados. <strong>10 pts</strong> equipo acertado en el orden correcto · <strong>20 pts</strong> resultado exacto.</div>
+    <div class="info-box">🏆 Pronostica equipos y resultados. <strong>10 pts</strong> equipo acertado en la posición exacta del cuadro · <strong>20 pts</strong> resultado exacto.</div>
     <div class="bracket-container"><div class="bracket" id="bracket-container"></div></div>
   </div>
 
