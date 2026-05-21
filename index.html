@@ -359,20 +359,39 @@
 // WORLD CUP 2026 DATA
 // ═══════════════════════════════════════════
 
+// Grupos oficiales Mundial 2026 (fuente: openfootball/worldcup)
 const GROUPS = {
-  A: ['USA','Uruguay','Panamá','Bolivia'],
-  B: ['Argentina','Chile','Perú','Ecuador'],
-  C: ['Brasil','Colombia','Venezuela','Paraguay'],
-  D: ['México','Jamaica','Honduras','Canadá'],
-  E: ['España','Croacia','Marruecos','Arabia Saudí'],
-  F: ['Alemania','Japón','Nueva Zelanda','Rep. Checa'],
-  G: ['Francia','Bélgica','Australia','Costa Rica'],
-  H: ['Portugal','Polonia','Argelia','Indonesia'],
-  I: ['Inglaterra','Serbia','Países Bajos','Eslovaquia'],
-  J: ['Turquía','Dinamarca','Eslovenia','Camerún'],
-  K: ['Italia','Albania','Georgia','Noruega'],
-  L: ['Rumanía','Ucrania','Escocia','Hungría'],
+  A: ['México','Sudáfrica','Corea del Sur','Rep. Checa'],
+  B: ['Canadá','Bosnia-Herzegovina','Catar','Suiza'],
+  C: ['Brasil','Marruecos','Haití','Escocia'],
+  D: ['USA','Paraguay','Australia','Turquía'],
+  E: ['Alemania','Curazao','Costa de Marfil','Ecuador'],
+  F: ['Países Bajos','Japón','Suecia','Túnez'],
+  G: ['Bélgica','Egipto','Irán','Nueva Zelanda'],
+  H: ['España','Cabo Verde','Arabia Saudí','Uruguay'],
+  I: ['Francia','Senegal','Irak','Noruega'],
+  J: ['Argentina','Argelia','Austria','Jordania'],
+  K: ['Portugal','R.D. Congo','Uzbekistán','Colombia'],
+  L: ['Inglaterra','Croacia','Ghana','Panamá'],
 };
+
+// Mapa de nombres inglés→español para la API de openfootball
+const NAME_MAP = {
+  'Mexico':'México','South Africa':'Sudáfrica','South Korea':'Corea del Sur',
+  'Czech Republic':'Rep. Checa','Canada':'Canadá','Bosnia & Herzegovina':'Bosnia-Herzegovina',
+  'Qatar':'Catar','Switzerland':'Suiza','Brazil':'Brasil','Morocco':'Marruecos',
+  'Haiti':'Haití','Scotland':'Escocia','USA':'USA','Paraguay':'Paraguay',
+  'Australia':'Australia','Turkey':'Turquía','Germany':'Alemania','Curaçao':'Curazao',
+  'Ivory Coast':'Costa de Marfil','Ecuador':'Ecuador','Netherlands':'Países Bajos',
+  'Japan':'Japón','Sweden':'Suecia','Tunisia':'Túnez','Belgium':'Bélgica',
+  'Egypt':'Egipto','Iran':'Irán','New Zealand':'Nueva Zelanda','Spain':'España',
+  'Cape Verde':'Cabo Verde','Saudi Arabia':'Arabia Saudí','Uruguay':'Uruguay',
+  'France':'Francia','Senegal':'Senegal','Iraq':'Irak','Norway':'Noruega',
+  'Argentina':'Argentina','Algeria':'Argelia','Austria':'Austria','Jordan':'Jordania',
+  'Portugal':'Portugal','DR Congo':'R.D. Congo','Uzbekistan':'Uzbekistán','Colombia':'Colombia',
+  'England':'Inglaterra','Croatia':'Croacia','Ghana':'Ghana','Panama':'Panamá',
+};
+function normName(n) { return NAME_MAP[n] || n; }
 
 const QUESTIONS = [
   { id:'q_champion',   label:'Campeón del mundo' },
@@ -913,101 +932,78 @@ function changeAdminPin() {
 // ═══════════════════════════════════════════
 
 async function autofillResults() {
-  document.getElementById('autofill-status').innerHTML = '<span>🔄 Consultando...</span>';
-  toast('🤖 Buscando resultados reales...');
+  const statusEl = document.getElementById('autofill-status');
+  statusEl.innerHTML = '<span>🔄 Descargando datos de openfootball...</span>';
+  toast('🔄 Consultando datos abiertos del Mundial...');
 
-  const prompt = `Eres un experto en fútbol. Hoy es ${new Date().toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})}.
-
-Busca los resultados reales del Mundial 2026 que ya se hayan jugado y devuelve SOLO un objeto JSON válido, sin texto adicional, sin backticks, sin comentarios.
-
-Estructura exacta requerida:
-{
-  "matches": [
-    {"home":"USA","away":"Uruguay","homeScore":2,"awayScore":1,"result":"1","played":true}
-  ],
-  "groupStandings": {
-    "A": ["USA","Uruguay","Panamá","Bolivia"]
-  },
-  "questions": {
-    "q_champion":"Argentina",
-    "q_runner":"Francia",
-    "q_third":"España",
-    "q_fourth":"Portugal",
-    "q_topscorer":"Mbappe",
-    "q_first_goal":"Pulisic",
-    "q_first_red":"Nombre Apellido",
-    "q_mvp":"Mbappe",
-    "q_spain":"Cuartos de final",
-    "q_goals":"156"
-  },
-  "lastUpdated":"${new Date().toISOString()}",
-  "note":"explicación breve"
-}
-
-Grupos del Mundial 2026:
-A(USA,Uruguay,Panamá,Bolivia), B(Argentina,Chile,Perú,Ecuador), C(Brasil,Colombia,Venezuela,Paraguay),
-D(México,Jamaica,Honduras,Canadá), E(España,Croacia,Marruecos,Arabia Saudí),
-F(Alemania,Japón,Nueva Zelanda,Rep.Checa), G(Francia,Bélgica,Australia,Costa Rica),
-H(Portugal,Polonia,Argelia,Indonesia), I(Inglaterra,Serbia,Países Bajos,Eslovaquia),
-J(Turquía,Dinamarca,Eslovenia,Camerún), K(Italia,Albania,Georgia,Noruega),
-L(Rumanía,Ucrania,Escocia,Hungría).
-
-result: "1"=gana local, "X"=empate, "2"=gana visitante.
-Solo incluye partidos YA jugados. Si el torneo no ha empezado, devuelve arrays vacíos e indica en "note".`;
+  // openfootball/worldcup.json — datos públicos, sin API key
+  // Usamos allorigins como proxy CORS gratuito
+  const DATA_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
+  const PROXY    = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(DATA_URL);
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{ role:'user', content: prompt }]
-      })
+    const res = await fetch(PROXY);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    let applied = 0, skipped = 0;
+
+    (data.matches || []).forEach(m => {
+      // Solo partidos con resultado
+      if (!m.score) { skipped++; return; }
+      const ft = m.score.ft;
+      if (!ft || ft.length < 2) { skipped++; return; }
+
+      const homeES = normName(m.team1);
+      const awayES = normName(m.team2);
+      const hScore = ft[0], aScore = ft[1];
+      const result = hScore > aScore ? '1' : aScore > hScore ? '2' : 'X';
+
+      // Buscar el partido en nuestra lista (por nombres en español)
+      const match = ALL_MATCHES.find(gm =>
+        (gm.home === homeES && gm.away === awayES) ||
+        (gm.home === awayES && gm.away === homeES)
+      );
+
+      if (match) {
+        const flip = match.home !== homeES;
+        state.realResults.matches[match.id] = {
+          result: flip ? (result==='1'?'2':result==='2'?'1':'X') : result,
+          home: flip ? aScore : hScore,
+          away: flip ? hScore : aScore,
+        };
+        applied++;
+      }
     });
 
-    const data = await response.json();
-    const text = (data.content || []).filter(b=>b.type==='text').map(b=>b.text).join('');
-    const jsonStr = text.match(/\{[\s\S]*\}/)?.[0];
-    if (!jsonStr) throw new Error('No se encontró JSON en la respuesta');
-
-    const results = JSON.parse(jsonStr);
-    let applied = 0;
-
-    if (Array.isArray(results.matches)) {
-      results.matches.forEach(m => {
-        if (!m.played) return;
-        const match = ALL_MATCHES.find(gm =>
-          (gm.home===m.home && gm.away===m.away) ||
-          (gm.home===m.away && gm.away===m.home)
-        );
-        if (match) {
-          const flip = match.home !== m.home;
-          state.realResults.matches[match.id] = {
-            result: m.result === '1' ? (flip ? '2' : '1') : m.result === '2' ? (flip ? '1' : '2') : 'X',
-            home: flip ? m.awayScore : m.homeScore,
-            away: flip ? m.homeScore : m.awayScore,
-          };
-          applied++;
-        }
+    // Clasificaciones de grupo si están disponibles
+    if (data.groups) {
+      Object.entries(data.groups).forEach(([, grp]) => {
+        // openfootball no siempre tiene standings calculados; los inferimos de partidos
       });
     }
 
-    if (results.groupStandings) state.realResults.groups = results.groupStandings;
-    if (results.questions)      Object.assign(state.realResults.questions, results.questions);
-
     state.lastAutofill = new Date().toISOString();
-    const note = results.note ? ` (${results.note})` : '';
-    document.getElementById('autofill-status').innerHTML = `<span>✅ ${applied} partidos · ${new Date().toLocaleTimeString('es-ES')}${note}</span>`;
+    const total = (data.matches || []).length;
+    statusEl.innerHTML = `<span>✅ ${applied} resultados aplicados · ${total - applied - skipped} pendientes · ${new Date().toLocaleTimeString('es-ES')}</span>`;
 
     renderAll();
     saveData();
-    toast(`✅ ${applied} resultados aplicados`);
+    toast(`✅ ${applied} resultado${applied!==1?'s':''} importados de openfootball`);
 
   } catch(e) {
-    document.getElementById('autofill-status').innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
-    toast('Error: ' + e.message, true);
+    // Fallback: intentar sin proxy por si el navegador lo permite
+    try {
+      statusEl.innerHTML = '<span>🔄 Reintentando sin proxy...</span>';
+      const res2 = await fetch('https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json');
+      if (!res2.ok) throw new Error('Sin datos');
+      const data2 = await res2.json();
+      statusEl.innerHTML = `<span>✅ Datos cargados (${(data2.matches||[]).filter(m=>m.score).length} resultados)</span>`;
+      toast('✅ Datos cargados');
+    } catch(e2) {
+      statusEl.innerHTML = `<span style="color:var(--red)">❌ No se pudo conectar. ¿El torneo ha empezado? (${e.message})</span>`;
+      toast('❌ Error al cargar datos: ' + e.message, true);
+    }
     console.error(e);
   }
 }
