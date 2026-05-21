@@ -115,6 +115,9 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .bscore::-webkit-outer-spin-button,.bscore::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .kosel{background:transparent;border:none;color:var(--text);font-family:'Barlow',sans-serif;font-size:.82rem;font-weight:600;width:100%;cursor:pointer;outline:none}
 .kosel option{background:var(--card);color:var(--text)}
+
+.kopts{font-family:'Bebas Neue',sans-serif;color:var(--win);font-size:.78rem;min-width:24px;text-align:center;flex-shrink:0}
+.ko-score-pts{border-top:1px solid rgba(34,197,94,.35);padding:4px 8px;font-family:'Bebas Neue',sans-serif;color:var(--win);font-size:.78rem;text-align:center;background:rgba(34,197,94,.08)}
 /* QUESTIONS */
 .qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:11px}
 .qrow{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--card);border:1px solid var(--border);border-radius:10px}
@@ -496,7 +499,7 @@ const QUESTIONS=[
   {id:'q3',label:'Tercer clasificado'},{id:'q4',label:'Cuarto clasificado'},
   {id:'q5',label:'Máximo goleador'},{id:'q6',label:'Primer goleador del torneo'},
   {id:'q7',label:'Primer expulsado'},{id:'q8',label:'MVP del torneo'},
-  {id:'q9',label:'¿Hasta dónde llega España?'},{id:'q10',label:'Total de goles (±5)'},
+  {id:'q9',label:'¿Hasta dónde llega España?'},
 ];
 const R32=[['A','B'],['C','D'],['E','F'],['G','H'],['I','J'],['K','L'],['A','C'],['B','D'],['E','G'],['F','H'],['I','K'],['J','L'],['A','D'],['B','C'],['E','H'],['F','G']];
 const KO_ROUNDS=[{id:'r32',label:'OCTAVOS DE FINAL',n:16},{id:'r16',label:'CUARTOS DE FINAL',n:8},{id:'sf',label:'SEMIFINALES',n:4},{id:'final',label:'FINAL / 3°-4°',n:2},{id:'winner',label:'CAMPEÓN',n:1}];
@@ -524,6 +527,7 @@ let forcePinChange=false;
 let ADMIN_VIEW_USER='';
 let ADMIN_PREVIEW_USER='';
 let _saveTimer=null;
+let QUESTION_SAVE_TIMERS={};
 
 function getReal(){return BETS['__admin__']||{matches:{},groups:{},knockout:{},questions:{}};}
 function isAdminPreview(){return !!(ses.isAdmin && ADMIN_PREVIEW_USER);}
@@ -697,17 +701,36 @@ async function handleQuestionInputChange(t){
   ensureBet(user);
   if(!BETS[user].questions)BETS[user].questions={};
   const qid=t.dataset.qid;
-  BETS[user].questions[qid]=t.value || '';
+  const value=t.value || '';
+  BETS[user].questions[qid]=value;
 
-  // No guardamos en Firebase en cada pulsación, porque el listener en tiempo real
-  // redibuja la pantalla y en algunos navegadores hace perder el foco del campo.
-  // Se guarda automáticamente tras una pequeña pausa al escribir.
+  // Guardado con debounce capturando el valor escrito. Así no se redibuja el campo
+  // en cada tecla y no se pierde el foco mientras se escribe una respuesta larga.
   const key=`${user}_${qid}`;
   clearTimeout(QUESTION_SAVE_TIMERS[key]);
   QUESTION_SAVE_TIMERS[key]=setTimeout(async()=>{
-    await persistBetChild(user,`questions/${qid}`,BETS[user]?.questions?.[qid] || '','pregunta');
-  },650);
+    await persistBetChild(user,`questions/${qid}`,value,'pregunta');
+    delete QUESTION_SAVE_TIMERS[key];
+  },900);
 
+  updateTabStatus();
+  recalc();
+  return true;
+}
+
+async function flushQuestionInput(t){
+  if(!t || !t.dataset.qid)return false;
+  const user=writableUser();
+  if(!user||!canEdit())return true;
+  ensureBet(user);
+  if(!BETS[user].questions)BETS[user].questions={};
+  const qid=t.dataset.qid;
+  const value=t.value || '';
+  BETS[user].questions[qid]=value;
+  const key=`${user}_${qid}`;
+  clearTimeout(QUESTION_SAVE_TIMERS[key]);
+  delete QUESTION_SAVE_TIMERS[key];
+  await persistBetChild(user,`questions/${qid}`,value,'pregunta');
   updateTabStatus();
   recalc();
   return true;
@@ -766,6 +789,11 @@ async function boot(){
       BETS = snap.exists() ? snap.val() : {};
       ensureBet('__admin__');
       if(ses.user)ensureBet(ses.user);
+
+      // Si el usuario está escribiendo una pregunta, no redibujamos el formulario.
+      // Redibujar destruye el input y provoca pérdida de foco.
+      if(focused?.type==='question')return;
+
       renderAll();
       restoreFocusedInputState(focused);
     });
@@ -1012,14 +1040,29 @@ function koSrc(rid,i){
 }
 function renderKnockout(){
   const u=activeUser(),dis=isAdminPreview()||(!canEdit()&&!ses.isAdmin);
+  const showPlayerPts = !!u && (!ses.isAdmin || isAdminPreview());
+  const exactScoreOk=(b,r)=>{
+    if(!showPlayerPts || !r)return false;
+    const rsA=scoreNumber(r.scoreA), rsB=scoreNumber(r.scoreB);
+    const bsA=scoreNumber(b.scoreA), bsB=scoreNumber(b.scoreB);
+    if(rsA===null || rsB===null || bsA!==rsA || bsB!==rsB)return false;
+    const realHasTeams=!!(r.teamA || r.teamB);
+    return !realHasTeams || ((r.teamA ? b.teamA===r.teamA : true) && (r.teamB ? b.teamB===r.teamB : true));
+  };
+
   document.getElementById('c-bracket').innerHTML=KO_ROUNDS.map(round=>{
     const items=Array.from({length:round.n},(_,i)=>{
       const sid=`${round.id}_${i}`;
       const bet=u?(BETS[u]?.knockout?.[sid]??{}):{};
+      const real=getReal().knockout?.[sid]??{};
       const mn=i+1;
+      const scorePts=exactScoreOk(bet,real);
       const teamRow=(side,sub,opts)=>{
         const score=side==='A'?bet.scoreA:bet.scoreB;
+        const team=side==='A'?bet.teamA:bet.teamB;
+        const realTeam=side==='A'?real.teamA:real.teamB;
         const iw=bet.winner===side;
+        const teamPts=showPlayerPts && realTeam && team===realTeam;
         return `<div class="bteam ${iw?'win':''}" data-ko="${sid}" data-side="${side}">
           <div style="display:flex;flex-direction:column;flex:1;min-width:0;gap:1px">
             <span style="font-size:.6rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">M${mn} · ${sub}</span>
@@ -1030,12 +1073,13 @@ function renderKnockout(){
           </div>
           <input class="bscore" type="number" min="0" max="20" value="${score??''}" placeholder="G"
             data-koscore="${sid}" data-side="${side}" ${dis?'disabled':''}>
+          ${teamPts?'<span class="kopts">+10</span>':''}
         </div>`;
       };
       let ha,hb;
       if(round.id==='r32'){const[gA,gB]=R32[i]||['A','B'];ha=teamRow('A',`1° Grp.${gA}`,GROUPS[gA]||[]);hb=teamRow('B',`2° Grp.${gB}`,GROUPS[gB]||[]);}
       else{const[sA,sB]=koSrc(round.id,i);ha=teamRow('A',sA,allTeams());hb=sB?teamRow('B',sB,allTeams()):''}
-      return `<div class="bmatch">${ha}${hb}</div>`;
+      return `<div class="bmatch">${ha}${hb}${scorePts?'<div class="ko-score-pts">+20 resultado exacto</div>':''}</div>`;
     }).join('');
     return `<div class="bround br-${round.id}"><div class="brtitle">${round.label}</div>${items}</div>`;
   }).join('');
@@ -1105,7 +1149,8 @@ function calcScore(name){
       tot += 20;
     }
   });
-  Object.entries(real.questions||{}).forEach(([qid,r])=>{
+  QUESTIONS.forEach(({id:qid})=>{
+    const r=real.questions?.[qid]||'';
     const a=bet.questions?.[qid]||'';
     if(r&&a&&a.toLowerCase().trim()===r.toLowerCase().trim()){q+=30;tot+=30;}
   });
@@ -1329,7 +1374,8 @@ function bindBetControls(){
   });
   document.querySelectorAll('.qinput').forEach(el=>{
     el.oninput=async ev=>{ev.__betHandled=true;await handleQuestionInputChange(el);};
-    el.onchange=async ev=>{ev.__betHandled=true;await handleQuestionInputChange(el);};
+    el.onchange=async ev=>{ev.__betHandled=true;await flushQuestionInput(el);};
+    el.onblur=async ev=>{ev.__betHandled=true;await flushQuestionInput(el);};
   });
 }
 function officialResultOf(v){return v&&typeof v==='object'?v.result:v;}
@@ -1546,7 +1592,7 @@ document.addEventListener('change',async e=>{
   if(t.id==='i-admin-user'){ADMIN_VIEW_USER=t.value;renderSelectedUserBets();return;}
   if(await handleGroupSelectChange(t))return;
   if(await handleKnockoutTeamChange(t))return;
-  if(await handleQuestionInputChange(t))return;
+  if(await flushQuestionInput(t))return;
 });
 
 // input cubre preguntas al escribir y algunos navegadores móviles que no disparan change igual en selects.
