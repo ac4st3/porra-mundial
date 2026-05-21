@@ -137,10 +137,16 @@
 
   /* KNOCKOUT */
   .bracket-container { overflow-x: auto; padding-bottom: 16px; }
-  .bracket { display: flex; gap: 0; min-width: 900px; }
-  .bracket-round { flex: 1; display: flex; flex-direction: column; justify-content: space-around; padding: 8px; min-width: 190px; }
+  .bracket { display: flex; gap: 4px; min-width: 1150px; align-items: flex-start; }
+  .bracket-round { flex: 1; display: flex; flex-direction: column; padding: 8px; min-width: 195px; }
   .bracket-round-title { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; color: var(--gold); font-size: 0.85rem;
     text-align: center; padding-bottom: 7px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+  /* Spacing between matches per round so bracket aligns visually */
+  .br-r32  .bracket-match { margin-bottom: 8px; }
+  .br-r16  .bracket-match { margin-bottom: 74px; }
+  .br-sf   .bracket-match { margin-bottom: 230px; }
+  .br-final .bracket-match { margin-bottom: 0; }
+  .br-winner { padding-top: 56px; }
   .bracket-match { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 9px; }
   .bracket-team { display: flex; align-items: center; padding: 6px 9px; gap: 7px;
     border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
@@ -201,8 +207,10 @@
 <!-- ═══ LOGIN SCREEN ═══ -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-logo">⚽ PORRA 2026</div>
-    <div class="login-sub">Mundial USA · México · Canadá</div>
+    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/5/5c/2026_FIFA_World_Cup_emblem.svg/400px-2026_FIFA_World_Cup_emblem.svg.png"
+      alt="FIFA World Cup 2026" style="width:140px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto">
+    <div class="login-logo" style="font-size:1.6rem;margin-bottom:2px">PORRA MUNDIAL 2026</div>
+    <div class="login-sub">México · USA · Canadá</div>
     <div class="login-tabs">
       <button class="login-tab active" id="tab-participant" onclick="switchLoginTab('participant')">SOY PARTICIPANTE</button>
       <button class="login-tab" id="tab-admin" onclick="switchLoginTab('admin')">SOY ADMIN</button>
@@ -231,7 +239,8 @@
 <div id="app" style="display:none">
 
 <header>
-  <span style="font-size:1.5rem">⚽</span>
+  <img src="https://upload.wikimedia.org/wikipedia/en/thumb/5/5c/2026_FIFA_World_Cup_emblem.svg/400px-2026_FIFA_World_Cup_emblem.svg.png"
+    alt="WC26" style="height:44px;width:auto">
   <h1>PORRA MUNDIAL 2026</h1>
   <div class="header-user">
     <span id="header-username" class="user-name"></span>
@@ -272,7 +281,7 @@
 
   <!-- ELIMINATORIA -->
   <div id="panel-eliminatoria" class="panel">
-    <div class="info-box">🏆 Pronostica equipos y resultados. <strong>10 pts</strong> equipo acertado · <strong>20 pts</strong> resultado exacto.</div>
+    <div class="info-box">🏆 Pronostica equipos y resultados. <strong>10 pts</strong> equipo acertado en el orden correcto · <strong>20 pts</strong> resultado exacto.</div>
     <div class="bracket-container"><div class="bracket" id="bracket-container"></div></div>
   </div>
 
@@ -749,7 +758,7 @@ function renderKnockout() {
         </div>`;
     }).join('');
 
-    return `<div class="bracket-round"><div class="bracket-round-title">${round.label}</div>${items}</div>`;
+    return `<div class="bracket-round br-${round.id}"><div class="bracket-round-title">${round.label}</div>${items}</div>`;
   }).join('');
 }
 
