@@ -51,16 +51,9 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .tab.disabled{opacity:.42;cursor:not-allowed;filter:grayscale(.4)}
 .tab.disabled:hover{color:var(--muted)}
 
-.tab-status{display:inline-flex;align-items:center;justify-content:center;margin-left:8px;width:18px;height:18px;border-radius:999px;border:1px solid transparent;vertical-align:middle;font-family:'Barlow',sans-serif;font-size:.72rem;font-weight:800;letter-spacing:0;position:relative}
-.tab.incomplete .tab-status{color:#fff;background:var(--red);border-color:#ff8b94;box-shadow:0 0 0 2px rgba(230,57,70,.16)}
-.tab.incomplete .tab-status::after{content:attr(data-tip);display:none;position:absolute;left:50%;top:26px;transform:translateX(-50%);width:max-content;max-width:260px;background:var(--card);border:1px solid var(--gold);color:var(--text);border-radius:10px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:.8rem;font-weight:600;line-height:1.25;letter-spacing:0;text-transform:none;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:9999;white-space:normal;text-align:center;pointer-events:none}
-.tab.incomplete .tab-status::before{content:'';display:none;position:absolute;left:50%;top:20px;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid var(--gold);z-index:10000;pointer-events:none}
-.tab.incomplete .tab-status:hover::after,.tab.incomplete .tab-status:hover::before{display:block}
-.tab.done .tab-status{color:#042f1f;background:var(--win);border-color:var(--win)}
-.tab.blocked .tab-status{color:#fff;background:#6b7280;border-color:#9ca3af;box-shadow:0 0 0 2px rgba(156,163,175,.14)}
-.tab.blocked .tab-status::after{content:attr(data-tip);display:none;position:absolute;left:50%;top:26px;transform:translateX(-50%);width:max-content;max-width:280px;background:var(--card);border:1px solid var(--gold);color:var(--text);border-radius:10px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:.8rem;font-weight:600;line-height:1.25;letter-spacing:0;text-transform:none;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:9999;white-space:normal;text-align:center;pointer-events:none}
-.tab.blocked .tab-status::before{content:'';display:none;position:absolute;left:50%;top:20px;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid var(--gold);z-index:10000;pointer-events:none}
-.tab.blocked .tab-status:hover::after,.tab.blocked .tab-status:hover::before{display:block}
+.tab-status{display:inline-flex;align-items:center;justify-content:center;margin-left:8px;width:auto;height:auto;min-width:0;border:none;background:transparent!important;box-shadow:none!important;vertical-align:middle;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;font-size:.92rem;font-weight:400;letter-spacing:0;line-height:1;position:relative}
+.tab.incomplete .tab-status,.tab.blocked .tab-status{filter:none;color:inherit}
+.tab.done .tab-status{color:var(--win);font-family:'Barlow',sans-serif;font-size:.9rem;font-weight:800}
 .deadline-pill{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:.78rem;color:var(--muted);white-space:nowrap}
 .deadline-pill.has-date{border-color:var(--gold);color:var(--gold)}
 .rules-body{text-align:left;color:var(--text);font-size:.88rem;line-height:1.45}
@@ -255,7 +248,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   .tabs{top:172px}
   .preview-bar{top:172px}
   .tab{font-size:.8rem;padding:10px 12px}
-  .tab-status{width:17px;height:17px;margin-left:5px}
+  .tab-status{margin-left:5px;font-size:.9rem}
   .main{padding:10px 8px}
 }
 
@@ -1316,12 +1309,18 @@ function recalc(){
   const rows=USERS.map(p=>({name:p.name,...calcScore(p.name)})).sort((a,b)=>b.tot-a.tot);
   document.getElementById('c-scores').innerHTML=`<thead><tr>
     <th>#</th><th>Participante</th><th>Partidos</th><th>Grupos</th><th>Eliminatoria</th><th>Preguntas</th><th>TOTAL</th><th>Porra</th>
-  </tr></thead><tbody>${rows.map((s,i)=>`<tr>
-    <td class="${i===0?'r1':i===1?'r2':i===2?'r3':''}">${['🥇','🥈','🥉'][i]||i+1}</td>
-    <td style="font-weight:600">${s.name}</td><td>${s.m}</td><td>${s.g}</td><td>${s.k}</td><td>${s.q}</td>
-    <td style="font-family:'Bebas Neue';font-size:1.05rem;color:var(--gold)">${s.tot}</td>
-    <td><button class="btn sec" style="padding:3px 8px;font-size:.72rem" data-viewscore="${s.name}">Ver</button></td>
-  </tr>`).join('')}</tbody>`;
+  </tr></thead><tbody>${rows.map((s,i)=>{
+    const showViewButton = ses.isAdmin || s.name !== ses.user;
+    const porraCell = showViewButton
+      ? `<button class="btn sec" style="padding:3px 8px;font-size:.72rem" data-viewscore="${s.name}">Ver</button>`
+      : `<span style="color:var(--muted);font-size:.78rem">Tu porra</span>`;
+    return `<tr>
+      <td class="${i===0?'r1':i===1?'r2':i===2?'r3':''}">${['🥇','🥈','🥉'][i]||i+1}</td>
+      <td style="font-weight:600">${s.name}</td><td>${s.m}</td><td>${s.g}</td><td>${s.k}</td><td>${s.q}</td>
+      <td style="font-family:'Bebas Neue';font-size:1.05rem;color:var(--gold)">${s.tot}</td>
+      <td>${porraCell}</td>
+    </tr>`;
+  }).join('')}</tbody>`;
   const ts=document.getElementById('s-marca-ts');
   if(ts)ts.textContent='Actualizado: '+new Date().toLocaleString('es-ES');
 }
@@ -1626,9 +1625,9 @@ function updateTabStatus(){
     el.classList.toggle('incomplete',!info.ok && !blocked);
     el.classList.toggle('blocked',blocked);
     if(st){
-      st.textContent = info.ok && !blocked ? '✓' : blocked ? '⛔' : '⚠️';
-      st.setAttribute('data-tip',info.ok && !blocked?'Completo':info.tip);
-      st.setAttribute('aria-label',info.ok && !blocked?'Completo':info.tip);
+      st.textContent = info.ok && !blocked ? '' : blocked ? '⛔' : '⚠️';
+      if(info.ok && !blocked){st.removeAttribute('data-tip');st.setAttribute('aria-label','');}
+      else{st.setAttribute('data-tip',info.tip);st.setAttribute('aria-label',info.tip);}
       st.removeAttribute('title');
     }
   });
@@ -1654,7 +1653,10 @@ function showTabTooltip(target){
   tip.style.top=top+'px';
 }
 function hideTabTooltip(){const tip=document.getElementById('tab-tooltip');if(tip)tip.style.display='none';}
-document.addEventListener('mouseover',e=>{const st=e.target.closest('.tab-status');if(st&&st.textContent==='!')showTabTooltip(st);});
+document.addEventListener('mouseover',e=>{
+  const st=e.target.closest('.tab-status');
+  if(st && st.textContent.trim() && (st.getAttribute('data-tip')||st.getAttribute('aria-label')))showTabTooltip(st);
+});
 document.addEventListener('mouseout',e=>{if(e.target.closest('.tab-status'))hideTabTooltip();});
 document.addEventListener('scroll',hideTabTooltip,true);
 
