@@ -61,7 +61,7 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .rules-body ul{margin-left:18px;margin-bottom:8px}
 .rules-body li{margin-bottom:4px}
 .rules-modal{max-width:620px;text-align:left}
-@media(max-width:760px){header{flex-wrap:wrap}.hright{width:100%;justify-content:flex-start;flex-wrap:wrap}.deadline-pill{font-size:.72rem}.tab{padding:11px 14px}.tab.incomplete .tab-status::after{left:auto;right:0;transform:none;max-width:220px}}
+@media(max-width:760px){header{flex-wrap:wrap}.hright{width:100%;justify-content:flex-start;flex-wrap:wrap}.deadline-pill{font-size:.72rem}.tab{padding:11px 14px}}
 /* LAYOUT */
 .main{padding:18px;max-width:1400px;margin:0 auto}
 .panel{display:none}.panel.on{display:block}
@@ -132,6 +132,15 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .ainput:focus{outline:none;border-color:var(--gold)}
 .prow{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
 .prow:last-child{border-bottom:none}
+
+.admin-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:10px}
+.admin-mini{background:var(--darker);border:1px solid var(--border);border-radius:10px;padding:11px}
+.admin-mini h4{font-family:'Bebas Neue',sans-serif;color:var(--gold);letter-spacing:1px;font-size:.9rem;margin-bottom:8px}
+.bet-summary{background:var(--darker);border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:10px;font-size:.82rem;color:var(--text);max-height:360px;overflow:auto}
+.bet-summary h4{font-family:'Bebas Neue',sans-serif;color:var(--gold);letter-spacing:1px;margin:10px 0 5px}
+.bet-summary h4:first-child{margin-top:0}
+.bet-line{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.05);padding:4px 0}
+.bet-line span:last-child{font-weight:700;color:var(--gold);text-align:right}
 /* MISC */
 .info{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:10px 14px;font-size:.81rem;color:#93C5FD;margin-bottom:13px}
 .lbanner{background:rgba(230,57,70,.15);border:1px solid var(--red);border-radius:10px;padding:11px 16px;margin-bottom:14px;color:#fca5a5;font-size:.88rem}
@@ -316,6 +325,30 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
       </div>
 
       <div class="card">
+        <div class="ch"><span class="ctitle">🧾 GESTIÓN DE APUESTAS DE USUARIOS</span></div>
+        <div class="cb">
+          <div class="admin-tools">
+            <div class="admin-mini">
+              <h4>Seleccionar jugador</h4>
+              <select class="ainput" id="i-admin-user" style="width:100%;margin-bottom:8px">
+                <option value="">— Elige participante —</option>
+              </select>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn sec" id="b-view-userbets">Ver apuestas</button>
+                <button class="btn red" id="b-clear-userbets">Borrar apuestas</button>
+              </div>
+            </div>
+            <div class="admin-mini">
+              <h4>PIN del jugador</h4>
+              <p style="color:var(--muted);font-size:.82rem;margin-bottom:9px">Restablece el PIN a 1234 y fuerza el cambio en el próximo inicio de sesión.</p>
+              <button class="btn sec" id="b-reset-userpin">🔑 Resetear PIN a 1234</button>
+            </div>
+          </div>
+          <div id="c-userbets" class="bet-summary" style="display:none"></div>
+        </div>
+      </div>
+
+      <div class="card">
         <div class="ch"><span class="ctitle">🔒 CONTROL DE APUESTAS</span></div>
         <div class="cb">
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
@@ -344,6 +377,7 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 </div>
 
 <div id="toast"></div>
+<div id="tab-tooltip" class="tab-tooltip"></div>
 
 <!-- Firebase SDK -->
 <script type="module">
@@ -409,6 +443,7 @@ let BETS={};     // {username: {matches,groups,knockout,questions}}
 const DEFAULT_USER_PIN='1234';
 let ses={user:null,isAdmin:false};
 let forcePinChange=false;
+let ADMIN_VIEW_USER='';
 let _saveTimer=null;
 
 function getReal(){return BETS['__admin__']||{matches:{},groups:{},knockout:{},questions:{}};}
@@ -422,13 +457,19 @@ async function fbGet(path){
 async function fbSet(path,data){ await set(ref(db,path),data); }
 async function fbUpdate(path,data){ await update(ref(db,path),data); }
 
-// Auto-save bet with debounce
-function saveBet(user,data){
-  clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(async()=>{
-    try{ await fbSet(`bets/${user}`,data); }
-    catch(e){ toast('Error guardando: '+e.message,true); }
-  },800);
+function normalizeBet(data){
+  return {
+    matches: data?.matches || {},
+    groups: data?.groups || {},
+    knockout: data?.knockout || {},
+    questions: data?.questions || {}
+  };
+}
+
+// Guarda inmediatamente para evitar perder selecciones si el usuario cierra o cambia rápido.
+async function saveBet(user,data){
+  try{ await fbSet(`bets/${user}`, normalizeBet(data)); }
+  catch(e){ toast('Error guardando: '+e.message,true); }
 }
 
 function ensureBet(u){if(!BETS[u])BETS[u]={matches:{},groups:{},knockout:{},questions:{}};}
@@ -467,6 +508,8 @@ async function boot(){
     // Listen for real-time changes from other users
     onValue(ref(db,'bets'), snap=>{
       BETS = snap.exists() ? snap.val() : {};
+      ensureBet('__admin__');
+      if(ses.user)ensureBet(ses.user);
       renderAll();
     });
     onValue(ref(db,'config'), snap=>{ if(snap.exists()){CONFIG={...CONFIG,...snap.val()};lockUI();autoLockUI();renderAll();} });
@@ -474,6 +517,7 @@ async function boot(){
       USERS = snap.exists() ? Object.values(snap.val()) : [];
       fillSelect();
       renderParts();
+      renderAdminUserTools();
     });
 
   }catch(e){
@@ -796,12 +840,74 @@ function recalc(){
 // ── ADMIN: PARTICIPANTS ───────────────────────────
 function renderParts(){
   const c=document.getElementById('c-parts');if(!c)return;
-  if(!USERS.length){c.innerHTML='<div style="color:var(--muted);font-size:.83rem">Sin usuarios.</div>';return;}
-  c.innerHTML=USERS.map(u=>`<div class="prow">
-    <span style="font-weight:600;flex:1">${u.name}</span>
-    <span style="color:var(--muted);font-size:.78rem;margin-right:8px">${Object.keys(BETS[u.name]?.matches||{}).length} apuestas${u.mustChangePin?' · PIN inicial':''}</span>
-    <button class="btn red" style="padding:3px 8px;font-size:.75rem" data-delpart="${u.name}">🗑️</button>
-  </div>`).join('');
+  if(!USERS.length){c.innerHTML='<div style="color:var(--muted);font-size:.83rem">Sin usuarios.</div>';renderAdminUserTools();return;}
+  c.innerHTML=USERS.map(u=>{
+    const bet=normalizeBet(BETS[u.name]);
+    const total=Object.keys(bet.matches||{}).length+Object.keys(bet.groups||{}).length+Object.keys(bet.knockout||{}).length+Object.keys(bet.questions||{}).length;
+    return `<div class="prow">
+      <span style="font-weight:600;flex:1">${u.name}</span>
+      <span style="color:var(--muted);font-size:.78rem;margin-right:8px">${total} bloques${u.mustChangePin?' · PIN inicial':''}</span>
+      <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-viewpart="${u.name}">Ver</button>
+      <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-resetpin="${u.name}">PIN 1234</button>
+      <button class="btn red" style="padding:3px 8px;font-size:.75rem" data-clearbets="${u.name}">Borrar apuestas</button>
+      <button class="btn red" style="padding:3px 8px;font-size:.75rem" data-delpart="${u.name}">🗑️</button>
+    </div>`;
+  }).join('');
+  renderAdminUserTools();
+}
+function renderAdminUserTools(){
+  const sel=document.getElementById('i-admin-user');
+  if(!sel)return;
+  const current=ADMIN_VIEW_USER && USERS.some(u=>u.name===ADMIN_VIEW_USER) ? ADMIN_VIEW_USER : '';
+  sel.innerHTML='<option value="">— Elige participante —</option>'+USERS.map(u=>`<option value="${u.name}" ${u.name===current?'selected':''}>${u.name}</option>`).join('');
+  ADMIN_VIEW_USER=current;
+  renderSelectedUserBets();
+}
+function formatObjCount(obj){return Object.keys(obj||{}).length;}
+function renderSelectedUserBets(){
+  const c=document.getElementById('c-userbets');
+  if(!c)return;
+  if(!ADMIN_VIEW_USER){c.style.display='none';c.innerHTML='';return;}
+  const bet=normalizeBet(BETS[ADMIN_VIEW_USER]);
+  c.style.display='block';
+  const matchLines=ALL.filter(m=>bet.matches?.[m.id]).map(m=>`<div class="bet-line"><span>${m.home} - ${m.away}</span><span>${bet.matches[m.id]}</span></div>`).join('') || '<div style="color:var(--muted)">Sin partidos apostados.</div>';
+  const groupLines=Object.entries(GROUPS).map(([g])=>{
+    const arr=bet.groups?.[g]||[];
+    const clean=arr.filter(Boolean);
+    if(!clean.length)return '';
+    return `<div class="bet-line"><span>Grupo ${g}</span><span>${arr.map((x,i)=>`${i+1}º ${x||'—'}`).join(' · ')}</span></div>`;
+  }).join('') || '<div style="color:var(--muted)">Sin clasificaciones rellenadas.</div>';
+  const koLines=Object.entries(bet.knockout||{}).map(([sid,v])=>`<div class="bet-line"><span>${sid}</span><span>${[v.teamA||'—',v.scoreA??'G',v.winner?'ganador '+v.winner:'sin ganador',v.scoreB??'G',v.teamB||'—'].join(' ')}</span></div>`).join('') || '<div style="color:var(--muted)">Sin eliminatoria rellenada.</div>';
+  const qLines=QUESTIONS.filter(q=>bet.questions?.[q.id]).map(q=>`<div class="bet-line"><span>${q.label}</span><span>${bet.questions[q.id]}</span></div>`).join('') || '<div style="color:var(--muted)">Sin preguntas respondidas.</div>';
+  c.innerHTML=`
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px">
+      <strong style="color:var(--gold)">Apuestas de ${ADMIN_VIEW_USER}</strong>
+      <span style="color:var(--muted);font-size:.78rem">Partidos: ${formatObjCount(bet.matches)} · Grupos: ${formatObjCount(bet.groups)} · Eliminatoria: ${formatObjCount(bet.knockout)} · Preguntas: ${formatObjCount(bet.questions)}</span>
+    </div>
+    <h4>Partidos 1-X-2</h4>${matchLines}
+    <h4>Clasificaciones</h4>${groupLines}
+    <h4>Eliminatoria</h4>${koLines}
+    <h4>Preguntas</h4>${qLines}
+  `;
+}
+async function resetUserPin(name){
+  const u=USERS.find(x=>x.name===name);
+  if(!u)return toast('Selecciona un usuario válido',true);
+  if(!confirm(`¿Resetear el PIN de ${name} a 1234 y obligarle a cambiarlo?`))return;
+  try{
+    await fbSet(`users/${name}`,{...u,pin:DEFAULT_USER_PIN,mustChangePin:true});
+    toast(`🔑 PIN de ${name} reseteado a 1234`);
+  }catch(e){toast('Error: '+e.message,true);}
+}
+async function clearUserBets(name){
+  if(!USERS.some(u=>u.name===name))return toast('Selecciona un usuario válido',true);
+  if(!confirm(`¿Borrar TODAS las apuestas de ${name}? Tendrá que rellenarlas otra vez.`))return;
+  try{
+    await fbSet(`bets/${name}`,null);
+    BETS[name]={matches:{},groups:{},knockout:{},questions:{}};
+    renderAll();
+    toast(`🗑️ Apuestas de ${name} borradas`);
+  }catch(e){toast('Error: '+e.message,true);}
 }
 async function addPart(){
   const name=document.getElementById('i-newname').value.trim();
@@ -980,10 +1086,30 @@ function updateTabStatus(){
       st.textContent=info.ok?'✓':'!';
       st.setAttribute('data-tip',info.ok?'Completo':info.tip);
       st.setAttribute('aria-label',info.ok?'Completo':info.tip);
-      st.setAttribute('title',info.ok?'Completo':info.tip);
+      st.removeAttribute('title');
     }
   });
 }
+
+function showTabTooltip(target){
+  const tip=document.getElementById('tab-tooltip');if(!tip)return;
+  const text=target.getAttribute('data-tip')||target.getAttribute('aria-label')||'';
+  if(!text)return;
+  tip.textContent=text;
+  tip.style.display='block';
+  const r=target.getBoundingClientRect();
+  const tr=tip.getBoundingClientRect();
+  let left=r.left+(r.width/2)-(tr.width/2);
+  left=Math.max(8,Math.min(left,window.innerWidth-tr.width-8));
+  let top=r.bottom+8;
+  if(top+tr.height>window.innerHeight-8)top=r.top-tr.height-8;
+  tip.style.left=left+'px';
+  tip.style.top=top+'px';
+}
+function hideTabTooltip(){const tip=document.getElementById('tab-tooltip');if(tip)tip.style.display='none';}
+document.addEventListener('mouseover',e=>{const st=e.target.closest('.tab-status');if(st&&st.textContent==='!')showTabTooltip(st);});
+document.addEventListener('mouseout',e=>{if(e.target.closest('.tab-status'))hideTabTooltip();});
+document.addEventListener('scroll',hideTabTooltip,true);
 
 function updateDeadlineHeader(){
   const el=document.getElementById('s-deadline');if(!el)return;
@@ -997,7 +1123,7 @@ function updateDeadlineHeader(){
 }
 function openRulesModal(){document.getElementById('rules-modal').classList.add('on');}
 function closeRulesModal(){document.getElementById('rules-modal').classList.remove('on');}
-function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();lockUI();autoLockUI();recalc();updateTabStatus();}
+function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();recalc();updateTabStatus();}
 
 // ── EVENT DELEGATION ──────────────────────────────
 document.addEventListener('click',e=>{
@@ -1014,7 +1140,14 @@ document.addEventListener('click',e=>{
   if(t.id==='b-rules-close'){closeRulesModal();return;}
   if(t.id==='b-pin-ok'){doChangePin();return;}
   if(t.id==='b-pin-no'){closePinModal();return;}
-  if(t.dataset.tab){showTab(t.dataset.tab);return;}
+  const tabTarget=t.closest('[data-tab]');
+  if(tabTarget){showTab(tabTarget.dataset.tab);return;}
+  if(t.dataset.viewpart){ADMIN_VIEW_USER=t.dataset.viewpart;renderAdminUserTools();showTab('admin');return;}
+  if(t.dataset.resetpin){resetUserPin(t.dataset.resetpin);return;}
+  if(t.dataset.clearbets){clearUserBets(t.dataset.clearbets);return;}
+  if(t.id==='b-view-userbets'){ADMIN_VIEW_USER=document.getElementById('i-admin-user').value;renderSelectedUserBets();return;}
+  if(t.id==='b-clear-userbets'){clearUserBets(document.getElementById('i-admin-user').value);return;}
+  if(t.id==='b-reset-userpin'){resetUserPin(document.getElementById('i-admin-user').value);return;}
   if(t.dataset.mid&&t.dataset.val){
     if(!ses.user||!canEdit())return toast(CONFIG.betsLocked?'🔒 Cerradas':'Sin sesión',true);
     ensureBet(ses.user);
@@ -1070,6 +1203,7 @@ document.addEventListener('click',e=>{
 
 document.addEventListener('change',e=>{
   const t=e.target;
+  if(t.id==='i-admin-user'){ADMIN_VIEW_USER=t.value;renderSelectedUserBets();return;}
   if(t.dataset.grp!==undefined&&t.dataset.pos!==undefined){
     if(!ses.user||!canEdit())return toast('🔒 Cerradas',true);
     ensureBet(ses.user);
