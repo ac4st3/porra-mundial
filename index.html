@@ -119,6 +119,21 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .kosel option{background:var(--card);color:var(--text)}
 
 .kopts{font-family:'Bebas Neue',sans-serif;color:var(--win);font-size:.78rem;min-width:24px;text-align:center;flex-shrink:0}
+.ko-help{margin-bottom:12px}
+.bmatch-head{display:flex;justify-content:space-between;align-items:center;background:rgba(201,168,76,.08);border-bottom:1px solid var(--border);padding:5px 8px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--gold);font-size:.76rem}
+.bpath{color:var(--muted);font-family:'Barlow',sans-serif;font-size:.64rem;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:6px}
+.bteam.from-prev{background:rgba(255,255,255,.015)}
+.bracket{display:grid;grid-template-columns:repeat(5,minmax(205px,1fr));gap:10px;min-width:1220px;align-items:stretch}
+.bround{display:grid;grid-template-rows:auto repeat(16,44px);gap:8px;padding:7px;min-width:205px}
+.bround .brtitle{grid-row:1}
+.bmatch{margin-bottom:0;align-self:center;position:relative}
+.br-r32 .bmatch{grid-row:span 1}
+.br-r16 .bmatch{grid-row:span 2}
+.br-qf .bmatch{grid-row:span 4}
+.br-sf .bmatch{grid-row:span 8}
+.br-final .bmatch{grid-row:span 16}
+.br-r16 .bmatch::before,.br-qf .bmatch::before,.br-sf .bmatch::before,.br-final .bmatch::before{content:'';position:absolute;left:-11px;top:50%;width:10px;border-top:1px solid var(--border)}
+
 .ko-score-pts{border-top:1px solid rgba(34,197,94,.35);padding:4px 8px;font-family:'Bebas Neue',sans-serif;color:var(--win);font-size:.78rem;text-align:center;background:rgba(34,197,94,.08)}
 /* QUESTIONS */
 .qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:11px}
@@ -204,8 +219,10 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   .qrow > div:last-child{align-items:stretch!important}
   .bcon{overflow-x:visible;padding-bottom:0}
   .bracket{display:block;min-width:0;width:100%}
-  .bround{min-width:0;width:100%;padding:0;margin-bottom:14px}
+  .bround{display:block;min-width:0;width:100%;padding:0;margin-bottom:14px}
   .br-r32 .bmatch,.br-r16 .bmatch,.br-qf .bmatch,.br-sf .bmatch,.br-final .bmatch{margin-bottom:8px}
+  .br-r32 .bmatch,.br-r16 .bmatch,.br-qf .bmatch,.br-sf .bmatch,.br-final .bmatch{grid-row:auto}
+  .br-r16 .bmatch::before,.br-qf .bmatch::before,.br-sf .bmatch::before,.br-final .bmatch::before{display:none}
   .bteam{padding:8px}
   .bscore{width:42px;padding:6px 2px}
   .kosel{font-size:.9rem}
@@ -304,7 +321,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       <h3>4) Eliminatoria</h3>
       <ul>
         <li>La eliminatoria se activa en una segunda fase, cuando haya terminado la fase de grupos y se conozcan los equipos de dieciseisavos.</li>
-        <li>Solo hay que indicar qué equipos pasan/ocupan cada posición de la siguiente ronda. No se introducen marcadores.</li>
+        <li>La pestaña sigue el cuadro oficial desde dieciseisavos: M73-M88, octavos M89-M96, cuartos M97-M100, semifinales M101-M102 y final M104. Solo hay que indicar los equipos que ocupan cada plaza; no se introducen marcadores.</li>
         <li>Cada equipo acertado en su posición exacta suma <strong>20 puntos</strong>.</li>
       </ul>
       <h3>5) Fases de activación</h3>
@@ -523,8 +540,54 @@ const QUESTIONS=[
   {id:'q7',label:'Primer expulsado'},{id:'q8',label:'MVP del torneo'},
   {id:'q9',label:'¿Hasta dónde llega España?'},
 ];
-const R32=[['A','B'],['C','D'],['E','F'],['G','H'],['I','J'],['K','L'],['A','C'],['B','D'],['E','G'],['F','H'],['I','K'],['J','L'],['A','D'],['B','C'],['E','H'],['F','G']];
-const KO_ROUNDS=[{id:'r32',label:'DIECISEISAVOS',n:16},{id:'r16',label:'OCTAVOS DE FINAL',n:8},{id:'qf',label:'CUARTOS DE FINAL',n:4},{id:'sf',label:'SEMIFINALES',n:2},{id:'final',label:'FINAL',n:1}];
+const R32_MATCHES=[
+  {sid:'m73',num:73,subA:'2º Grupo A',subB:'2º Grupo B'},
+  {sid:'m75',num:75,subA:'1º Grupo E',subB:'3º Grupo A/B/C/D/F'},
+  {sid:'m74',num:74,subA:'1º Grupo C',subB:'2º Grupo F'},
+  {sid:'m77',num:77,subA:'2º Grupo E',subB:'2º Grupo I'},
+  {sid:'m76',num:76,subA:'1º Grupo F',subB:'2º Grupo C'},
+  {sid:'m78',num:78,subA:'1º Grupo I',subB:'3º Grupo C/D/F/G/H'},
+  {sid:'m79',num:79,subA:'1º Grupo A',subB:'3º Grupo C/E/F/H/I'},
+  {sid:'m80',num:80,subA:'1º Grupo L',subB:'3º Grupo E/H/I/J/K'},
+  {sid:'m83',num:83,subA:'1º Grupo H',subB:'2º Grupo J'},
+  {sid:'m84',num:84,subA:'2º Grupo K',subB:'2º Grupo L'},
+  {sid:'m81',num:81,subA:'1º Grupo G',subB:'3º Grupo A/E/H/I/J'},
+  {sid:'m82',num:82,subA:'1º Grupo D',subB:'3º Grupo B/E/F/I/J'},
+  {sid:'m86',num:86,subA:'2º Grupo D',subB:'2º Grupo G'},
+  {sid:'m88',num:88,subA:'1º Grupo K',subB:'3º Grupo D/E/I/J/L'},
+  {sid:'m85',num:85,subA:'1º Grupo B',subB:'3º Grupo E/F/G/I/J'},
+  {sid:'m87',num:87,subA:'1º Grupo J',subB:'2º Grupo H'},
+];
+const R16_MATCHES=[
+  {sid:'m89',num:89,subA:'Ganador M73',subB:'Ganador M75'},
+  {sid:'m90',num:90,subA:'Ganador M74',subB:'Ganador M77'},
+  {sid:'m91',num:91,subA:'Ganador M76',subB:'Ganador M78'},
+  {sid:'m92',num:92,subA:'Ganador M79',subB:'Ganador M80'},
+  {sid:'m93',num:93,subA:'Ganador M83',subB:'Ganador M84'},
+  {sid:'m94',num:94,subA:'Ganador M81',subB:'Ganador M82'},
+  {sid:'m95',num:95,subA:'Ganador M86',subB:'Ganador M88'},
+  {sid:'m96',num:96,subA:'Ganador M85',subB:'Ganador M87'},
+];
+const QF_MATCHES=[
+  {sid:'m97',num:97,subA:'Ganador M89',subB:'Ganador M90'},
+  {sid:'m98',num:98,subA:'Ganador M93',subB:'Ganador M94'},
+  {sid:'m99',num:99,subA:'Ganador M91',subB:'Ganador M92'},
+  {sid:'m100',num:100,subA:'Ganador M95',subB:'Ganador M96'},
+];
+const SF_MATCHES=[
+  {sid:'m101',num:101,subA:'Ganador M97',subB:'Ganador M98'},
+  {sid:'m102',num:102,subA:'Ganador M99',subB:'Ganador M100'},
+];
+const FINAL_MATCHES=[
+  {sid:'m104',num:104,subA:'Ganador M101',subB:'Ganador M102'},
+];
+const KO_ROUNDS=[
+  {id:'r32',label:'DIECISEISAVOS',matches:R32_MATCHES},
+  {id:'r16',label:'OCTAVOS',matches:R16_MATCHES},
+  {id:'qf',label:'CUARTOS',matches:QF_MATCHES},
+  {id:'sf',label:'SEMIFINALES',matches:SF_MATCHES},
+  {id:'final',label:'FINAL',matches:FINAL_MATCHES}
+];
 
 function buildMatches(){
   const out=[];let id=1;const d0=new Date('2026-06-11');
@@ -1053,14 +1116,8 @@ function renderGroups(){
 }
 
 // ── RENDER KNOCKOUT ───────────────────────────────
-function koSrc(rid,i){
-  if(rid==='r16')return[`Gan. Dieciseisavo M${i*2+1}`,`Gan. Dieciseisavo M${i*2+2}`];
-  if(rid==='qf') return[`Gan. Octavo M${i*2+1}`,`Gan. Octavo M${i*2+2}`];
-  if(rid==='sf') return[`Gan. Cuarto M${i*2+1}`,`Gan. Cuarto M${i*2+2}`];
-  if(rid==='final')return ['Gan. Semi M1','Gan. Semi M2'];
-  return['',''];
-}
 function isKnockoutEnabled(){return CONFIG.knockoutEnabled===true;}
+function koOptionsFor(match){return allTeams();}
 function renderKnockout(){
   const c=document.getElementById('c-bracket');
   if(!c)return;
@@ -1075,38 +1132,31 @@ function renderKnockout(){
   const u=activeUser(),dis=isAdminPreview()||(!canEdit()&&!ses.isAdmin);
   const showPlayerPts = !!u && (!ses.isAdmin || isAdminPreview());
 
-  document.getElementById('c-bracket').innerHTML=KO_ROUNDS.map(round=>{
-    const items=Array.from({length:round.n},(_,i)=>{
-      const sid=`${round.id}_${i}`;
+  c.innerHTML=KO_ROUNDS.map(round=>{
+    const items=round.matches.map((match,idx)=>{
+      const sid=match.sid;
       const bet=u?(BETS[u]?.knockout?.[sid]??{}):{};
       const real=getReal().knockout?.[sid]??{};
-      const mn=i+1;
-      const teamRow=(side,sub,opts)=>{
-        const team=side==='A'?bet.teamA:bet.teamB;
+      const opts=koOptionsFor(match);
+      const teamRow=(side,sub)=>{
+        const val=side==='A'?bet.teamA:bet.teamB;
         const realTeam=side==='A'?real.teamA:real.teamB;
-        const teamPts=showPlayerPts && realTeam && team===realTeam;
-        return `<div class="bteam" data-ko="${sid}" data-side="${side}">
+        const teamPts=showPlayerPts && realTeam && val===realTeam;
+        return `<div class="bteam from-prev" data-ko="${sid}" data-side="${side}">
           <div style="display:flex;flex-direction:column;flex:1;min-width:0;gap:1px">
-            <span style="font-size:.6rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">M${mn} · ${sub}</span>
+            <span style="font-size:.6rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sub}</span>
             <select class="kosel" data-koteam="${sid}" data-side="${side}" ${dis?'disabled':''}>
               <option value="">-- equipo --</option>
-              ${opts.map(t=>`<option value="${t}" ${(side==='A'?bet.teamA:bet.teamB)===t?'selected':''}>${t}</option>`).join('')}
+              ${opts.map(t=>`<option value="${t}" ${val===t?'selected':''}>${t}</option>`).join('')}
             </select>
           </div>
           ${teamPts?`<span class="kopts">+${POINTS_KO_TEAM}</span>`:''}
         </div>`;
       };
-      let ha,hb;
-      if(round.id==='r32'){
-        const[gA,gB]=R32[i]||['A','B'];
-        ha=teamRow('A',`1° Grp.${gA}`,GROUPS[gA]||[]);
-        hb=teamRow('B',`2° Grp.${gB}`,GROUPS[gB]||[]);
-      }else{
-        const[sA,sB]=koSrc(round.id,i);
-        ha=teamRow('A',sA,allTeams());
-        hb=sB?teamRow('B',sB,allTeams()):'';
-      }
-      return `<div class="bmatch">${ha}${hb}</div>`;
+      return `<div class="bmatch">
+        <div class="bmatch-head"><span>M${match.num}</span><span class="bpath">${match.subA} · ${match.subB}</span></div>
+        ${teamRow('A',match.subA)}${teamRow('B',match.subB)}
+      </div>`;
     }).join('');
     return `<div class="bround br-${round.id}"><div class="brtitle">${round.label}</div>${items}</div>`;
   }).join('');
@@ -1128,7 +1178,7 @@ function renderQuestions(){
     const wrong=showPlayerPts&&rv&&bv&&!ok;
     const pts=ok?`+${POINTS_QUESTION}`:wrong?'✗':'';
     return `<div class="qrow">
-      <div class="qlabel">${q.label}${rv?`<div style="font-size:.7rem;color:var(--gold);margin-top:2px">✓ ${rv}</div>`:''}
+      <div class="qlabel">${q.label}<div class="qref" data-qref="${q.id}" style="font-size:.7rem;color:var(--gold);margin-top:2px;min-height:14px">${rv?`✓ ${rv}`:''}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
         <input class="qinput" style="${ok?'border-color:var(--win)':wrong?'border-color:var(--lose);opacity:.7':''}"
@@ -1143,15 +1193,20 @@ function renderQuestions(){
 function updateQuestionPointsUI(){
   const u=activeUser();
   const showPlayerPts = !!u && (!ses.isAdmin || isAdminPreview());
-  document.querySelectorAll('[data-qpts]').forEach(el=>{
-    const qid=el.dataset.qpts;
+  QUESTIONS.forEach(q=>{
+    const qid=q.id;
     const input=document.querySelector(`.qinput[data-qid="${qid}"]`);
     const bv=input ? input.value : (u?(BETS[u]?.questions?.[qid]??''):'');
     const rv=getReal().questions?.[qid]??'';
+    const refEl=document.querySelector(`[data-qref="${qid}"]`);
+    if(refEl)refEl.textContent=rv?`✓ ${rv}`:'';
+    const ptsEl=document.querySelector(`[data-qpts="${qid}"]`);
     const ok=showPlayerPts&&rv&&bv&&questionCompare(bv,rv);
     const wrong=showPlayerPts&&rv&&bv&&!ok;
-    el.textContent=ok?'+30':wrong?'✗':'';
-    el.style.color=ok?'var(--win)':'var(--lose)';
+    if(ptsEl){
+      ptsEl.textContent=ok?`+${POINTS_QUESTION}`:wrong?'✗':'';
+      ptsEl.style.color=ok?'var(--win)':'var(--lose)';
+    }
     if(input){
       input.style.borderColor=ok?'var(--win)':wrong?'var(--lose)':'';
       input.style.opacity=wrong?'.7':'';
@@ -1444,11 +1499,10 @@ function isClassifCompleteFor(u){
 function isKnockoutCompleteFor(u){
   if(!isKnockoutEnabled())return true;
   const k=BETS[u]?.knockout||{};
-  return KO_ROUNDS.every(round=>Array.from({length:round.n},(_,i)=>{
-    const sid=`${round.id}_${i}`;
-    const item=k[sid]||{};
+  return KO_ROUNDS.every(round=>round.matches.every(match=>{
+    const item=k[match.sid]||{};
     return !!item.teamA && !!item.teamB;
-  }).every(Boolean));
+  }));
 }
 function isQuestionsCompleteFor(u){
   const q=BETS[u]?.questions||{};
