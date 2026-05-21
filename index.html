@@ -155,10 +155,13 @@
   .bracket-team.winner-selected { background: rgba(201,168,76,0.18); }
   .bracket-team-name { flex: 1; font-size: 0.82rem; font-weight: 600; }
   .bracket-score { width: 34px; background: var(--darker); border: 1px solid var(--border); color: var(--text);
-    text-align: center; padding: 3px 2px; border-radius: 4px; font-size: 0.82rem; -moz-appearance: textfield; }
+    text-align: center; padding: 3px 2px; border-radius: 4px; font-size: 0.82rem; -moz-appearance: textfield; flex-shrink:0; }
   .bracket-score::-webkit-outer-spin-button,
   .bracket-score::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .bracket-score:focus { outline: none; border-color: var(--gold); }
+  .ko-team-select { outline: none; padding: 1px 0; }
+  .ko-team-select:focus { color: var(--gold); }
+  .ko-team-select option { background: var(--card); color: var(--text); }
 
   /* QUESTIONS */
   .questions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
@@ -351,11 +354,18 @@
     <div class="card">
       <div class="card-header"><span class="card-title">🔒 CONTROL DE APUESTAS</span></div>
       <div class="card-body">
-        <div class="info-box">Cuando cierres las apuestas, los participantes ya no podrán modificar sus pronósticos. Solo el admin puede volver a abrirlas.</div>
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-          <button class="btn danger" onclick="lockBets()" id="btn-lock">🔒 CERRAR APUESTAS</button>
+        <div class="info-box">Cuando cierres las apuestas, los participantes ya no podrán modificar sus pronósticos. También puedes fijar una fecha/hora de cierre automático.</div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+          <button class="btn danger" onclick="lockBets()" id="btn-lock">🔒 CERRAR APUESTAS YA</button>
           <button class="btn green" onclick="unlockBets()" id="btn-unlock" style="display:none">🔓 ABRIR APUESTAS</button>
           <span id="lock-status" style="color:var(--muted);font-size:0.85rem"></span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <label style="color:var(--muted);font-size:0.85rem">⏰ Cierre automático:</label>
+          <input type="datetime-local" class="admin-input" id="auto-lock-input" style="width:220px">
+          <button class="btn secondary" onclick="setAutoLock()">Guardar fecha</button>
+          <button class="btn secondary" onclick="clearAutoLock()">Quitar</button>
+          <span id="auto-lock-status" style="color:var(--gold);font-size:0.82rem"></span>
         </div>
       </div>
     </div>
@@ -492,6 +502,7 @@ const KNOCKOUT_ROUNDS = [
 let state = {
   adminPin: 'admin2026',
   betsLocked: false,
+  autoLockDate: null, // ISO string
   participants: [],   // [{name, pin}]
   bets: {},           // { name: {matches, groups, knockout, questions} }
   realResults: { matches:{}, groups:{}, knockout:{}, questions:{} },
@@ -582,8 +593,12 @@ function enterApp() {
   });
 
   updateLockUI();
+  updateAutoLockStatus();
   renderAll();
   showTab('fase-grupos');
+  checkAutoLock();
+  // Check every minute
+  setInterval(checkAutoLock, 60000);
 }
 
 // ═══════════════════════════════════════════
@@ -605,6 +620,47 @@ function unlockBets() {
   updateLockUI();
   renderAll();
   toast('🔓 Apuestas abiertas');
+}
+
+function setAutoLock() {
+  const val = document.getElementById('auto-lock-input').value;
+  if (!val) return toast('Selecciona una fecha y hora', true);
+  state.autoLockDate = new Date(val).toISOString();
+  saveData();
+  updateAutoLockStatus();
+  toast('⏰ Cierre automático fijado: ' + new Date(val).toLocaleString('es-ES'));
+}
+
+function clearAutoLock() {
+  state.autoLockDate = null;
+  saveData();
+  updateAutoLockStatus();
+  toast('⏰ Cierre automático eliminado');
+}
+
+function updateAutoLockStatus() {
+  const el = document.getElementById('auto-lock-status');
+  if (!el) return;
+  if (state.autoLockDate) {
+    const d = new Date(state.autoLockDate);
+    el.textContent = `⏰ Cierre programado: ${d.toLocaleString('es-ES')}`;
+    // Prefill input
+    const inp = document.getElementById('auto-lock-input');
+    if (inp) inp.value = d.toISOString().slice(0,16);
+  } else {
+    el.textContent = 'Sin cierre automático';
+  }
+}
+
+function checkAutoLock() {
+  if (!state.autoLockDate || state.betsLocked || session.isAdmin) return;
+  if (new Date() >= new Date(state.autoLockDate)) {
+    state.betsLocked = true;
+    saveData();
+    updateLockUI();
+    renderAll();
+    toast('🔒 Apuestas cerradas automáticamente');
+  }
 }
 
 function updateLockUI() {
@@ -716,31 +772,42 @@ function setBetMatch(id, val) {
 function renderGroups() {
   const container = document.getElementById('groups-container');
   const user = session.user;
-  const disabled = !canEdit();
+  const disabled = !canEdit() && !session.isAdmin;
 
   let html = '';
-  if (disabled && !session.isAdmin) html += '<div class="locked-banner">🔒 Apuestas cerradas.</div>';
+  if (!canEdit() && !session.isAdmin) html += '<div class="locked-banner">🔒 Apuestas cerradas.</div>';
 
   html += Object.entries(GROUPS).map(([grp, teams]) => {
     const betRank = user ? (state.bets[user]?.groups?.[grp] ?? [null,null,null,null]) : [null,null,null,null];
     const realRank = state.realResults.groups?.[grp] ?? null;
 
+    // Find duplicate selections in this group
+    const chosen = betRank.filter(v => v && v !== '');
+    const dupes  = chosen.filter((v, i) => chosen.indexOf(v) !== i);
+
     const rows = [0,1,2,3].map(i => {
-      const val = betRank[i] ?? '';
-      const pts = realRank && val ? (realRank[i]===val ? '+20' : '') : '';
-      const col = pts ? 'var(--win)' : 'var(--muted)';
+      const val  = betRank[i] ?? '';
+      const pts  = realRank && val ? (realRank[i]===val ? '+20' : '') : '';
+      const col  = pts ? 'var(--win)' : 'var(--muted)';
+      const isDupe = val && dupes.includes(val);
+      const dupWarn = isDupe ? `<span style="color:var(--red);font-size:0.75rem;margin-left:4px">⚠️ repetido</span>` : '';
+      const selStyle = isDupe ? 'border-color:var(--red)' : '';
       return `
         <div class="ranking-row">
           <span class="rank-pos ${i<2?'q':''}">${i+1}°</span>
-          <select class="rank-select" onchange="setBetGroup('${grp}',${i},this.value)" ${disabled&&!session.isAdmin?'disabled':''}>
+          <select class="rank-select" style="${selStyle}" onchange="setBetGroup('${grp}',${i},this.value)" ${disabled?'disabled':''}>
             <option value="">-- equipo --</option>
             ${teams.map(t=>`<option value="${t}" ${t===val?'selected':''}>${t}</option>`).join('')}
           </select>
-          <span class="rank-pts" style="color:${col}">${pts}${realRank&&realRank[i]&&!pts?`<span style="font-size:0.7rem;color:var(--muted)">${realRank[i]}</span>`:''}</span>
+          ${dupWarn}
+          <span class="rank-pts" style="color:${col};margin-left:auto">${pts}${realRank&&realRank[i]&&!pts?`<span style="font-size:0.7rem;color:var(--muted)">${realRank[i]}</span>`:''}</span>
         </div>`;
     }).join('');
 
-    return `<div class="group-card"><div class="group-card-title">GRUPO ${grp}</div>${rows}</div>`;
+    const hasDupe = dupes.length > 0;
+    const dupeBanner = hasDupe ? `<div style="background:rgba(230,57,70,0.12);border-top:1px solid var(--red);padding:6px 12px;font-size:0.78rem;color:#fca5a5">⚠️ Hay equipos repetidos en este grupo — revisa tu clasificación</div>` : '';
+
+    return `<div class="group-card"><div class="group-card-title">GRUPO ${grp}</div>${rows}${dupeBanner}</div>`;
   }).join('');
 
   container.innerHTML = html;
@@ -751,6 +818,7 @@ function setBetGroup(grp, pos, val) {
   ensureBets(session.user);
   if (!state.bets[session.user].groups[grp]) state.bets[session.user].groups[grp] = [null,null,null,null];
   state.bets[session.user].groups[grp][pos] = val;
+  renderGroups(); // re-render to show/hide dupe warnings
   autoSave();
 }
 
@@ -758,48 +826,80 @@ function setBetGroup(grp, pos, val) {
 // KNOCKOUT
 // ═══════════════════════════════════════════
 
+// R32: which groups feed each of the 16 octavo matches
+const R32_PAIRS = [
+  ['A','B'],['C','D'],['E','F'],['G','H'],
+  ['I','J'],['K','L'],['A','C'],['B','D'],
+  ['E','G'],['F','H'],['I','K'],['J','L'],
+  ['A','D'],['B','C'],['E','H'],['F','G'],
+];
+
+// Human-readable source label for each slot in later rounds
+function slotSourceLabel(roundId, i) {
+  if (roundId === 'r16')   return [`Gan. Octavo M${i*2+1}`, `Gan. Octavo M${i*2+2}`];
+  if (roundId === 'sf')    return [`Gan. Cuarto M${i*2+1}`, `Gan. Cuarto M${i*2+2}`];
+  if (roundId === 'final') return i===0
+    ? ['Gan. Semi M1','Gan. Semi M2']
+    : ['Perd. Semi M1','Perd. Semi M2'];
+  if (roundId === 'winner') return ['Ganador Final', ''];
+  return ['Equipo A','Equipo B'];
+}
+
+function allTeams() { return Object.values(GROUPS).flat(); }
+
 function renderKnockout() {
   const container = document.getElementById('bracket-container');
   const user = session.user;
-  const disabled = !canEdit();
-  const grpKeys = Object.keys(GROUPS);
+  const dis = (!canEdit() && !session.isAdmin) ? 'disabled' : '';
 
   container.innerHTML = KNOCKOUT_ROUNDS.map(round => {
     const items = Array.from({length:round.count}, (_,i) => {
       const slotId = `${round.id}_${i}`;
-      const bet  = user ? (state.bets[user]?.knockout?.[slotId] ?? {}) : {};
-      const real = state.realResults.knockout?.[slotId] ?? {};
+      const bet = user ? (state.bets[user]?.knockout?.[slotId] ?? {}) : {};
+      const matchNum = i + 1;
 
-      let labelA, labelB;
+      const teamRow = (side, sublabel, teams, betTeam, isWinner) => {
+        const score = side==='A' ? bet.scoreA : bet.scoreB;
+        const opts  = teams.map(t=>`<option value="${t}" ${betTeam===t?'selected':''}>${t}</option>`).join('');
+        return `
+          <div class="bracket-team ${isWinner?'winner-selected':''}" onclick="${dis?'':'setKOWinner(''+slotId+'',''+side+'')'}">
+            <div style="display:flex;flex-direction:column;flex:1;min-width:0;gap:1px">
+              <span style="font-size:0.62rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">M${matchNum} · ${sublabel}</span>
+              <select class="ko-team-select" onchange="setKOTeam('${slotId}','${side}',this.value)" onclick="event.stopPropagation()" ${dis}>
+                <option value="">-- elige equipo --</option>
+                ${opts}
+              </select>
+            </div>
+            <input class="bracket-score" type="number" min="0" max="20" value="${score??''}"
+              placeholder="G" oninput="setKOScore('${slotId}','${side}',this.value)" onclick="event.stopPropagation()" ${dis}>
+          </div>`;
+      };
+
+      let htmlA, htmlB;
+
       if (round.id === 'r32') {
-        labelA = `1° Grp.${grpKeys[i % grpKeys.length]}`;
-        labelB = `2° Grp.${grpKeys[(i+1) % grpKeys.length]}`;
+        const [gA, gB] = R32_PAIRS[i] || ['A','B'];
+        htmlA = teamRow('A', `1° Grupo ${gA}`, GROUPS[gA]||[], bet.teamA||'', bet.winner==='A');
+        htmlB = teamRow('B', `2° Grupo ${gB}`, GROUPS[gB]||[], bet.teamB||'', bet.winner==='B');
       } else {
-        labelA = bet.teamA || real.teamA || `Gan. M${i*2+1}`;
-        labelB = bet.teamB || real.teamB || `Gan. M${i*2+2}`;
+        const [srcA, srcB] = slotSourceLabel(round.id, i);
+        htmlA = teamRow('A', srcA, allTeams(), bet.teamA||'', bet.winner==='A');
+        htmlB = srcB ? teamRow('B', srcB, allTeams(), bet.teamB||'', bet.winner==='B') : '';
       }
 
-      const winA = bet.winner === 'A';
-      const winB = bet.winner === 'B';
-      const dis = disabled && !session.isAdmin ? 'disabled' : '';
-
-      return `
-        <div class="bracket-match">
-          <div class="bracket-team ${winA?'winner-selected':''}" onclick="${dis?'':'setKOWinner(\''+slotId+'\',\'A\')'}">
-            <span class="bracket-team-name">${labelA}</span>
-            <input class="bracket-score" type="number" min="0" max="20" value="${bet.scoreA??''}"
-              placeholder="G" oninput="setKOScore('${slotId}','A',this.value)" onclick="event.stopPropagation()" ${dis}>
-          </div>
-          <div class="bracket-team ${winB?'winner-selected':''}" onclick="${dis?'':'setKOWinner(\''+slotId+'\',\'B\')'}">
-            <span class="bracket-team-name">${labelB}</span>
-            <input class="bracket-score" type="number" min="0" max="20" value="${bet.scoreB??''}"
-              placeholder="G" oninput="setKOScore('${slotId}','B',this.value)" onclick="event.stopPropagation()" ${dis}>
-          </div>
-        </div>`;
+      return `<div class="bracket-match">${htmlA}${htmlB}</div>`;
     }).join('');
 
     return `<div class="bracket-round br-${round.id}"><div class="bracket-round-title">${round.label}</div>${items}</div>`;
   }).join('');
+}
+
+function setKOTeam(slotId, side, val) {
+  if (!session.user || !canEdit()) return toast('🔒 Apuestas cerradas', true);
+  ensureBets(session.user);
+  if (!state.bets[session.user].knockout[slotId]) state.bets[session.user].knockout[slotId] = {};
+  state.bets[session.user].knockout[slotId][side==='A'?'teamA':'teamB'] = val;
+  autoSave();
 }
 
 function setKOWinner(slotId, team) {
@@ -818,7 +918,6 @@ function setKOScore(slotId, side, val) {
   state.bets[session.user].knockout[slotId][`score${side}`] = parseInt(val) || 0;
   autoSave();
 }
-
 // ═══════════════════════════════════════════
 // QUESTIONS
 // ═══════════════════════════════════════════
