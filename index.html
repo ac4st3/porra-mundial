@@ -553,6 +553,30 @@ async function saveBet(user,data){
   catch(e){ toast('Error guardando: '+e.message,true); }
 }
 
+// Guardado por secciones/rutas concretas. Esto evita que una escritura rápida de
+// una pestaña machaque datos de otra pestaña si Firebase todavía no ha devuelto
+// el último estado. Es importante para clasificaciones, eliminatoria y preguntas.
+async function saveBetSection(user,section){
+  ensureBet(user);
+  try{ await fbSet(`bets/${user}/${section}`, BETS[user][section] || {}); }
+  catch(e){ toast('Error guardando '+section+': '+e.message,true); }
+}
+async function saveGroupBet(user,grp){
+  ensureBet(user);
+  try{ await fbSet(`bets/${user}/groups/${grp}`, BETS[user].groups?.[grp] || [null,null,null,null]); }
+  catch(e){ toast('Error guardando grupo '+grp+': '+e.message,true); }
+}
+async function saveKnockoutBet(user,sid){
+  ensureBet(user);
+  try{ await fbSet(`bets/${user}/knockout/${sid}`, BETS[user].knockout?.[sid] || {}); }
+  catch(e){ toast('Error guardando eliminatoria: '+e.message,true); }
+}
+async function saveQuestionBet(user,qid){
+  ensureBet(user);
+  try{ await fbSet(`bets/${user}/questions/${qid}`, BETS[user].questions?.[qid] || null); }
+  catch(e){ toast('Error guardando pregunta: '+e.message,true); }
+}
+
 function ensureBet(u){if(!BETS[u])BETS[u]={matches:{},groups:{},knockout:{},questions:{}};}
 
 // ── BOOTSTRAP ─────────────────────────────────────
@@ -1240,7 +1264,7 @@ function closeRulesModal(){document.getElementById('rules-modal').classList.remo
 function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();recalc();updateTabStatus();updatePreviewBar();}
 
 // ── EVENT DELEGATION ──────────────────────────────
-document.addEventListener('click',e=>{
+document.addEventListener('click',async e=>{
   const t=e.target;
   if(t.id==='t-part'){switchLoginTab('part');return;}
   if(t.id==='t-admin'){switchLoginTab('admin');return;}
@@ -1294,7 +1318,7 @@ document.addEventListener('click',e=>{
       BETS[ses.user].matches[mid] = val;
     }
 
-    saveBet(ses.user,BETS[ses.user]);
+    await saveBetSection(ses.user,'matches');
     renderMatches();updateTabStatus();return;
   }
   if(t.closest('[data-ko]')&&!t.closest('select')&&!t.closest('input')){
@@ -1304,8 +1328,8 @@ document.addEventListener('click',e=>{
     const sid=row.dataset.ko,side=row.dataset.side;
     if(!BETS[ses.user].knockout[sid])BETS[ses.user].knockout[sid]={};
     BETS[ses.user].knockout[sid].winner=side;
-    saveBet(ses.user,BETS[ses.user]);
-    renderKnockout();return;
+    await saveKnockoutBet(ses.user,sid);
+    renderKnockout();updateTabStatus();return;
   }
   if(t.id==='b-addpart'){addPart();return;}
   if(t.dataset.delpart){delPart(t.dataset.delpart);return;}
@@ -1316,41 +1340,44 @@ document.addEventListener('click',e=>{
   if(t.id==='b-clradmin'){clearAdminResults();return;}
 });
 
-document.addEventListener('change',e=>{
+document.addEventListener('change',async e=>{
   const t=e.target;
   if(t.id==='i-admin-user'){ADMIN_VIEW_USER=t.value;renderSelectedUserBets();return;}
   if(t.dataset.grp!==undefined&&t.dataset.pos!==undefined){
     if(!ses.user||!canEdit())return toast('🔒 Cerradas',true);
     ensureBet(ses.user);
     if(!BETS[ses.user].groups[t.dataset.grp])BETS[ses.user].groups[t.dataset.grp]=[null,null,null,null];
-    BETS[ses.user].groups[t.dataset.grp][parseInt(t.dataset.pos)]=t.value;
-    renderGroups();updateTabStatus();saveBet(ses.user,BETS[ses.user]);return;
+    BETS[ses.user].groups[t.dataset.grp][parseInt(t.dataset.pos)]=t.value || null;
+    await saveGroupBet(ses.user,t.dataset.grp);
+    renderGroups();updateTabStatus();return;
   }
   if(t.dataset.koteam){
     if(!ses.user||!canEdit())return toast('🔒 Cerradas',true);
     ensureBet(ses.user);
     const sid=t.dataset.koteam,side=t.dataset.side;
     if(!BETS[ses.user].knockout[sid])BETS[ses.user].knockout[sid]={};
-    BETS[ses.user].knockout[sid][side==='A'?'teamA':'teamB']=t.value;
-    saveBet(ses.user,BETS[ses.user]);updateTabStatus();return;
+    BETS[ses.user].knockout[sid][side==='A'?'teamA':'teamB']=t.value || null;
+    await saveKnockoutBet(ses.user,sid);
+    updateTabStatus();return;
   }
   if(t.dataset.qid){
     if(!ses.user||isAdminPreview()||(!canEdit()&&!ses.isAdmin))return toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);
     ensureBet(ses.user);
-    BETS[ses.user].questions[t.dataset.qid]=t.value;
-    saveBet(ses.user,BETS[ses.user]);updateTabStatus();return;
+    BETS[ses.user].questions[t.dataset.qid]=t.value || null;
+    await saveQuestionBet(ses.user,t.dataset.qid);
+    updateTabStatus();return;
   }
 });
 
-document.addEventListener('input',e=>{
+document.addEventListener('input',async e=>{
   const t=e.target;
   if(t.dataset.koscore){
     if(!ses.user||!canEdit())return;
     ensureBet(ses.user);
     const sid=t.dataset.koscore,side=t.dataset.side;
     if(!BETS[ses.user].knockout[sid])BETS[ses.user].knockout[sid]={};
-    BETS[ses.user].knockout[sid][side==='A'?'scoreA':'scoreB']=parseInt(t.value)||0;
-    saveBet(ses.user,BETS[ses.user]);
+    BETS[ses.user].knockout[sid][side==='A'?'scoreA':'scoreB']=t.value===''?null:(parseInt(t.value)||0);
+    await saveKnockoutBet(ses.user,sid);
     updateTabStatus();
   }
 });
