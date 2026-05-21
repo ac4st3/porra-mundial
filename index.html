@@ -309,7 +309,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       </ul>
       <h3>5) Fases de activación</h3>
       <ul>
-        <li><strong>Fase 1:</strong> están activas Fase de grupos, Clasificaciones y Preguntas. La pestaña Eliminatoria permanece bloqueada.</li>
+        <li><strong>Fase 1:</strong> para los participantes están activas Fase de grupos, Clasificaciones y Preguntas. La pestaña Eliminatoria permanece bloqueada para jugadores hasta que el admin la active.</li>
         <li><strong>Fase 2:</strong> el admin activa la Eliminatoria cuando ya se conocen los cruces de dieciseisavos.</li>
       </ul>
       <h3>6) Cierre de apuestas</h3>
@@ -359,6 +359,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 
   <div class="main">
     <div id="p-grupos" class="panel on">
+      <div class="info">⚽ Pronostica el signo de cada partido de la fase de grupos: <strong>1</strong> gana el equipo local, <strong>X</strong> empate, <strong>2</strong> gana el equipo visitante. <strong>10 pts</strong> por cada acierto.</div>
       <div id="c-matches"></div>
     </div>
 
@@ -439,7 +440,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
         <div class="ch"><span class="ctitle">🧩 FASES DE LA PORRA</span></div>
         <div class="cb">
           <div class="info" style="margin-bottom:12px">
-            <strong>Fase 1:</strong> Fase de grupos, Clasificaciones y Preguntas activas. Eliminatoria bloqueada.<br>
+            <strong>Fase 1:</strong> Fase de grupos, Clasificaciones y Preguntas activas para jugadores. Eliminatoria bloqueada para participantes.<br>
             <strong>Fase 2:</strong> activa Eliminatoria cuando ya se sepan los cruces de dieciseisavos.
           </div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -704,7 +705,7 @@ async function handleGroupSelectChange(t){
 }
 async function handleKnockoutTeamChange(t){
   if(!t || !t.dataset.koteam)return false;
-  if(!isKnockoutEnabled()){toast('🔒 Eliminatoria todavía bloqueada',true);return true;}
+  if(!isKnockoutEnabled() && !ses.isAdmin){toast('🔒 Eliminatoria todavía bloqueada',true);return true;}
   const user=writableUser();
   if(!user||!canEdit()){toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);return true;}
 
@@ -934,7 +935,7 @@ async function doChangePin(){
 
 // ── TABS ──────────────────────────────────────────
 function showTab(tab){
-  if(tab==='elim' && !isKnockoutEnabled()){
+  if(tab==='elim' && !isKnockoutEnabled() && !ses.isAdmin){
     toast('🔒 Eliminatoria bloqueada hasta la segunda fase',true);
     return;
   }
@@ -1064,7 +1065,7 @@ function renderKnockout(){
   const c=document.getElementById('c-bracket');
   if(!c)return;
 
-  if(!isKnockoutEnabled()){
+  if(!isKnockoutEnabled() && !ses.isAdmin){
     c.innerHTML=`<div class="lbanner" style="width:100%;margin:0">
       🔒 La Eliminatoria todavía no está activada. Se abrirá cuando termine la fase de grupos y se conozcan los cruces de dieciseisavos.
     </div>`;
@@ -1309,13 +1310,14 @@ function phaseUI(){
   const enabled=isKnockoutEnabled();
   const tab=document.querySelector('.tab[data-tab="elim"]');
   if(tab){
-    tab.classList.toggle('disabled',!enabled);
-    tab.setAttribute('aria-disabled',enabled?'false':'true');
+    const lockedForThisUser = !enabled && !ses.isAdmin;
+    tab.classList.toggle('disabled',lockedForThisUser);
+    tab.setAttribute('aria-disabled',lockedForThisUser?'true':'false');
   }
   const on=document.getElementById('b-enable-ko'),off=document.getElementById('b-disable-ko'),st=document.getElementById('s-ko-phase');
   if(on)on.style.display=enabled?'none':'';
   if(off)off.style.display=enabled?'':'none';
-  if(st)st.textContent=enabled?'✅ Fase 2 activa: Eliminatoria abierta':'🔒 Fase 1 activa: Eliminatoria bloqueada';
+  if(st)st.textContent=enabled?'✅ Fase 2 activa: Eliminatoria abierta para todos':'🔒 Fase 1 activa: Eliminatoria bloqueada solo para jugadores';
 }
 async function setKnockoutPhase(enabled){
   try{
