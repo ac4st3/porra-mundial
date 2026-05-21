@@ -47,6 +47,8 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .tab{padding:12px 20px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.92rem;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s}
 .tab:hover{color:var(--text)}
 .tab.on{color:var(--gold);border-bottom-color:var(--gold)}
+.tab.disabled{opacity:.42;cursor:not-allowed;filter:grayscale(.4)}
+.tab.disabled:hover{color:var(--muted)}
 
 .tab-status{display:inline-flex;align-items:center;justify-content:center;margin-left:8px;width:18px;height:18px;border-radius:999px;border:1px solid transparent;vertical-align:middle;font-family:'Barlow',sans-serif;font-size:.72rem;font-weight:800;letter-spacing:0;position:relative}
 .tab.incomplete .tab-status{color:#fff;background:var(--red);border-color:#ff8b94;box-shadow:0 0 0 2px rgba(230,57,70,.16)}
@@ -103,10 +105,10 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .brtitle{font-family:'Bebas Neue',sans-serif;letter-spacing:2px;color:var(--gold);font-size:.83rem;text-align:center;padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:9px}
 .bmatch{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:8px}
 .br-r32 .bmatch{margin-bottom:8px}
-.br-r16 .bmatch{margin-bottom:74px}
+.br-r16 .bmatch{margin-bottom:42px}
+.br-qf  .bmatch{margin-bottom:118px}
 .br-sf  .bmatch{margin-bottom:230px}
 .br-final .bmatch{margin-bottom:0}
-.br-winner{padding-top:54px}
 .bteam{display:flex;align-items:center;padding:6px 8px;gap:7px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;overflow:hidden}
 .bteam:last-child{border-bottom:none}
 .bteam:hover{background:var(--card2)}
@@ -203,8 +205,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   .bcon{overflow-x:visible;padding-bottom:0}
   .bracket{display:block;min-width:0;width:100%}
   .bround{min-width:0;width:100%;padding:0;margin-bottom:14px}
-  .br-r32 .bmatch,.br-r16 .bmatch,.br-sf .bmatch,.br-final .bmatch{margin-bottom:8px}
-  .br-winner{padding-top:0}
+  .br-r32 .bmatch,.br-r16 .bmatch,.br-qf .bmatch,.br-sf .bmatch,.br-final .bmatch{margin-bottom:8px}
   .bteam{padding:8px}
   .bscore{width:42px;padding:6px 2px}
   .kosel{font-size:.9rem}
@@ -292,21 +293,26 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       <h3>2) Clasificaciones de grupo</h3>
       <ul>
         <li>Hay que ordenar los 4 equipos de cada grupo del 1º al 4º.</li>
-        <li>Cada posición exacta acertada suma <strong>20 puntos</strong>.</li>
+        <li>Cada posición exacta acertada suma <strong>25 puntos</strong>.</li>
         <li>No se puede repetir un mismo equipo dentro del mismo grupo.</li>
       </ul>
-      <h3>3) Eliminatoria</h3>
+      <h3>3) Preguntas especiales</h3>
       <ul>
-        <li>Hay que seleccionar los equipos de cada cruce, marcar el ganador y rellenar el resultado previsto.</li>
-        <li>Equipo/ganador acertado en la posición exacta: <strong>10 puntos</strong>.</li>
-        <li>Resultado exacto acertado: <strong>20 puntos</strong>.</li>
-      </ul>
-      <h3>4) Preguntas especiales</h3>
-      <ul>
-        <li>Cada pregunta especial acertada suma <strong>30 puntos</strong>.</li>
+        <li>Cada pregunta especial acertada suma <strong>50 puntos</strong>.</li>
         <li>Las respuestas se comparan ignorando mayúsculas/minúsculas y espacios sobrantes.</li>
       </ul>
-      <h3>5) Cierre de apuestas</h3>
+      <h3>4) Eliminatoria</h3>
+      <ul>
+        <li>La eliminatoria se activa en una segunda fase, cuando haya terminado la fase de grupos y se conozcan los equipos de dieciseisavos.</li>
+        <li>Solo hay que indicar qué equipos pasan/ocupan cada posición de la siguiente ronda. No se introducen marcadores.</li>
+        <li>Cada equipo acertado en su posición exacta suma <strong>20 puntos</strong>.</li>
+      </ul>
+      <h3>5) Fases de activación</h3>
+      <ul>
+        <li><strong>Fase 1:</strong> están activas Fase de grupos, Clasificaciones y Preguntas. La pestaña Eliminatoria permanece bloqueada.</li>
+        <li><strong>Fase 2:</strong> el admin activa la Eliminatoria cuando ya se conocen los cruces de dieciseisavos.</li>
+      </ul>
+      <h3>6) Cierre de apuestas</h3>
       <ul>
         <li>El admin puede establecer una fecha límite. Cuando llegue esa fecha, las apuestas quedan cerradas.</li>
         <li>Después del cierre, los participantes pueden consultar sus apuestas, pero no modificarlas.</li>
@@ -357,17 +363,17 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
     </div>
 
     <div id="p-clasif" class="panel">
-      <div class="info">📊 Pronostica el orden final de cada grupo. <strong>20 pts</strong> por posición acertada.</div>
+      <div class="info">📊 Pronostica el orden final de cada grupo. <strong>25 pts</strong> por posición acertada.</div>
       <div class="ggrid" id="c-groups"></div>
     </div>
 
     <div id="p-elim" class="panel">
-      <div class="info">🏆 <strong>10 pts</strong> equipo en posición exacta · <strong>20 pts</strong> resultado exacto.</div>
+      <div class="info">🏆 Segunda fase — <strong>20 pts</strong> por cada equipo acertado en su posición exacta. No se introducen marcadores.</div>
       <div class="bcon"><div class="bracket" id="c-bracket"></div></div>
     </div>
 
     <div id="p-preg" class="panel">
-      <div class="info">❓ Preguntas especiales — <strong>30 pts</strong> por acierto.</div>
+      <div class="info">❓ Preguntas especiales — <strong>50 pts</strong> por acierto.</div>
       <div class="qgrid" id="c-questions"></div>
     </div>
 
@@ -426,6 +432,21 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
             </div>
           </div>
           <div id="c-userbets" class="bet-summary" style="display:none"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ctitle">🧩 FASES DE LA PORRA</span></div>
+        <div class="cb">
+          <div class="info" style="margin-bottom:12px">
+            <strong>Fase 1:</strong> Fase de grupos, Clasificaciones y Preguntas activas. Eliminatoria bloqueada.<br>
+            <strong>Fase 2:</strong> activa Eliminatoria cuando ya se sepan los cruces de dieciseisavos.
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="btn grn" id="b-enable-ko">Activar Eliminatoria</button>
+            <button class="btn red" id="b-disable-ko" style="display:none">Desactivar Eliminatoria</button>
+            <span id="s-ko-phase" style="color:var(--muted);font-size:.83rem"></span>
+          </div>
         </div>
       </div>
 
@@ -502,7 +523,7 @@ const QUESTIONS=[
   {id:'q9',label:'¿Hasta dónde llega España?'},
 ];
 const R32=[['A','B'],['C','D'],['E','F'],['G','H'],['I','J'],['K','L'],['A','C'],['B','D'],['E','G'],['F','H'],['I','K'],['J','L'],['A','D'],['B','C'],['E','H'],['F','G']];
-const KO_ROUNDS=[{id:'r32',label:'OCTAVOS DE FINAL',n:16},{id:'r16',label:'CUARTOS DE FINAL',n:8},{id:'sf',label:'SEMIFINALES',n:4},{id:'final',label:'FINAL / 3°-4°',n:2},{id:'winner',label:'CAMPEÓN',n:1}];
+const KO_ROUNDS=[{id:'r32',label:'DIECISEISAVOS',n:16},{id:'r16',label:'OCTAVOS DE FINAL',n:8},{id:'qf',label:'CUARTOS DE FINAL',n:4},{id:'sf',label:'SEMIFINALES',n:2},{id:'final',label:'FINAL',n:1}];
 
 function buildMatches(){
   const out=[];let id=1;const d0=new Date('2026-06-11');
@@ -519,7 +540,11 @@ function allTeams(){return Object.values(GROUPS).flat();}
 
 // ── APP STATE ─────────────────────────────────────
 let USERS=[];    // [{name,pin}] from Firebase
-let CONFIG={adminPin:'admin2026',betsLocked:false,autoLockDate:null};
+let CONFIG={adminPin:'admin2026',betsLocked:false,autoLockDate:null,knockoutEnabled:false};
+const POINTS_MATCH=10;
+const POINTS_GROUP=25;
+const POINTS_QUESTION=50;
+const POINTS_KO_TEAM=20;
 let BETS={};     // {username: {matches,groups,knockout,questions}}
 const DEFAULT_USER_PIN='1234';
 let ses={user:null,isAdmin:false};
@@ -679,6 +704,7 @@ async function handleGroupSelectChange(t){
 }
 async function handleKnockoutTeamChange(t){
   if(!t || !t.dataset.koteam)return false;
+  if(!isKnockoutEnabled()){toast('🔒 Eliminatoria todavía bloqueada',true);return true;}
   const user=writableUser();
   if(!user||!canEdit()){toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);return true;}
 
@@ -704,16 +730,22 @@ async function handleQuestionInputChange(t){
   const value=t.value || '';
   BETS[user].questions[qid]=value;
 
-  // Guardado con debounce capturando el valor escrito. Así no se redibuja el campo
-  // en cada tecla y no se pierde el foco mientras se escribe una respuesta larga.
-  const key=`${user}_${qid}`;
-  clearTimeout(QUESTION_SAVE_TIMERS[key]);
-  QUESTION_SAVE_TIMERS[key]=setTimeout(async()=>{
-    await persistBetChild(user,`questions/${qid}`,value,'pregunta');
-    delete QUESTION_SAVE_TIMERS[key];
-  },900);
+  // El admin confirma resultados oficiales: se guardan al momento para que los
+  // jugadores vean el +30 sin esperar. Los jugadores mantienen debounce para no
+  // perder el foco mientras escriben.
+  if(ses.isAdmin && user==='__admin__'){
+    persistBetChild(user,`questions/${qid}`,value,'pregunta');
+  }else{
+    const key=`${user}_${qid}`;
+    clearTimeout(QUESTION_SAVE_TIMERS[key]);
+    QUESTION_SAVE_TIMERS[key]=setTimeout(async()=>{
+      await persistBetChild(user,`questions/${qid}`,value,'pregunta');
+      delete QUESTION_SAVE_TIMERS[key];
+    },900);
+  }
 
   updateTabStatus();
+  updateQuestionPointsUI();
   recalc();
   return true;
 }
@@ -735,23 +767,6 @@ async function flushQuestionInput(t){
   recalc();
   return true;
 }
-async function handleKnockoutScoreInput(t){
-  if(!t || !t.dataset.koscore)return false;
-  const user=writableUser();
-  if(!user||!canEdit())return true;
-
-  ensureBet(user);
-  const sid=t.dataset.koscore;
-  const side=t.dataset.side;
-  if(!BETS[user].knockout)BETS[user].knockout={};
-  if(!BETS[user].knockout[sid])BETS[user].knockout[sid]={};
-  BETS[user].knockout[sid][side==='A'?'scoreA':'scoreB']=t.value===''?'':(parseInt(t.value,10)||0);
-  await persistBetChild(user,`knockout/${sid}`,BETS[user].knockout[sid],'eliminatoria');
-  updateTabStatus();
-  recalc();
-  return true;
-}
-
 // ── BOOTSTRAP ─────────────────────────────────────
 async function boot(){
   try{
@@ -792,12 +807,12 @@ async function boot(){
 
       // Si el usuario está escribiendo una pregunta, no redibujamos el formulario.
       // Redibujar destruye el input y provoca pérdida de foco.
-      if(focused?.type==='question')return;
+      if(focused?.type==='question'){updateQuestionPointsUI();recalc();return;}
 
       renderAll();
       restoreFocusedInputState(focused);
     });
-    onValue(ref(db,'config'), snap=>{ if(snap.exists()){CONFIG={...CONFIG,...snap.val()};lockUI();autoLockUI();renderAll();} });
+    onValue(ref(db,'config'), snap=>{ if(snap.exists()){CONFIG={...CONFIG,...snap.val()};lockUI();autoLockUI();phaseUI();renderAll();} });
     onValue(ref(db,'users'), snap=>{
       USERS = snap.exists() ? Object.values(snap.val()) : [];
       fillSelect();
@@ -859,7 +874,7 @@ function enterApp(){
   document.getElementById('hdr-fill-zone').style.display=ses.isAdmin?'flex':'none';
   document.getElementById('b-mypin').style.display=ses.isAdmin?'none':'';
   ensureBet(ses.user);
-  lockUI();autoLockUI();
+  lockUI();autoLockUI();phaseUI();
   renderAll();
   setInterval(checkAutoLock,60000);
   if(userMustChangePin()){
@@ -919,6 +934,10 @@ async function doChangePin(){
 
 // ── TABS ──────────────────────────────────────────
 function showTab(tab){
+  if(tab==='elim' && !isKnockoutEnabled()){
+    toast('🔒 Eliminatoria bloqueada hasta la segunda fase',true);
+    return;
+  }
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   document.getElementById('p-'+tab).classList.add('on');
@@ -1004,6 +1023,7 @@ function mrowHTML(m,u,locked){
 // ── RENDER GROUPS ─────────────────────────────────
 function renderGroups(){
   const u=activeUser(),dis=isAdminPreview()||(!canEdit()&&!ses.isAdmin);
+  const showPlayerPts = !!u && (!ses.isAdmin || isAdminPreview());
   let html=dis?'<div class="lbanner">🔒 Apuestas cerradas.</div>':'';
   html+=Object.entries(GROUPS).map(([g,teams])=>{
     const br=u?normalizeGroupArray(BETS[u]?.groups?.[g]):['','','',''];
@@ -1012,7 +1032,7 @@ function renderGroups(){
     const dupes=chosen.filter((v,i)=>chosen.indexOf(v)!==i);
     const rows=[0,1,2,3].map(i=>{
       const val=br[i]??'';
-      const pts=rr&&val?(rr[i]===val?'+20':''):'';
+      const pts=showPlayerPts&&rr&&val?(normalizeGroupArray(rr)[i]===val?`+${POINTS_GROUP}`:''):'';
       const dup=val&&dupes.includes(val);
       return `<div class="grow">
         <span class="gpos ${i<2?'q':''}">${i+1}°</span>
@@ -1033,22 +1053,26 @@ function renderGroups(){
 
 // ── RENDER KNOCKOUT ───────────────────────────────
 function koSrc(rid,i){
-  if(rid==='r16')return[`Gan. Octavo M${i*2+1}`,`Gan. Octavo M${i*2+2}`];
+  if(rid==='r16')return[`Gan. Dieciseisavo M${i*2+1}`,`Gan. Dieciseisavo M${i*2+2}`];
+  if(rid==='qf') return[`Gan. Octavo M${i*2+1}`,`Gan. Octavo M${i*2+2}`];
   if(rid==='sf') return[`Gan. Cuarto M${i*2+1}`,`Gan. Cuarto M${i*2+2}`];
-  if(rid==='final')return i===0?['Gan. Semi M1','Gan. Semi M2']:['Perd. Semi M1','Perd. Semi M2'];
-  return['Ganador Final',''];
+  if(rid==='final')return ['Gan. Semi M1','Gan. Semi M2'];
+  return['',''];
 }
+function isKnockoutEnabled(){return CONFIG.knockoutEnabled===true;}
 function renderKnockout(){
+  const c=document.getElementById('c-bracket');
+  if(!c)return;
+
+  if(!isKnockoutEnabled()){
+    c.innerHTML=`<div class="lbanner" style="width:100%;margin:0">
+      🔒 La Eliminatoria todavía no está activada. Se abrirá cuando termine la fase de grupos y se conozcan los cruces de dieciseisavos.
+    </div>`;
+    return;
+  }
+
   const u=activeUser(),dis=isAdminPreview()||(!canEdit()&&!ses.isAdmin);
   const showPlayerPts = !!u && (!ses.isAdmin || isAdminPreview());
-  const exactScoreOk=(b,r)=>{
-    if(!showPlayerPts || !r)return false;
-    const rsA=scoreNumber(r.scoreA), rsB=scoreNumber(r.scoreB);
-    const bsA=scoreNumber(b.scoreA), bsB=scoreNumber(b.scoreB);
-    if(rsA===null || rsB===null || bsA!==rsA || bsB!==rsB)return false;
-    const realHasTeams=!!(r.teamA || r.teamB);
-    return !realHasTeams || ((r.teamA ? b.teamA===r.teamA : true) && (r.teamB ? b.teamB===r.teamB : true));
-  };
 
   document.getElementById('c-bracket').innerHTML=KO_ROUNDS.map(round=>{
     const items=Array.from({length:round.n},(_,i)=>{
@@ -1056,14 +1080,11 @@ function renderKnockout(){
       const bet=u?(BETS[u]?.knockout?.[sid]??{}):{};
       const real=getReal().knockout?.[sid]??{};
       const mn=i+1;
-      const scorePts=exactScoreOk(bet,real);
       const teamRow=(side,sub,opts)=>{
-        const score=side==='A'?bet.scoreA:bet.scoreB;
         const team=side==='A'?bet.teamA:bet.teamB;
         const realTeam=side==='A'?real.teamA:real.teamB;
-        const iw=bet.winner===side;
         const teamPts=showPlayerPts && realTeam && team===realTeam;
-        return `<div class="bteam ${iw?'win':''}" data-ko="${sid}" data-side="${side}">
+        return `<div class="bteam" data-ko="${sid}" data-side="${side}">
           <div style="display:flex;flex-direction:column;flex:1;min-width:0;gap:1px">
             <span style="font-size:.6rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">M${mn} · ${sub}</span>
             <select class="kosel" data-koteam="${sid}" data-side="${side}" ${dis?'disabled':''}>
@@ -1071,15 +1092,20 @@ function renderKnockout(){
               ${opts.map(t=>`<option value="${t}" ${(side==='A'?bet.teamA:bet.teamB)===t?'selected':''}>${t}</option>`).join('')}
             </select>
           </div>
-          <input class="bscore" type="number" min="0" max="20" value="${score??''}" placeholder="G"
-            data-koscore="${sid}" data-side="${side}" ${dis?'disabled':''}>
-          ${teamPts?'<span class="kopts">+10</span>':''}
+          ${teamPts?`<span class="kopts">+${POINTS_KO_TEAM}</span>`:''}
         </div>`;
       };
       let ha,hb;
-      if(round.id==='r32'){const[gA,gB]=R32[i]||['A','B'];ha=teamRow('A',`1° Grp.${gA}`,GROUPS[gA]||[]);hb=teamRow('B',`2° Grp.${gB}`,GROUPS[gB]||[]);}
-      else{const[sA,sB]=koSrc(round.id,i);ha=teamRow('A',sA,allTeams());hb=sB?teamRow('B',sB,allTeams()):''}
-      return `<div class="bmatch">${ha}${hb}${scorePts?'<div class="ko-score-pts">+20 resultado exacto</div>':''}</div>`;
+      if(round.id==='r32'){
+        const[gA,gB]=R32[i]||['A','B'];
+        ha=teamRow('A',`1° Grp.${gA}`,GROUPS[gA]||[]);
+        hb=teamRow('B',`2° Grp.${gB}`,GROUPS[gB]||[]);
+      }else{
+        const[sA,sB]=koSrc(round.id,i);
+        ha=teamRow('A',sA,allTeams());
+        hb=sB?teamRow('B',sB,allTeams()):'';
+      }
+      return `<div class="bmatch">${ha}${hb}</div>`;
     }).join('');
     return `<div class="bround br-${round.id}"><div class="brtitle">${round.label}</div>${items}</div>`;
   }).join('');
@@ -1087,26 +1113,49 @@ function renderKnockout(){
 }
 
 // ── RENDER QUESTIONS ──────────────────────────────
+function questionCompare(a,b){
+  return (a||'').toString().toLowerCase().trim() === (b||'').toString().toLowerCase().trim();
+}
 function renderQuestions(){
   const u=activeUser(),dis=isAdminPreview()||(!canEdit()&&!ses.isAdmin);
+  const showPlayerPts = !!u && (!ses.isAdmin || isAdminPreview());
   let html=dis?'<div class="lbanner">🔒 Apuestas cerradas.</div>':'';
   html+=QUESTIONS.map(q=>{
     const bv=u?(BETS[u]?.questions?.[q.id]??''):'';
     const rv=getReal().questions?.[q.id]??'';
-    const ok=rv&&bv&&bv.toLowerCase().trim()===rv.toLowerCase().trim();
-    const pts=rv&&bv?(ok?'+30':'✗'):'';
+    const ok=showPlayerPts&&rv&&bv&&questionCompare(bv,rv);
+    const wrong=showPlayerPts&&rv&&bv&&!ok;
+    const pts=ok?`+${POINTS_QUESTION}`:wrong?'✗':'';
     return `<div class="qrow">
       <div class="qlabel">${q.label}${rv?`<div style="font-size:.7rem;color:var(--gold);margin-top:2px">✓ ${rv}</div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
-        <input class="qinput" style="${ok?'border-color:var(--win)':pts==='✗'?'border-color:var(--lose);opacity:.7':''}"
+        <input class="qinput" style="${ok?'border-color:var(--win)':wrong?'border-color:var(--lose);opacity:.7':''}"
           value="${bv}" placeholder="Tu respuesta" data-qid="${q.id}" ${dis?'disabled':''}>
-        ${pts?`<span style="color:${ok?'var(--win)':'var(--lose)'};font-family:'Bebas Neue';font-size:.83rem">${pts}</span>`:''}
+        <span class="qpts" data-qpts="${q.id}" style="color:${ok?'var(--win)':'var(--lose)'};font-family:'Bebas Neue';font-size:.83rem">${pts}</span>
       </div>
     </div>`;
   }).join('');
   document.getElementById('c-questions').innerHTML=html;
   bindBetControls();
+}
+function updateQuestionPointsUI(){
+  const u=activeUser();
+  const showPlayerPts = !!u && (!ses.isAdmin || isAdminPreview());
+  document.querySelectorAll('[data-qpts]').forEach(el=>{
+    const qid=el.dataset.qpts;
+    const input=document.querySelector(`.qinput[data-qid="${qid}"]`);
+    const bv=input ? input.value : (u?(BETS[u]?.questions?.[qid]??''):'');
+    const rv=getReal().questions?.[qid]??'';
+    const ok=showPlayerPts&&rv&&bv&&questionCompare(bv,rv);
+    const wrong=showPlayerPts&&rv&&bv&&!ok;
+    el.textContent=ok?'+30':wrong?'✗':'';
+    el.style.color=ok?'var(--win)':'var(--lose)';
+    if(input){
+      input.style.borderColor=ok?'var(--win)':wrong?'var(--lose)':'';
+      input.style.opacity=wrong?'.7':'';
+    }
+  });
 }
 
 // ── SCORING ───────────────────────────────────────
@@ -1120,39 +1169,22 @@ function calcScore(name){
   let tot=0,m=0,g=0,k=0,q=0;
   Object.entries(real.matches||{}).forEach(([id,r])=>{
     const realResult = r && typeof r === 'object' ? r.result : r;
-    if(realResult && bet.matches?.[id]===realResult){m+=10;tot+=10;}
+    if(realResult && bet.matches?.[id]===realResult){m+=POINTS_MATCH;tot+=POINTS_MATCH;}
   });
   Object.entries(real.groups||{}).forEach(([grp,rk])=>{
     const realArr=normalizeGroupArray(rk);
     const betArr=normalizeGroupArray(bet.groups?.[grp]);
-    realArr.forEach((t,i)=>{if(t && betArr[i]===t){g+=20;tot+=20;}});
+    realArr.forEach((t,i)=>{if(t && betArr[i]===t){g+=POINTS_GROUP;tot+=POINTS_GROUP;}});
   });
   Object.entries(real.knockout||{}).forEach(([sid,r])=>{
     const b=bet.knockout?.[sid]||{};
-
-    // 10 pts por cada equipo acertado en su posición exacta dentro del cruce.
-    if(r.teamA && b.teamA === r.teamA){k += 10; tot += 10;}
-    if(r.teamB && b.teamB === r.teamB){k += 10; tot += 10;}
-
-    // 20 pts por resultado exacto. Normalizamos números porque Firebase puede
-    // devolverlos como número o como texto según cómo se hayan introducido.
-    const rsA = scoreNumber(r.scoreA);
-    const rsB = scoreNumber(r.scoreB);
-    const bsA = scoreNumber(b.scoreA);
-    const bsB = scoreNumber(b.scoreB);
-
-    const realHasTeams = !!(r.teamA || r.teamB);
-    const sameTeamsForScore = !realHasTeams || ((r.teamA ? b.teamA === r.teamA : true) && (r.teamB ? b.teamB === r.teamB : true));
-
-    if(sameTeamsForScore && rsA !== null && rsB !== null && bsA === rsA && bsB === rsB){
-      k += 20;
-      tot += 20;
-    }
+    if(r.teamA && b.teamA === r.teamA){k += POINTS_KO_TEAM; tot += POINTS_KO_TEAM;}
+    if(r.teamB && b.teamB === r.teamB){k += POINTS_KO_TEAM; tot += POINTS_KO_TEAM;}
   });
   QUESTIONS.forEach(({id:qid})=>{
     const r=real.questions?.[qid]||'';
     const a=bet.questions?.[qid]||'';
-    if(r&&a&&a.toLowerCase().trim()===r.toLowerCase().trim()){q+=30;tot+=30;}
+    if(r&&a&&a.toLowerCase().trim()===r.toLowerCase().trim()){q+=POINTS_QUESTION;tot+=POINTS_QUESTION;}
   });
   return{tot,m,g,k,q};
 }
@@ -1273,6 +1305,24 @@ function lockUI(){
   if(bu)bu.style.display=l?'':'none';
   if(ss)ss.textContent=l?'🔒 Apuestas CERRADAS':'🔓 Apuestas abiertas';
 }
+function phaseUI(){
+  const enabled=isKnockoutEnabled();
+  const tab=document.querySelector('.tab[data-tab="elim"]');
+  if(tab){
+    tab.classList.toggle('disabled',!enabled);
+    tab.setAttribute('aria-disabled',enabled?'false':'true');
+  }
+  const on=document.getElementById('b-enable-ko'),off=document.getElementById('b-disable-ko'),st=document.getElementById('s-ko-phase');
+  if(on)on.style.display=enabled?'none':'';
+  if(off)off.style.display=enabled?'':'none';
+  if(st)st.textContent=enabled?'✅ Fase 2 activa: Eliminatoria abierta':'🔒 Fase 1 activa: Eliminatoria bloqueada';
+}
+async function setKnockoutPhase(enabled){
+  try{
+    await fbUpdate('config',{knockoutEnabled:!!enabled});
+    toast(enabled?'✅ Eliminatoria activada':'🔒 Eliminatoria desactivada');
+  }catch(e){toast('Error: '+e.message,true);}
+}
 async function lockBets(){
   if(!confirm('¿Cerrar apuestas?'))return;
   try{await fbUpdate('config',{betsLocked:true});toast('🔒 Apuestas cerradas');}
@@ -1368,10 +1418,6 @@ function bindBetControls(){
   document.querySelectorAll('.kosel').forEach(el=>{
     el.onchange=async ev=>{ev.__betHandled=true;await handleKnockoutTeamChange(el);};
   });
-  document.querySelectorAll('.bscore').forEach(el=>{
-    el.oninput=async ev=>{ev.__betHandled=true;await handleKnockoutScoreInput(el);};
-    el.onchange=async ev=>{ev.__betHandled=true;await handleKnockoutScoreInput(el);};
-  });
   document.querySelectorAll('.qinput').forEach(el=>{
     el.oninput=async ev=>{ev.__betHandled=true;await handleQuestionInputChange(el);};
     el.onchange=async ev=>{ev.__betHandled=true;await flushQuestionInput(el);};
@@ -1394,12 +1440,12 @@ function isClassifCompleteFor(u){
   });
 }
 function isKnockoutCompleteFor(u){
+  if(!isKnockoutEnabled())return true;
   const k=BETS[u]?.knockout||{};
   return KO_ROUNDS.every(round=>Array.from({length:round.n},(_,i)=>{
     const sid=`${round.id}_${i}`;
     const item=k[sid]||{};
-    if(round.id==='winner')return !!item.teamA;
-    return !!item.teamA && !!item.teamB && !!item.winner && item.scoreA!==undefined && item.scoreB!==undefined;
+    return !!item.teamA && !!item.teamB;
   }).every(Boolean));
 }
 function isQuestionsCompleteFor(u){
@@ -1423,7 +1469,7 @@ function updateTabStatus(){
   const status={
     grupos:{ok:isGroupsCompleteFor(activeUser()),tip:'Faltan partidos por apostar'},
     clasif:{ok:isClassifCompleteFor(activeUser()),tip:'Faltan clasificaciones por completar'},
-    elim:{ok:isKnockoutCompleteFor(activeUser()),tip:'Faltan cruces, ganadores o resultados'},
+    elim:{ok:isKnockoutCompleteFor(activeUser()),tip:isKnockoutEnabled()?'Faltan equipos por completar':'Eliminatoria todavía bloqueada'},
     preg:{ok:isQuestionsCompleteFor(activeUser()),tip:'Faltan preguntas por responder'},
   };
 
@@ -1565,24 +1611,14 @@ document.addEventListener('click',async e=>{
     await saveBetSection(ses.user,'matches');
     renderMatches();updateTabStatus();return;
   }
-  if(t.closest('[data-ko]')&&!t.closest('select')&&!t.closest('input')){
-    const row=t.closest('[data-ko]');if(!row)return;
-    const user=writableUser();
-    if(!user||!canEdit())return toast(isAdminPreview()?'👁️ Vista previa: no se modifica':'🔒 Cerradas',true);
-    ensureBet(user);
-    const sid=row.dataset.ko,side=row.dataset.side;
-    if(!BETS[user].knockout)BETS[user].knockout={};
-    if(!BETS[user].knockout[sid])BETS[user].knockout[sid]={};
-    BETS[user].knockout[sid].winner=side;
-    await persistBetChild(user,`knockout/${sid}`,BETS[user].knockout[sid],'eliminatoria');
-    renderKnockout();updateTabStatus();recalc();return;
-  }
   if(t.id==='b-addpart'){addPart();return;}
   if(t.dataset.delpart){delPart(t.dataset.delpart);return;}
   if(t.id==='b-lock'){lockBets();return;}
   if(t.id==='b-unlock'){unlockBets();return;}
   if(t.id==='b-setlock'){setAutoLock();return;}
   if(t.id==='b-clrlock'){clearAutoLock();return;}
+  if(t.id==='b-enable-ko'){setKnockoutPhase(true);return;}
+  if(t.id==='b-disable-ko'){setKnockoutPhase(false);return;}
   if(t.id==='b-clradmin'){clearAdminResults();return;}
 });
 
@@ -1599,7 +1635,6 @@ document.addEventListener('change',async e=>{
 document.addEventListener('input',async e=>{
   if(e.__betHandled)return;
   const t=e.target;
-  if(await handleKnockoutScoreInput(t))return;
   if(await handleQuestionInputChange(t))return;
   if(t.matches && t.matches('select')){
     if(await handleGroupSelectChange(t))return;
