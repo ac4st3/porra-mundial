@@ -531,6 +531,16 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       </div>
 
       <div class="card">
+        <div class="ch"><span class="ctitle">📄 INFORME DE APUESTAS</span></div>
+        <div class="cb">
+          <div class="info" style="margin-bottom:12px">
+            Genera un PDF con el resumen de lo apostado por cada participante, fecha de generación y huella de verificación. Sirve como constancia para revisar la porra si hubiera dudas.
+          </div>
+          <button class="btn grn" id="b-export-report">📄 Generar informe PDF</button>
+        </div>
+      </div>
+
+      <div class="card">
         <div class="ch"><span class="ctitle">📋 RESULTADOS ADMIN</span></div>
         <div class="cb" style="display:flex;gap:9px;flex-wrap:wrap">
           <button class="btn red" id="b-clradmin">🗑️ Limpiar mis resultados</button>
@@ -565,7 +575,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v27-20260525-session-persistence';
+const APP_VERSION = 'v28-20260525-pdf-report';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -1865,6 +1875,151 @@ async function importBackupFile(file){
   }
 }
 
+
+// ── PDF REPORT ────────────────────────────────────
+function reportText(v){
+  return String(v ?? '').replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[\u2013\u2014]/g,'-').replace(/\s+/g,' ').trim();
+}
+function reportSignForMatch(bet,m){
+  const v=bet?.matches?.[m.id];
+  const r=officialResultOf(v);
+  return r || '-';
+}
+function reportGroupLines(bet){
+  return Object.entries(GROUPS).map(([grp])=>{
+    const arr=normalizeGroupArray(bet?.groups?.[grp]);
+    return `Grupo ${grp}: 1º ${arr[0]||'-'} | 2º ${arr[1]||'-'} | 3º ${arr[2]||'-'} | 4º ${arr[3]||'-'}`;
+  });
+}
+function reportQuestionLines(bet){
+  return QUESTIONS.map(q=>`${q.label}: ${bet?.questions?.[q.id] || '-'}`);
+}
+function reportKnockoutLines(bet){
+  const lines=[];
+  KO_ROUNDS.forEach(round=>{
+    lines.push(round.label);
+    round.matches.forEach(match=>{
+      const item=bet?.knockout?.[match.sid] || {};
+      lines.push(`  M${match.num}: ${item.teamA || '-'} vs ${item.teamB || '-'}`);
+    });
+  });
+  return lines;
+}
+function reportCompletionForUser(name){
+  return [
+    isGroupsCompleteFor(name) ? 'Fase de grupos OK' : 'Fase de grupos incompleta',
+    isClassifCompleteFor(name) ? 'Clasificaciones OK' : 'Clasificaciones incompletas',
+    isQuestionsCompleteFor(name) ? 'Preguntas OK' : 'Preguntas incompletas',
+    isKnockoutEnabled() ? (isKnockoutCompleteFor(name) ? 'Eliminatoria OK' : 'Eliminatoria incompleta') : 'Eliminatoria no activada'
+  ].join(' · ');
+}
+async function sha256Text(text){
+  if(!window.crypto?.subtle)return 'no disponible';
+  const enc=new TextEncoder().encode(text);
+  const hash=await crypto.subtle.digest('SHA-256',enc);
+  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function addPdfWrappedText(doc,text,x,y,maxWidth,lineHeight,options={}){
+  const pageH=doc.internal.pageSize.getHeight();
+  const bottom=options.bottom || 286;
+  const lines=doc.splitTextToSize(reportText(text),maxWidth);
+  lines.forEach(line=>{
+    if(y>bottom){doc.addPage();y=14;}
+    doc.text(line,x,y);
+    y+=lineHeight;
+  });
+  return y;
+}
+async function exportBetsReportPdf(){
+  if(!ses.isAdmin)return toast('Solo admin puede generar el informe PDF',true);
+  try{
+    toast('Generando PDF...');
+    const { jsPDF } = await import('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/+esm');
+    const generatedAt=new Date();
+    const usersSorted=[...USERS].sort((a,b)=>a.name.localeCompare(b.name,'es'));
+    const payloadForHash={
+      generatedAt:generatedAt.toISOString(),
+      users:usersSorted.map(u=>({name:u.name,bet:normalizeBet(BETS[u.name])})),
+      config:CONFIG,
+      knockoutEnabled:isKnockoutEnabled()
+    };
+    const auditHash=await sha256Text(JSON.stringify(payloadForHash));
+
+    const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+    const margin=12;
+    const maxW=186;
+    let y=14;
+
+    function header(){
+      doc.setFont('helvetica','bold');doc.setFontSize(15);
+      doc.text('Informe de apuestas - Porra Mundial 2026',margin,y);y+=7;
+      doc.setFont('helvetica','normal');doc.setFontSize(9);
+      doc.text(`Generado: ${generatedAt.toLocaleString('es-ES')}`,margin,y);y+=5;
+      doc.text(`Participantes: ${usersSorted.length} | Bote: ${fmtMoney(potInfo().total)}`,margin,y);y+=5;
+      doc.text(`Hash auditoria SHA-256: ${auditHash.slice(0,32)}...${auditHash.slice(-16)}`,margin,y);y+=7;
+      doc.setDrawColor(120);doc.line(margin,y,198,y);y+=6;
+    }
+    header();
+
+    doc.setFont('helvetica','bold');doc.setFontSize(11);
+    doc.text('Resumen de ranking en el momento de generar el informe',margin,y);y+=6;
+    doc.setFont('helvetica','normal');doc.setFontSize(9);
+    const ranking=usersSorted.map(u=>({name:u.name,...calcScore(u.name)})).sort((a,b)=>b.tot-a.tot);
+    ranking.forEach((r,i)=>{
+      y=addPdfWrappedText(doc,`${i+1}. ${r.name} - Total ${r.tot} pts (Partidos ${r.m}, Grupos ${r.g}, Eliminatoria ${r.k}, Preguntas ${r.q})`,margin,y,maxW,4.3);
+    });
+
+    usersSorted.forEach((u,idx)=>{
+      const name=u.name;
+      const bet=normalizeBet(BETS[name]);
+      if(idx>0 || y>235){doc.addPage();y=14;}
+      doc.setFont('helvetica','bold');doc.setFontSize(13);
+      doc.text(`Apuestas de ${reportText(name)}`,margin,y);y+=6;
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);
+      y=addPdfWrappedText(doc,reportCompletionForUser(name),margin,y,maxW,4.2);
+      y+=2;
+
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Fase de grupos 1-X-2',margin,y);y+=5;
+      doc.setFont('helvetica','normal');doc.setFontSize(8);
+      ALL.forEach(m=>{
+        const line=`M${m.id} · ${fmtDate(m.date)} ${m.time} · ${m.home} - ${m.away}: ${reportSignForMatch(bet,m)}`;
+        y=addPdfWrappedText(doc,line,margin,y,maxW,3.8,{bottom:286});
+      });
+      y+=3;
+
+      if(y>245){doc.addPage();y=14;}
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Clasificaciones',margin,y);y+=5;
+      doc.setFont('helvetica','normal');doc.setFontSize(8);
+      reportGroupLines(bet).forEach(line=>{y=addPdfWrappedText(doc,line,margin,y,maxW,3.8);});
+      y+=3;
+
+      if(y>235){doc.addPage();y=14;}
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Preguntas',margin,y);y+=5;
+      doc.setFont('helvetica','normal');doc.setFontSize(8);
+      reportQuestionLines(bet).forEach(line=>{y=addPdfWrappedText(doc,line,margin,y,maxW,3.8);});
+      y+=3;
+
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Eliminatoria',margin,y);y+=5;
+      doc.setFont('helvetica','normal');doc.setFontSize(8);
+      reportKnockoutLines(bet).forEach(line=>{y=addPdfWrappedText(doc,line,margin,y,maxW,3.8);});
+    });
+
+    const pages=doc.getNumberOfPages();
+    for(let i=1;i<=pages;i++){
+      doc.setPage(i);
+      doc.setFont('helvetica','normal');doc.setFontSize(8);
+      doc.text(`Página ${i}/${pages}`,180,292);
+    }
+
+    const ts=generatedAt.toISOString().replace(/[:.]/g,'-').slice(0,19);
+    doc.save(`informe_apuestas_porra_mundial_2026_${ts}.pdf`);
+    toast('📄 Informe PDF generado');
+  }catch(e){
+    console.error(e);
+    toast('Error generando PDF: '+e.message,true);
+  }
+}
+
 // ── UTILS ─────────────────────────────────────────
 function fmtDate(d){return new Date(d+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'long'});}
 function fmtDeadline(d){return new Date(d).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
@@ -2062,6 +2217,7 @@ document.addEventListener('click',async e=>{
   if(t.id==='b-rules-close'){closeRulesModal();return;}
   if(t.id==='b-export-backup'){exportBackup();return;}
   if(t.id==='b-import-backup'){openImportBackup();return;}
+  if(t.id==='b-export-report'){exportBetsReportPdf();return;}
   if(t.id==='b-pin-ok'){doChangePin();return;}
   if(t.id==='b-pin-no'){closePinModal();return;}
   const tabTarget=t.closest('[data-tab]');
