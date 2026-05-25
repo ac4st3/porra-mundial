@@ -565,7 +565,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v26-20260525-ranking-header';
+const APP_VERSION = 'v27-20260525-session-persistence';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -783,6 +783,87 @@ let ADMIN_PREVIEW_USER=''; // Admin editando la porra de un jugador
 let PUBLIC_VIEW_USER='';   // Participante viendo la porra de otro jugador en solo lectura
 let _saveTimer=null;
 let QUESTION_SAVE_TIMERS={};
+
+const SESSION_KEY='porra_mundial_2026_session';
+const SESSION_TTL_MS=4*60*60*1000; // 4 horas de inactividad
+let _sessionActivityInit=false;
+let _lastSessionTouch=0;
+
+function saveSession(){
+  if(!ses.user)return;
+  try{
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      user: ses.user,
+      isAdmin: !!ses.isAdmin,
+      lastActivity: Date.now(),
+      version: APP_VERSION
+    }));
+  }catch(e){
+    console.warn('No se pudo guardar la sesión:', e);
+  }
+}
+function clearStoredSession(){
+  try{localStorage.removeItem(SESSION_KEY);}catch(e){}
+}
+function readStoredSession(){
+  try{
+    const raw=localStorage.getItem(SESSION_KEY);
+    if(!raw)return null;
+    const data=JSON.parse(raw);
+    if(!data||!data.user||!data.lastActivity)return null;
+    if(Date.now()-Number(data.lastActivity)>SESSION_TTL_MS){
+      clearStoredSession();
+      return null;
+    }
+    return data;
+  }catch(e){
+    clearStoredSession();
+    return null;
+  }
+}
+function touchSession(){
+  if(!ses.user)return;
+  const now=Date.now();
+  if(now-_lastSessionTouch<30000)return; // no escribir en localStorage en cada pequeño movimiento
+  _lastSessionTouch=now;
+  saveSession();
+}
+function checkSessionTimeout(){
+  if(!ses.user)return;
+  const data=readStoredSession();
+  if(!data){
+    toast('Sesión cerrada por inactividad');
+    doLogout();
+  }
+}
+function initSessionPersistence(){
+  if(_sessionActivityInit)return;
+  _sessionActivityInit=true;
+  ['click','keydown','input','change','touchstart','mousemove','scroll'].forEach(ev=>{
+    window.addEventListener(ev,touchSession,{passive:true});
+  });
+  setInterval(checkSessionTimeout,60000);
+}
+function restoreStoredSession(){
+  const data=readStoredSession();
+  if(!data)return false;
+
+  if(data.isAdmin && data.user==='__admin__'){
+    ses={user:'__admin__',isAdmin:true};
+    saveSession();
+    return true;
+  }
+
+  const u=USERS.find(x=>x.name===data.user);
+  if(u){
+    ses={user:u.name,isAdmin:false};
+    saveSession();
+    return true;
+  }
+
+  clearStoredSession();
+  return false;
+}
 
 function getReal(){return normalizeBet(BETS['__admin__']);}
 function getUserObj(name){return USERS.find(x=>x.name===name)||null;}
@@ -1079,9 +1160,13 @@ async function boot(){
     toast('Error conectando con Firebase: '+e.message,true);
   }finally{
     document.getElementById('loading').style.display='none';
-    document.getElementById('login-screen').classList.add('on');
-  initTabsOverflowHint();
-    initTabsOverflowHint();
+    initSessionPersistence();
+    if(restoreStoredSession()){
+      enterApp();
+    }else{
+      document.getElementById('login-screen').classList.add('on');
+      initTabsOverflowHint();
+    }
   }
 }
 
@@ -1107,6 +1192,7 @@ function doLogin(){
   const u=USERS.find(x=>x.name===name);
   if(!u||u.pin!==pin){err.style.color='var(--red)';err.textContent='❌ PIN incorrecto';return;}
   ses={user:name,isAdmin:false};
+  saveSession();
   enterApp();
 }
 function doAdminLogin(){
@@ -1114,6 +1200,7 @@ function doAdminLogin(){
   const err=document.getElementById('l-err');
   if(pin!==CONFIG.adminPin){err.style.color='var(--red)';err.textContent='❌ PIN de admin incorrecto';return;}
   ses={user:'__admin__',isAdmin:true};
+  saveSession();
   enterApp();
 }
 function userMustChangePin(){
@@ -1122,6 +1209,8 @@ function userMustChangePin(){
   return !!(u && (u.mustChangePin || u.pin===DEFAULT_USER_PIN));
 }
 function enterApp(){
+  saveSession();
+  initSessionPersistence();
   document.getElementById('login-screen').classList.remove('on');
   document.getElementById('app').style.display='block';
   document.getElementById('h-user').textContent=ses.isAdmin?'Admin':ses.user;
@@ -1139,8 +1228,10 @@ function enterApp(){
   }
 }
 function doLogout(){
+  clearStoredSession();
   forcePinChange=false;
   ADMIN_PREVIEW_USER='';
+  PUBLIC_VIEW_USER='';
   ses={user:null,isAdmin:false};
   document.getElementById('app').style.display='none';
   document.getElementById('pin-modal').classList.remove('on');
