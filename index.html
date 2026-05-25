@@ -390,7 +390,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 
   <div class="main">
     <div id="p-grupos" class="panel on">
-      <div class="info">⚽ Pronostica el signo de cada partido de la fase de grupos: <strong>1</strong> gana el equipo local, <strong>X</strong> empate, <strong>2</strong> gana el equipo visitante. <strong>10 pts</strong> por cada acierto.</div>
+      <div class="info">⚽ Pronostica el signo de cada partido de la fase de grupos: <strong>1</strong> gana el equipo local, <strong>X</strong> empate, <strong>2</strong> gana el equipo visitante. <strong>10 pts</strong> por cada acierto. Horarios en <strong>hora peninsular española</strong>.</div>
       <div id="c-matches"></div>
     </div>
 
@@ -606,14 +606,82 @@ const KO_ROUNDS=[
 ];
 
 function buildMatches(){
-  const out=[];let id=1;const d0=new Date('2026-06-11');
-  Object.entries(GROUPS).forEach(([g,t],gi)=>{
-    [[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]].forEach(([a,b],pi)=>{
-      const d=new Date(d0);d.setDate(d.getDate()+Math.floor(gi/2)+pi*2);
-      out.push({id:String(id++),group:g,date:d.toISOString().slice(0,10),time:['18:00','20:00','22:00'][pi%3],home:t[a],away:t[b]});
-    });
-  });
-  return out;
+  // Calendario oficial de fase de grupos convertido a horario peninsular español (CEST, UTC+2).
+  // Los id coinciden con el número de partido FIFA para evitar ambigüedades.
+  return [
+    {"id": "1", "group": "A", "date": "2026-06-11", "time": "21:00", "home": "México", "away": "Sudáfrica"},
+    {"id": "2", "group": "A", "date": "2026-06-12", "time": "04:00", "home": "Corea del Sur", "away": "Rep. Checa"},
+    {"id": "3", "group": "B", "date": "2026-06-12", "time": "21:00", "home": "Canadá", "away": "Bosnia-Herz."},
+    {"id": "4", "group": "D", "date": "2026-06-13", "time": "03:00", "home": "USA", "away": "Paraguay"},
+    {"id": "6", "group": "D", "date": "2026-06-13", "time": "06:00", "home": "Australia", "away": "Turquía"},
+    {"id": "8", "group": "B", "date": "2026-06-13", "time": "21:00", "home": "Catar", "away": "Suiza"},
+    {"id": "7", "group": "C", "date": "2026-06-14", "time": "00:00", "home": "Brasil", "away": "Marruecos"},
+    {"id": "5", "group": "C", "date": "2026-06-14", "time": "03:00", "home": "Haití", "away": "Escocia"},
+    {"id": "10", "group": "E", "date": "2026-06-14", "time": "19:00", "home": "Alemania", "away": "Curazao"},
+    {"id": "11", "group": "F", "date": "2026-06-14", "time": "22:00", "home": "Países Bajos", "away": "Japón"},
+    {"id": "9", "group": "E", "date": "2026-06-15", "time": "01:00", "home": "Costa de Marfil", "away": "Ecuador"},
+    {"id": "12", "group": "F", "date": "2026-06-15", "time": "04:00", "home": "Suecia", "away": "Túnez"},
+    {"id": "14", "group": "H", "date": "2026-06-15", "time": "18:00", "home": "España", "away": "Cabo Verde"},
+    {"id": "16", "group": "G", "date": "2026-06-15", "time": "21:00", "home": "Bélgica", "away": "Egipto"},
+    {"id": "13", "group": "H", "date": "2026-06-16", "time": "00:00", "home": "Arabia Saudí", "away": "Uruguay"},
+    {"id": "15", "group": "G", "date": "2026-06-16", "time": "03:00", "home": "Irán", "away": "Nueva Zelanda"},
+    {"id": "20", "group": "J", "date": "2026-06-16", "time": "06:00", "home": "Austria", "away": "Jordania"},
+    {"id": "17", "group": "I", "date": "2026-06-16", "time": "21:00", "home": "Francia", "away": "Senegal"},
+    {"id": "18", "group": "I", "date": "2026-06-17", "time": "00:00", "home": "Irak", "away": "Noruega"},
+    {"id": "19", "group": "J", "date": "2026-06-17", "time": "03:00", "home": "Argentina", "away": "Argelia"},
+    {"id": "23", "group": "K", "date": "2026-06-17", "time": "19:00", "home": "Portugal", "away": "R.D. Congo"},
+    {"id": "22", "group": "L", "date": "2026-06-17", "time": "22:00", "home": "Inglaterra", "away": "Croacia"},
+    {"id": "21", "group": "L", "date": "2026-06-18", "time": "01:00", "home": "Ghana", "away": "Panamá"},
+    {"id": "24", "group": "K", "date": "2026-06-18", "time": "04:00", "home": "Uzbekistán", "away": "Colombia"},
+    {"id": "25", "group": "A", "date": "2026-06-18", "time": "18:00", "home": "Rep. Checa", "away": "Sudáfrica"},
+    {"id": "26", "group": "B", "date": "2026-06-18", "time": "21:00", "home": "Suiza", "away": "Bosnia-Herz."},
+    {"id": "27", "group": "B", "date": "2026-06-19", "time": "00:00", "home": "Canadá", "away": "Catar"},
+    {"id": "28", "group": "A", "date": "2026-06-19", "time": "03:00", "home": "México", "away": "Corea del Sur"},
+    {"id": "32", "group": "D", "date": "2026-06-19", "time": "21:00", "home": "USA", "away": "Australia"},
+    {"id": "30", "group": "C", "date": "2026-06-20", "time": "00:00", "home": "Escocia", "away": "Marruecos"},
+    {"id": "29", "group": "C", "date": "2026-06-20", "time": "03:00", "home": "Brasil", "away": "Haití"},
+    {"id": "31", "group": "D", "date": "2026-06-20", "time": "05:00", "home": "Turquía", "away": "Paraguay"},
+    {"id": "36", "group": "F", "date": "2026-06-20", "time": "06:00", "home": "Túnez", "away": "Japón"},
+    {"id": "35", "group": "F", "date": "2026-06-20", "time": "19:00", "home": "Países Bajos", "away": "Suecia"},
+    {"id": "33", "group": "E", "date": "2026-06-20", "time": "22:00", "home": "Alemania", "away": "Costa de Marfil"},
+    {"id": "34", "group": "E", "date": "2026-06-21", "time": "02:00", "home": "Ecuador", "away": "Curazao"},
+    {"id": "38", "group": "H", "date": "2026-06-21", "time": "18:00", "home": "España", "away": "Arabia Saudí"},
+    {"id": "39", "group": "G", "date": "2026-06-21", "time": "21:00", "home": "Bélgica", "away": "Irán"},
+    {"id": "37", "group": "H", "date": "2026-06-22", "time": "00:00", "home": "Uruguay", "away": "Cabo Verde"},
+    {"id": "40", "group": "G", "date": "2026-06-22", "time": "03:00", "home": "Nueva Zelanda", "away": "Egipto"},
+    {"id": "43", "group": "J", "date": "2026-06-22", "time": "19:00", "home": "Argentina", "away": "Austria"},
+    {"id": "42", "group": "I", "date": "2026-06-22", "time": "23:00", "home": "Francia", "away": "Irak"},
+    {"id": "41", "group": "I", "date": "2026-06-23", "time": "02:00", "home": "Noruega", "away": "Senegal"},
+    {"id": "44", "group": "J", "date": "2026-06-23", "time": "05:00", "home": "Jordania", "away": "Argelia"},
+    {"id": "47", "group": "K", "date": "2026-06-23", "time": "19:00", "home": "Portugal", "away": "Uzbekistán"},
+    {"id": "45", "group": "L", "date": "2026-06-23", "time": "22:00", "home": "Inglaterra", "away": "Ghana"},
+    {"id": "46", "group": "L", "date": "2026-06-24", "time": "01:00", "home": "Panamá", "away": "Croacia"},
+    {"id": "48", "group": "K", "date": "2026-06-24", "time": "04:00", "home": "Colombia", "away": "R.D. Congo"},
+    {"id": "51", "group": "B", "date": "2026-06-24", "time": "21:00", "home": "Suiza", "away": "Canadá"},
+    {"id": "52", "group": "B", "date": "2026-06-24", "time": "21:00", "home": "Bosnia-Herz.", "away": "Catar"},
+    {"id": "49", "group": "C", "date": "2026-06-25", "time": "00:00", "home": "Escocia", "away": "Brasil"},
+    {"id": "50", "group": "C", "date": "2026-06-25", "time": "00:00", "home": "Marruecos", "away": "Haití"},
+    {"id": "53", "group": "A", "date": "2026-06-25", "time": "03:00", "home": "Rep. Checa", "away": "México"},
+    {"id": "54", "group": "A", "date": "2026-06-25", "time": "03:00", "home": "Sudáfrica", "away": "Corea del Sur"},
+    {"id": "55", "group": "E", "date": "2026-06-25", "time": "22:00", "home": "Curazao", "away": "Costa de Marfil"},
+    {"id": "56", "group": "E", "date": "2026-06-25", "time": "22:00", "home": "Ecuador", "away": "Alemania"},
+    {"id": "57", "group": "F", "date": "2026-06-26", "time": "01:00", "home": "Japón", "away": "Suecia"},
+    {"id": "58", "group": "F", "date": "2026-06-26", "time": "01:00", "home": "Túnez", "away": "Países Bajos"},
+    {"id": "59", "group": "D", "date": "2026-06-26", "time": "04:00", "home": "Turquía", "away": "USA"},
+    {"id": "60", "group": "D", "date": "2026-06-26", "time": "04:00", "home": "Paraguay", "away": "Australia"},
+    {"id": "61", "group": "I", "date": "2026-06-26", "time": "21:00", "home": "Noruega", "away": "Francia"},
+    {"id": "62", "group": "I", "date": "2026-06-26", "time": "21:00", "home": "Senegal", "away": "Irak"},
+    {"id": "65", "group": "H", "date": "2026-06-27", "time": "02:00", "home": "Cabo Verde", "away": "Arabia Saudí"},
+    {"id": "66", "group": "H", "date": "2026-06-27", "time": "02:00", "home": "Uruguay", "away": "España"},
+    {"id": "63", "group": "G", "date": "2026-06-27", "time": "05:00", "home": "Egipto", "away": "Irán"},
+    {"id": "64", "group": "G", "date": "2026-06-27", "time": "05:00", "home": "Nueva Zelanda", "away": "Bélgica"},
+    {"id": "67", "group": "L", "date": "2026-06-27", "time": "23:00", "home": "Panamá", "away": "Inglaterra"},
+    {"id": "68", "group": "L", "date": "2026-06-27", "time": "23:00", "home": "Croacia", "away": "Ghana"},
+    {"id": "71", "group": "K", "date": "2026-06-28", "time": "01:30", "home": "Colombia", "away": "Portugal"},
+    {"id": "72", "group": "K", "date": "2026-06-28", "time": "01:30", "home": "R.D. Congo", "away": "Uzbekistán"},
+    {"id": "69", "group": "J", "date": "2026-06-28", "time": "04:00", "home": "Argelia", "away": "Austria"},
+    {"id": "70", "group": "J", "date": "2026-06-28", "time": "04:00", "home": "Jordania", "away": "Argentina"},
+  ];
 }
 const ALL=buildMatches();
 function allTeams(){return Object.values(GROUPS).flat();}
