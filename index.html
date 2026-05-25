@@ -34,7 +34,9 @@ body{background:var(--darker);color:var(--text);font-family:'Barlow',sans-serif;
 /* HEADER */
 header{background:linear-gradient(135deg,#0A0E1A,#0d1628,#0A0E1A);border-bottom:2px solid var(--gold);padding:12px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100}
 header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3px;color:var(--gold)}
-.huser{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:.88rem;display:flex;align-items:center;gap:7px}
+.huser{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:.88rem;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ranking-pill-btn{background:transparent;color:var(--gold);border:1px solid rgba(201,168,76,.55);padding:3px 8px;border-radius:7px;font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1px;cursor:pointer;line-height:1.1}
+.ranking-pill-btn:hover,.ranking-pill-btn.on{background:rgba(201,168,76,.16);border-color:var(--gold)}
 .uname{color:var(--gold);font-weight:600}
 .abadge{background:var(--red);color:#fff;font-size:.68rem;padding:2px 6px;border-radius:4px;font-family:'Bebas Neue',sans-serif}
 .ubadge{background:rgba(230,57,70,.18);color:#fca5a5;border:1px solid rgba(230,57,70,.45);font-size:.68rem;padding:2px 6px;border-radius:4px;font-family:'Bebas Neue',sans-serif;letter-spacing:.8px}
@@ -337,7 +339,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       <h3>4) Eliminatoria</h3>
       <ul>
         <li>La eliminatoria se abrirá cuando termine la fase de grupos y se conozcan los cruces de dieciseisavos.</li>
-        <li>En cada ronda solo hay que indicar qué equipos pasan a la siguiente fase; no se introducen marcadores.</li>
+        <li>En cada ronda solo hay que indicar qué equipos pasan a la siguiente fase; no se introducen rankinges.</li>
         <li>Cada equipo acertado en su posición exacta suma <strong>20 puntos</strong>.</li>
       </ul>
       <h3>5) Fases de la porra</h3>
@@ -372,6 +374,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
     <div class="huser">
       <span class="uname" id="h-user"></span>
       <span class="abadge" id="h-badge" style="display:none">ADMIN</span>
+      <button class="ranking-pill-btn" id="b-ranking" type="button">🏆 RANKING</button>
     </div>
     <div class="hright">
       <span class="deadline-pill" id="s-deadline">⏰ Límite: sin establecer</span>
@@ -394,7 +397,6 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       <div class="tab" data-tab="clasif"><span class="tab-label">CLASIFICACIONES</span><span class="tab-status"></span></div>
       <div class="tab" data-tab="preg"><span class="tab-label">PREGUNTAS</span><span class="tab-status"></span></div>
       <div class="tab" data-tab="elim"><span class="tab-label">ELIMINATORIA</span><span class="tab-status"></span></div>
-      <div class="tab" data-tab="marca"><span class="tab-label">MARCADOR</span></div>
       <div class="tab adm" data-tab="admin" style="display:none"><span class="tab-label">⚙️ ADMIN</span></div>
     </div>
     <div class="tabs-more" id="tabs-more" aria-hidden="true">›</div>
@@ -412,7 +414,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
     </div>
 
     <div id="p-elim" class="panel">
-      <div class="info">🏆 Segunda fase — <strong>20 pts</strong> por cada equipo acertado en su posición exacta. No se introducen marcadores.</div>
+      <div class="info">🏆 Segunda fase — <strong>20 pts</strong> por cada equipo acertado en su posición exacta. No se introducen rankinges.</div>
       <div class="bcon"><div class="bracket" id="c-bracket"></div></div>
     </div>
 
@@ -425,7 +427,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       <div class="pot-card" id="c-pot"></div>
       <div class="card">
         <div class="ch">
-          <span class="ctitle">🏆 CLASIFICACIÓN GENERAL</span>
+          <span class="ctitle">🏆 RANKING GENERAL</span>
           <span id="s-marca-ts" style="margin-left:auto;font-size:.75rem;color:var(--muted)"></span>
         </div>
         <div class="cb" style="padding:0"><table class="stable" id="c-scores"></table></div>
@@ -563,7 +565,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v25-20260525-tabs-mobile';
+const APP_VERSION = 'v26-20260525-ranking-header';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -1195,8 +1197,12 @@ function showTab(tab){
   }
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  document.getElementById('p-'+tab).classList.add('on');
-  document.querySelector(`[data-tab="${tab}"]`).classList.add('on');
+  const panel=document.getElementById('p-'+tab);
+  if(panel)panel.classList.add('on');
+  const tabEl=document.querySelector(`[data-tab="${tab}"]`);
+  if(tabEl)tabEl.classList.add('on');
+  const rankingBtn=document.getElementById('b-ranking');
+  if(rankingBtn)rankingBtn.classList.toggle('on',tab==='marca');
 }
 
 // ── RENDER MATCHES ────────────────────────────────
@@ -1961,6 +1967,7 @@ document.addEventListener('click',async e=>{
   if(t.id==='b-admin-settings'){if(isAdminPlayerEdit())ADMIN_PREVIEW_USER='';renderAll();showTab('admin');return;}
   if(t.id==='b-exit-preview'){exitUserPreview();return;}
   if(t.id==='b-rules'){openRulesModal();return;}
+  if(t.id==='b-ranking'){if(isAdminPlayerEdit())ADMIN_PREVIEW_USER='';PUBLIC_VIEW_USER='';renderAll();showTab('marca');return;}
   if(t.id==='b-rules-close'){closeRulesModal();return;}
   if(t.id==='b-export-backup'){exportBackup();return;}
   if(t.id==='b-import-backup'){openImportBackup();return;}
@@ -1989,7 +1996,7 @@ document.addEventListener('click',async e=>{
       const prev = BETS[userToWrite].matches?.[mid];
 
       // El admin introduce el resultado oficial 1/X/2.
-      // Si el resultado venía de autorellenar y tenía marcador real, conservamos el marcador.
+      // Si el resultado venía de autorellenar y tenía ranking real, conservamos el ranking.
       if(prev && typeof prev === 'object'){
         BETS[userToWrite].matches[mid] = {
           ...prev,
