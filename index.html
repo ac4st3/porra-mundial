@@ -273,15 +273,17 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       <button class="ltab on" id="t-part">SOY PARTICIPANTE</button>
       <button class="ltab" id="t-admin">SOY ADMIN</button>
     </div>
-    <div id="f-part">
-      <select class="lfield" id="l-user"><option value="">— Selecciona tu nombre —</option></select>
-      <input class="lfield" id="l-pin" type="password" placeholder="Tu PIN personal">
-      <button class="lbtn" id="b-login">ENTRAR</button>
-    </div>
-    <div id="f-admin" style="display:none">
-      <input class="lfield" id="l-apin" type="password" placeholder="PIN de administrador">
-      <button class="lbtn" id="b-alogin">ACCEDER COMO ADMIN</button>
-    </div>
+    <form id="f-part" autocomplete="on">
+      <select class="lfield" id="l-user" name="username" autocomplete="username">
+        <option value="">— Selecciona tu nombre —</option>
+      </select>
+      <input class="lfield" id="l-pin" name="password" type="password" placeholder="Tu PIN personal" autocomplete="current-password">
+      <button class="lbtn" id="b-login" type="submit">ENTRAR</button>
+    </form>
+    <form id="f-admin" style="display:none" autocomplete="on">
+      <input class="lfield" id="l-apin" name="admin-password" type="password" placeholder="PIN de administrador" autocomplete="current-password">
+      <button class="lbtn" id="b-alogin" type="submit">ACCEDER COMO ADMIN</button>
+    </form>
     <div class="lerr" id="l-err"></div>
     <div style="margin-top:14px;font-size:.73rem;color:var(--muted)">¿No estás registrado? Pide al admin que te añada.</div>
   </div>
@@ -291,9 +293,9 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 <div class="modal-bg" id="pin-modal">
   <div class="modal">
     <div class="modal-title">🔑 CAMBIAR MI PIN</div>
-    <input class="lfield" id="pin-cur"  type="password" placeholder="PIN actual">
-    <input class="lfield" id="pin-new1" type="password" placeholder="Nuevo PIN (mín. 3 caracteres)">
-    <input class="lfield" id="pin-new2" type="password" placeholder="Repetir nuevo PIN">
+    <input class="lfield" id="pin-cur" name="current-password" type="password" placeholder="PIN actual" autocomplete="current-password">
+    <input class="lfield" id="pin-new1" name="new-password" type="password" placeholder="Nuevo PIN (mín. 3 caracteres)" autocomplete="new-password">
+    <input class="lfield" id="pin-new2" name="new-password-confirm" type="password" placeholder="Repetir nuevo PIN" autocomplete="new-password">
     <div style="display:flex;gap:9px;margin-top:4px">
       <button class="lbtn" id="b-pin-ok" style="flex:1">GUARDAR</button>
       <button class="lbtn" id="b-pin-no" style="flex:1;background:var(--card2);color:var(--text)">CANCELAR</button>
@@ -325,14 +327,14 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       </ul>
       <h3>4) Eliminatoria</h3>
       <ul>
-        <li>La eliminatoria se activa en una segunda fase, cuando haya terminado la fase de grupos y se conozcan los equipos de dieciseisavos.</li>
-        <li>La pestaña sigue el cuadro oficial desde dieciseisavos: M73-M88, octavos M89-M96, cuartos M97-M100, semifinales M101-M102 y final M104. Solo hay que indicar los equipos que ocupan cada plaza; no se introducen marcadores.</li>
+        <li>La eliminatoria se abrirá cuando termine la fase de grupos y se conozcan los cruces de dieciseisavos.</li>
+        <li>En cada ronda solo hay que indicar qué equipos pasan a la siguiente fase; no se introducen marcadores.</li>
         <li>Cada equipo acertado en su posición exacta suma <strong>20 puntos</strong>.</li>
       </ul>
-      <h3>5) Fases de activación</h3>
+      <h3>5) Fases de la porra</h3>
       <ul>
-        <li><strong>Fase 1:</strong> para los participantes están activas Fase de grupos, Clasificaciones y Preguntas. La pestaña Eliminatoria permanece bloqueada para jugadores hasta que el admin la active.</li>
-        <li><strong>Fase 2:</strong> el admin activa la Eliminatoria cuando ya se conocen los cruces de dieciseisavos.</li>
+        <li><strong>Fase 1:</strong> están activas Fase de grupos, Clasificaciones y Preguntas.</li>
+        <li><strong>Fase 2:</strong> se abrirá la Eliminatoria cuando estén definidos los cruces.</li>
       </ul>
       <h3>6) Precio y premios</h3>
       <ul>
@@ -344,10 +346,8 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       </ul>
       <h3>7) Cierre de apuestas</h3>
       <ul>
-        <li>El admin puede establecer una fecha límite. Cuando llegue esa fecha, las apuestas quedan cerradas.</li>
-        <li>Después del cierre, los participantes pueden consultar sus apuestas, pero no modificarlas.</li>
-        <li>El admin también puede bloquear manualmente la porra de un jugador concreto cuando ya la haya completado. Ese jugador podrá verla, pero no editarla salvo que el admin la desbloquee.</li>
-        <li>El admin puede cargar resultados con <strong>Autorellenar</strong> o corregirlos manualmente.</li>
+        <li>Habrá una fecha límite visible en la parte superior de la web.</li>
+        <li>Después del cierre, las apuestas podrán consultarse, pero no modificarse.</li>
       </ul>
     </div>
     <button class="lbtn" id="b-rules-close" style="margin-top:14px">ENTENDIDO</button>
@@ -498,6 +498,20 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
             <button class="btn sec" id="b-setlock">Guardar</button>
             <button class="btn sec" id="b-clrlock">Quitar</button>
             <span id="s-autolock" style="color:var(--gold);font-size:.8rem"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ctitle">💾 BACKUP DE PORRAS</span></div>
+        <div class="cb">
+          <div class="info" style="margin-bottom:12px">
+            Exporta un archivo JSON con usuarios, apuestas, resultados oficiales y configuración. Guárdalo como copia de seguridad por si hubiera que restaurar la porra.
+          </div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">
+            <button class="btn grn" id="b-export-backup">⬇️ Exportar backup</button>
+            <button class="btn sec" id="b-import-backup">⬆️ Importar backup</button>
+            <input type="file" id="i-import-backup" accept="application/json,.json" style="display:none">
           </div>
         </div>
       </div>
@@ -1618,6 +1632,75 @@ async function clearAdminResults(){
   }catch(e){toast('Error: '+e.message,true);}
 }
 
+
+// ── BACKUP / RESTORE ──────────────────────────────
+function sanitizeBackupNamePart(v){
+  return String(v||'porra').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'') || 'porra';
+}
+function normalizeBackupData(raw){
+  if(!raw || typeof raw !== 'object')throw new Error('El archivo no contiene un backup válido.');
+  const users = raw.users && typeof raw.users === 'object' ? raw.users : null;
+  const bets = raw.bets && typeof raw.bets === 'object' ? raw.bets : null;
+  const config = raw.config && typeof raw.config === 'object' ? raw.config : null;
+  if(!users || !bets || !config)throw new Error('Faltan bloques obligatorios: users, bets o config.');
+  return {users,bets,config};
+}
+function exportBackup(){
+  if(!ses.isAdmin)return toast('Solo admin puede exportar backups',true);
+  const usersObj = Object.fromEntries(USERS.map(u=>[u.name,u]));
+  const payload = {
+    app:'Porra Mundial 2026',
+    version:'backup-v1',
+    exportedAt:new Date().toISOString(),
+    exportedAtLocal:new Date().toLocaleString('es-ES'),
+    users:usersObj,
+    bets:BETS || {},
+    config:CONFIG || {}
+  };
+  const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  const ts=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+  a.href=URL.createObjectURL(blob);
+  a.download=`backup_${sanitizeBackupNamePart('porra_mundial_2026')}_${ts}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+  toast('⬇️ Backup exportado');
+}
+function openImportBackup(){
+  if(!ses.isAdmin)return toast('Solo admin puede importar backups',true);
+  const inp=document.getElementById('i-import-backup');
+  if(inp){inp.value='';inp.click();}
+}
+async function importBackupFile(file){
+  if(!ses.isAdmin)return toast('Solo admin puede importar backups',true);
+  if(!file)return;
+  try{
+    const text=await file.text();
+    const raw=JSON.parse(text);
+    const data=normalizeBackupData(raw);
+    const userCount=Object.keys(data.users).length;
+    const betCount=Object.keys(data.bets).length;
+    const msg=`Vas a restaurar un backup con ${userCount} usuarios y ${betCount} bloques de apuestas. Esto sustituirá los datos actuales de Firebase. ¿Continuar?`;
+    if(!confirm(msg))return;
+    await Promise.all([
+      fbSet('users',data.users),
+      fbSet('bets',data.bets),
+      fbSet('config',{...CONFIG,...data.config})
+    ]);
+    USERS=Object.values(data.users);
+    BETS=data.bets;
+    CONFIG={...CONFIG,...data.config};
+    ensureBet('__admin__');
+    if(ses.user)ensureBet(ses.user);
+    fillSelect();
+    renderAll();
+    toast('✅ Backup importado correctamente');
+  }catch(e){
+    toast('Error importando backup: '+e.message,true);
+  }
+}
+
 // ── UTILS ─────────────────────────────────────────
 function fmtDate(d){return new Date(d+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'long'});}
 function fmtDeadline(d){return new Date(d).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
@@ -1790,8 +1873,6 @@ document.addEventListener('click',async e=>{
   const t=e.target;
   if(t.id==='t-part'){switchLoginTab('part');return;}
   if(t.id==='t-admin'){switchLoginTab('admin');return;}
-  if(t.id==='b-login'){doLogin();return;}
-  if(t.id==='b-alogin'){doAdminLogin();return;}
   if(t.id==='b-mypin'){openPinModal();return;}
   if(t.id==='b-out'){doLogout();return;}
   if(t.id==='b-hdr-fill'){autofill();return;}
@@ -1799,6 +1880,8 @@ document.addEventListener('click',async e=>{
   if(t.id==='b-exit-preview'){exitUserPreview();return;}
   if(t.id==='b-rules'){openRulesModal();return;}
   if(t.id==='b-rules-close'){closeRulesModal();return;}
+  if(t.id==='b-export-backup'){exportBackup();return;}
+  if(t.id==='b-import-backup'){openImportBackup();return;}
   if(t.id==='b-pin-ok'){doChangePin();return;}
   if(t.id==='b-pin-no'){closePinModal();return;}
   const tabTarget=t.closest('[data-tab]');
@@ -1884,6 +1967,21 @@ document.addEventListener('keydown',e=>{
   else if(id==='i-newname'||id==='i-newppin')addPart();
   else if(['pin-cur','pin-new1','pin-new2'].includes(id))doChangePin();
 });
+
+
+// Formularios de login: mejora la detección de gestores de contraseñas y evita recarga.
+const loginForm=document.getElementById('f-part');
+if(loginForm){
+  loginForm.addEventListener('submit',e=>{e.preventDefault();doLogin();});
+}
+const adminLoginForm=document.getElementById('f-admin');
+if(adminLoginForm){
+  adminLoginForm.addEventListener('submit',e=>{e.preventDefault();doAdminLogin();});
+}
+const importInput=document.getElementById('i-import-backup');
+if(importInput){
+  importInput.addEventListener('change',e=>importBackupFile(e.target.files && e.target.files[0]));
+}
 
 // ── BOOT ──────────────────────────────────────────
 boot();
