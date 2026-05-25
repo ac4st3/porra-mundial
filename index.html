@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Porra Mundial 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -547,6 +550,58 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
+
+// ── APP VERSION / CACHE CONTROL ───────────────────
+// Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
+// Sirve para detectar si un navegador está usando una copia antigua en caché.
+const APP_VERSION = 'v24-20260525-cache-control';
+window.APP_VERSION = APP_VERSION;
+
+function latestIndexUrl(){
+  const url = new URL(window.location.href);
+  url.searchParams.set('_', Date.now().toString());
+  return url.toString();
+}
+
+function showUpdateBanner(version){
+  let b = document.getElementById('update-banner');
+  if(!b){
+    b = document.createElement('div');
+    b.id = 'update-banner';
+    b.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:100000;background:#111827;border:1px solid var(--gold);color:var(--text);padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.45);display:flex;align-items:center;gap:10px;justify-content:space-between;font-family:Barlow,sans-serif;font-size:.9rem';
+    document.body.appendChild(b);
+  }
+  b.innerHTML = `<span>🔄 Hay una versión nueva de la porra disponible.</span><button class="btn" id="b-update-now" type="button">Actualizar</button>`;
+  const btn = document.getElementById('b-update-now');
+  if(btn) btn.onclick = () => window.location.replace(latestIndexUrl());
+}
+
+async function checkForNewAppVersion(autoReload=false){
+  try{
+    if(location.protocol === 'file:') return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('_version_check', Date.now().toString());
+    const res = await fetch(url.toString(), {cache:'no-store'});
+    if(!res.ok) return;
+    const html = await res.text();
+    const m = html.match(/const\s+APP_VERSION\s*=\s*['"`]([^'"`]+)['"`]/);
+    if(!m || !m[1] || m[1] === APP_VERSION) return;
+
+    const reloadKey = 'porra_reloaded_to_' + m[1];
+    if(autoReload && !sessionStorage.getItem(reloadKey)){
+      sessionStorage.setItem(reloadKey, '1');
+      window.location.replace(latestIndexUrl());
+      return;
+    }
+    showUpdateBanner(m[1]);
+  }catch(e){
+    console.warn('No se pudo comprobar la versión de la app:', e);
+  }
+}
+
+checkForNewAppVersion(true);
+setInterval(()=>checkForNewAppVersion(false), 60000);
+
 
 // ── TOURNAMENT DATA ────────────────────────────────
 const GROUPS={
