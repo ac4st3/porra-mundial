@@ -67,7 +67,7 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .rules-body h3{font-family:'Bebas Neue',sans-serif;color:var(--gold);letter-spacing:1px;font-size:1rem;margin:13px 0 5px}
 .rules-body ul{margin-left:18px;margin-bottom:8px}
 .rules-body li{margin-bottom:4px}
-.rules-modal{max-width:620px;text-align:left}
+.rules-modal{max-width:620px;text-align:left;max-height:calc(100vh - 44px);overflow-y:auto;-webkit-overflow-scrolling:touch}
 @media(max-width:760px){header{flex-wrap:wrap}.hright{width:100%;justify-content:flex-start;flex-wrap:wrap}.deadline-pill{font-size:.72rem}.tab{padding:11px 14px}}
 /* LAYOUT */
 .main{padding:18px;max-width:1400px;margin:0 auto}
@@ -179,10 +179,13 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 /* MISC */
 .info{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:10px 14px;font-size:.81rem;color:#93C5FD;margin-bottom:13px}
 .lbanner{background:rgba(230,57,70,.15);border:1px solid var(--red);border-radius:10px;padding:11px 16px;margin-bottom:14px;color:#fca5a5;font-size:.88rem}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;align-items:center;justify-content:center}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;align-items:flex-start;justify-content:center;overflow-y:auto;padding:22px 12px}
 .modal-bg.on{display:flex}
-.modal{background:var(--card);border:1px solid var(--gold);border-radius:14px;padding:28px;width:100%;max-width:360px;text-align:center}
+.modal{background:var(--card);border:1px solid var(--gold);border-radius:14px;padding:28px;width:100%;max-width:360px;text-align:center;max-height:calc(100vh - 44px);overflow-y:auto;-webkit-overflow-scrolling:touch}
 .modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gold);letter-spacing:2px;margin-bottom:18px}
+
+#rules-modal .modal-title{position:sticky;top:-28px;background:var(--card);z-index:2;padding-top:2px;padding-bottom:10px}
+#b-rules-close{position:sticky;bottom:-28px;z-index:2}
 #toast{position:fixed;bottom:20px;right:20px;background:var(--card2);border:1px solid var(--gold);color:var(--text);padding:10px 16px;border-radius:10px;font-size:.86rem;z-index:99999;transform:translateY(80px);opacity:0;transition:all .3s}
 #toast.show{transform:translateY(0);opacity:1}
 
@@ -580,7 +583,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v31-20260525-sin-rol-resultados';
+const APP_VERSION = 'v32-20260525-scroll-reglas';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
