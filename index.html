@@ -286,7 +286,6 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
     <div class="lsub">México · USA · Canadá</div>
     <div class="ltabs">
       <button class="ltab on" id="t-part">SOY PARTICIPANTE</button>
-      <button class="ltab" id="t-results">SOY RESULTADOS</button>
       <button class="ltab" id="t-admin">SOY ADMIN</button>
     </div>
     <form id="f-part" autocomplete="on">
@@ -295,10 +294,6 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       </select>
       <input class="lfield" id="l-pin" name="password" type="password" placeholder="Tu PIN personal" autocomplete="current-password">
       <button class="lbtn" id="b-login" type="submit">ENTRAR</button>
-    </form>
-    <form id="f-results" style="display:none" autocomplete="on">
-      <input class="lfield" id="l-rpin" name="results-password" type="password" placeholder="PIN de resultados" autocomplete="current-password">
-      <button class="lbtn" id="b-rlogin" type="submit">ACCEDER A RESULTADOS</button>
     </form>
     <form id="f-admin" style="display:none" autocomplete="on">
       <input class="lfield" id="l-apin" name="admin-password" type="password" placeholder="PIN de administrador" autocomplete="current-password">
@@ -469,20 +464,6 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       </div>
 
       <div class="card">
-        <div class="ch"><span class="ctitle">🧑‍💻 ROL DE RESULTADOS</span></div>
-        <div class="cb">
-          <div class="info" style="margin-bottom:12px">
-            Este acceso solo permite introducir resultados oficiales de la porra. No puede gestionar participantes, backups, bloqueos ni ajustes de administración.
-          </div>
-          <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
-            <input class="ainput" id="i-resultspin" type="password" placeholder="PIN de resultados" style="width:210px" autocomplete="new-password">
-            <button class="btn sec" id="b-set-resultspin">Guardar PIN</button>
-            <span id="s-resultspin" style="color:var(--muted);font-size:.83rem">PIN actual configurado</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
         <div class="ch"><span class="ctitle">🧾 GESTIÓN DE APUESTAS DE USUARIOS</span></div>
         <div class="cb">
           <div class="admin-tools">
@@ -599,7 +580,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v30-20260525-pagos-bizum';
+const APP_VERSION = 'v31-20260525-sin-rol-resultados';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -802,7 +783,7 @@ function allTeams(){return Object.values(GROUPS).flat();}
 
 // ── APP STATE ─────────────────────────────────────
 let USERS=[];    // [{name,pin}] from Firebase
-let CONFIG={adminPin:'admin2026',resultsPin:'resultados2026',betsLocked:false,autoLockDate:null,knockoutEnabled:false};
+let CONFIG={adminPin:'admin2026',betsLocked:false,autoLockDate:null,knockoutEnabled:false};
 const POINTS_MATCH=10;
 const POINTS_GROUP=25;
 const POINTS_QUESTION=50;
@@ -810,7 +791,7 @@ const POINTS_KO_TEAM=20;
 const PARTICIPATION_FEE=20;
 let BETS={};     // {username: {matches,groups,knockout,questions}}
 const DEFAULT_USER_PIN='1234';
-let ses={user:null,isAdmin:false,isDataEntry:false};
+let ses={user:null,isAdmin:false};
 let forcePinChange=false;
 let ADMIN_VIEW_USER='';
 let ADMIN_PREVIEW_USER=''; // Admin editando la porra de un jugador
@@ -829,7 +810,6 @@ function saveSession(){
     localStorage.setItem(SESSION_KEY, JSON.stringify({
       user: ses.user,
       isAdmin: !!ses.isAdmin,
-      isDataEntry: !!ses.isDataEntry,
       lastActivity: Date.now(),
       version: APP_VERSION
     }));
@@ -884,20 +864,14 @@ function restoreStoredSession(){
   if(!data)return false;
 
   if(data.isAdmin && data.user==='__admin__'){
-    ses={user:'__admin__',isAdmin:true,isDataEntry:false};
-    saveSession();
-    return true;
-  }
-
-  if(data.isDataEntry && data.user==='__results__'){
-    ses={user:'__results__',isAdmin:false,isDataEntry:true};
+    ses={user:'__admin__',isAdmin:true};
     saveSession();
     return true;
   }
 
   const u=USERS.find(x=>x.name===data.user);
   if(u){
-    ses={user:u.name,isAdmin:false,isDataEntry:false};
+    ses={user:u.name,isAdmin:false};
     saveSession();
     return true;
   }
@@ -908,7 +882,7 @@ function restoreStoredSession(){
 
 function getReal(){return normalizeBet(BETS['__admin__']);}
 function getUserObj(name){return USERS.find(x=>x.name===name)||null;}
-function isResultEditor(){return !!(ses.isAdmin || ses.isDataEntry);}
+function isResultEditor(){return !!ses.isAdmin;}
 function isOfficialEditor(){return !!(isResultEditor() && !isAdminPlayerEdit());}
 function isUserBetLocked(name){return !!getUserObj(name)?.betLocked;}
 function isAdminPlayerEdit(){return !!(ses.isAdmin && ADMIN_PREVIEW_USER);}
@@ -917,7 +891,6 @@ function isAdminPreview(){return isReadOnlyPreview();}
 function activeUser(){
   if(isAdminPlayerEdit())return ADMIN_PREVIEW_USER;
   if(isReadOnlyPreview())return PUBLIC_VIEW_USER;
-  if(ses.isDataEntry)return '__admin__';
   return ses.user;
 }
 function canEdit(){
@@ -988,7 +961,6 @@ function ensureBet(u){
 function writableUser(){
   if(isReadOnlyPreview())return null;
   if(isAdminPlayerEdit())return ADMIN_PREVIEW_USER;
-  if(ses.isDataEntry)return '__admin__';
   return ses.user;
 }
 function normalizeGroupArray(arr){
@@ -1191,7 +1163,7 @@ async function boot(){
       renderAll();
       restoreFocusedInputState(focused);
     });
-    onValue(ref(db,'config'), snap=>{ if(snap.exists()){CONFIG={...CONFIG,...snap.val()};lockUI();autoLockUI();resultsPinUI();phaseUI();renderAll();} });
+    onValue(ref(db,'config'), snap=>{ if(snap.exists()){CONFIG={...CONFIG,...snap.val()};lockUI();autoLockUI();phaseUI();renderAll();} });
     onValue(ref(db,'users'), snap=>{
       USERS = snap.exists() ? Object.values(snap.val()) : [];
       fillSelect();
@@ -1223,10 +1195,8 @@ function fillSelect(){
 }
 function switchLoginTab(mode){
   document.getElementById('t-part').className='ltab'+(mode==='part'?' on':'');
-  document.getElementById('t-results').className='ltab'+(mode==='results'?' on':'');
   document.getElementById('t-admin').className='ltab'+(mode==='admin'?' on':'');
   document.getElementById('f-part').style.display=mode==='part'?'':'none';
-  document.getElementById('f-results').style.display=mode==='results'?'':'none';
   document.getElementById('f-admin').style.display=mode==='admin'?'':'none';
   document.getElementById('l-err').textContent='';
 }
@@ -1238,15 +1208,7 @@ function doLogin(){
   if(!pin){err.style.color='var(--red)';err.textContent='Introduce tu PIN';return;}
   const u=USERS.find(x=>x.name===name);
   if(!u||u.pin!==pin){err.style.color='var(--red)';err.textContent='❌ PIN incorrecto';return;}
-  ses={user:name,isAdmin:false,isDataEntry:false};
-  saveSession();
-  enterApp();
-}
-function doResultsLogin(){
-  const pin=document.getElementById('l-rpin').value;
-  const err=document.getElementById('l-err');
-  if(pin!==CONFIG.resultsPin){err.style.color='var(--red)';err.textContent='❌ PIN de resultados incorrecto';return;}
-  ses={user:'__results__',isAdmin:false,isDataEntry:true};
+  ses={user:name,isAdmin:false};
   saveSession();
   enterApp();
 }
@@ -1254,7 +1216,7 @@ function doAdminLogin(){
   const pin=document.getElementById('l-apin').value;
   const err=document.getElementById('l-err');
   if(pin!==CONFIG.adminPin){err.style.color='var(--red)';err.textContent='❌ PIN de admin incorrecto';return;}
-  ses={user:'__admin__',isAdmin:true,isDataEntry:false};
+  ses={user:'__admin__',isAdmin:true};
   saveSession();
   enterApp();
 }
@@ -1268,13 +1230,13 @@ function enterApp(){
   initSessionPersistence();
   document.getElementById('login-screen').classList.remove('on');
   document.getElementById('app').style.display='block';
-  document.getElementById('h-user').textContent=ses.isAdmin?'Admin':(ses.isDataEntry?'Resultados':ses.user);
-  document.getElementById('h-badge').style.display=isResultEditor()?'':'none';
-  document.getElementById('h-badge').textContent=ses.isAdmin?'ADMIN':'RESULTADOS';
+  document.getElementById('h-user').textContent=ses.isAdmin?'Admin':ses.user;
+  document.getElementById('h-badge').style.display=ses.isAdmin?'':'none';
+  document.getElementById('h-badge').textContent='ADMIN';
   document.querySelectorAll('.adm').forEach(el=>el.style.display='none');
-  document.getElementById('hdr-fill-zone').style.display=isResultEditor()?'flex':'none';
+  document.getElementById('hdr-fill-zone').style.display=ses.isAdmin?'flex':'none';
   document.getElementById('b-admin-settings').style.display=ses.isAdmin?'':'none';
-  document.getElementById('b-mypin').style.display=isResultEditor()?'none':'';
+  document.getElementById('b-mypin').style.display=ses.isAdmin?'none':'';
   ensureBet(ses.user);
   lockUI();autoLockUI();phaseUI();
   renderAll();
@@ -1289,11 +1251,11 @@ function doLogout(){
   forcePinChange=false;
   ADMIN_PREVIEW_USER='';
   PUBLIC_VIEW_USER='';
-  ses={user:null,isAdmin:false,isDataEntry:false};
+  ses={user:null,isAdmin:false};
   document.getElementById('app').style.display='none';
   document.getElementById('pin-modal').classList.remove('on');
   document.getElementById('login-screen').classList.add('on');
-  ['l-pin','l-rpin','l-apin'].forEach(id=>{document.getElementById(id).value='';});
+  ['l-pin','l-apin'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('l-err').textContent='';
 }
 
@@ -1799,23 +1761,6 @@ async function unlockBets(){
   try{await fbUpdate('config',{betsLocked:false});toast('🔓 Apuestas abiertas');}
   catch(e){toast('Error: '+e.message,true);}
 }
-function resultsPinUI(){
-  const inp=document.getElementById('i-resultspin');
-  const st=document.getElementById('s-resultspin');
-  if(inp)inp.value='';
-  if(st)st.textContent='PIN de resultados configurado';
-}
-async function setResultsPin(){
-  if(!ses.isAdmin)return toast('Solo admin puede cambiar el PIN de resultados',true);
-  const v=(document.getElementById('i-resultspin')?.value||'').trim();
-  if(!v || v.length<4)return toast('El PIN de resultados debe tener al menos 4 caracteres',true);
-  try{
-    await fbUpdate('config',{resultsPin:v});
-    const inp=document.getElementById('i-resultspin');
-    if(inp)inp.value='';
-    toast('✅ PIN de resultados actualizado');
-  }catch(e){toast('Error: '+e.message,true);}
-}
 function autoLockUI(){
   updateDeadlineHeader();
   const el=document.getElementById('s-autolock'),inp=document.getElementById('i-autolock');
@@ -2238,7 +2183,7 @@ function exitUserPreview(){
   const wasAdmin=!!ADMIN_PREVIEW_USER;
   ADMIN_PREVIEW_USER='';
   PUBLIC_VIEW_USER='';
-  document.getElementById('h-user').textContent=ses.isAdmin?'Admin':(ses.isDataEntry?'Resultados':ses.user);
+  document.getElementById('h-user').textContent=ses.isAdmin?'Admin':ses.user;
   renderAll();
   showTab(wasAdmin?'admin':'marca');
 }
@@ -2283,13 +2228,12 @@ function initTabsOverflowHint(){
   setTimeout(update,0);
   setTimeout(update,400);
 }
-function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();resultsPinUI();recalc();updateTabStatus();updatePreviewBar();bindBetControls();initTabsOverflowHint();}
+function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();recalc();updateTabStatus();updatePreviewBar();bindBetControls();initTabsOverflowHint();}
 
 // ── EVENT DELEGATION ──────────────────────────────
 document.addEventListener('click',async e=>{
   const t=e.target;
   if(t.id==='t-part'){switchLoginTab('part');return;}
-  if(t.id==='t-results'){switchLoginTab('results');return;}
   if(t.id==='t-admin'){switchLoginTab('admin');return;}
   if(t.id==='b-mypin'){openPinModal();return;}
   if(t.id==='b-out'){doLogout();return;}
@@ -2302,7 +2246,6 @@ document.addEventListener('click',async e=>{
   if(t.id==='b-export-backup'){exportBackup();return;}
   if(t.id==='b-import-backup'){openImportBackup();return;}
   if(t.id==='b-export-report'){exportBetsReportPdf();return;}
-  if(t.id==='b-set-resultspin'){setResultsPin();return;}
   if(t.id==='b-pin-ok'){doChangePin();return;}
   if(t.id==='b-pin-no'){closePinModal();return;}
   const tabTarget=t.closest('[data-tab]');
@@ -2385,7 +2328,6 @@ document.addEventListener('keydown',e=>{
   if(e.key!=='Enter')return;
   const id=e.target.id;
   if(id==='l-pin')doLogin();
-  else if(id==='l-rpin')doResultsLogin();
   else if(id==='l-apin')doAdminLogin();
   else if(id==='i-newname'||id==='i-newppin')addPart();
   else if(['pin-cur','pin-new1','pin-new2'].includes(id))doChangePin();
