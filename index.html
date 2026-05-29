@@ -525,6 +525,22 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       </div>
 
       <div class="card">
+        <div class="ch"><span class="ctitle">🔐 SEGURIDAD ADMIN</span></div>
+        <div class="cb">
+          <div class="info" style="margin-bottom:12px">
+            El PIN de admin no está escrito en el index.html. Se guarda en Firebase como huella SHA-256, no como texto visible.
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;align-items:end">
+            <input class="ainput" id="i-admin-pin-cur" type="password" placeholder="PIN admin actual" autocomplete="current-password">
+            <input class="ainput" id="i-admin-pin-new1" type="password" placeholder="Nuevo PIN admin" autocomplete="new-password">
+            <input class="ainput" id="i-admin-pin-new2" type="password" placeholder="Repetir nuevo PIN" autocomplete="new-password">
+            <button class="btn sec" id="b-change-admin-pin">🔑 Cambiar PIN admin</button>
+          </div>
+          <div id="s-admin-pin" style="color:var(--muted);font-size:.8rem;margin-top:9px"></div>
+        </div>
+      </div>
+
+      <div class="card">
         <div class="ch"><span class="ctitle">💾 BACKUP DE PORRAS</span></div>
         <div class="cb">
           <div class="info" style="margin-bottom:12px">
@@ -583,7 +599,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v32-20260525-scroll-reglas';
+const APP_VERSION = 'v33-20260529-admin-pin-firebase-hash';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -786,7 +802,8 @@ function allTeams(){return Object.values(GROUPS).flat();}
 
 // ── APP STATE ─────────────────────────────────────
 let USERS=[];    // [{name,pin}] from Firebase
-let CONFIG={adminPin:'admin2026',betsLocked:false,autoLockDate:null,knockoutEnabled:false};
+let CONFIG={betsLocked:false,autoLockDate:null,knockoutEnabled:false};
+let AUTH={adminPinHash:null,adminPinUpdatedAt:null};
 const POINTS_MATCH=10;
 const POINTS_GROUP=25;
 const POINTS_QUESTION=50;
@@ -915,6 +932,54 @@ async function fbGet(path){
 }
 async function fbSet(path,data){ await set(ref(db,path),data); }
 async function fbUpdate(path,data){ await update(ref(db,path),data); }
+
+function normalizeAdminAuth(data){
+  const raw=data&&typeof data==='object'?data:{};
+  return {
+    adminPinHash: raw.adminPinHash || raw.pinHash || null,
+    adminPinUpdatedAt: raw.adminPinUpdatedAt || raw.updatedAt || null
+  };
+}
+async function sha256Hex(text){
+  const enc=new TextEncoder().encode(String(text));
+  const buf=await crypto.subtle.digest('SHA-256',enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function setAdminPinHash(hash){
+  const updatedAt=new Date().toISOString();
+  await fbSet('auth/admin',{adminPinHash:hash,adminPinUpdatedAt:updatedAt});
+  AUTH={adminPinHash:hash,adminPinUpdatedAt:updatedAt};
+  // Limpieza de compatibilidad: si queda un adminPin antiguo en config, lo borramos.
+  try{await fbSet('config/adminPin',null);}catch(e){console.warn('No se pudo borrar config/adminPin antiguo:',e);}
+  try{await fbSet('config/adminPinHash',null);}catch(e){console.warn('No se pudo borrar config/adminPinHash antiguo:',e);}
+  renderAdminSecurityUI();
+}
+function renderAdminSecurityUI(){
+  const el=document.getElementById('s-admin-pin');
+  if(!el)return;
+  if(AUTH.adminPinHash){
+    el.textContent='PIN admin configurado en Firebase'+(AUTH.adminPinUpdatedAt?' · Último cambio: '+new Date(AUTH.adminPinUpdatedAt).toLocaleString('es-ES'):'');
+  }else{
+    el.textContent='PIN admin todavía no configurado. El primer PIN que introduzcas en el acceso admin quedará configurado.';
+  }
+}
+async function changeAdminPin(){
+  if(!ses.isAdmin)return toast('Solo admin puede cambiar el PIN de admin',true);
+  const cur=document.getElementById('i-admin-pin-cur')?.value || '';
+  const n1=document.getElementById('i-admin-pin-new1')?.value || '';
+  const n2=document.getElementById('i-admin-pin-new2')?.value || '';
+  if(AUTH.adminPinHash){
+    if(!cur)return toast('Introduce el PIN admin actual',true);
+    const curHash=await sha256Hex(cur);
+    if(curHash!==AUTH.adminPinHash)return toast('PIN admin actual incorrecto',true);
+  }
+  if(!n1 || n1.length<6)return toast('El nuevo PIN admin debe tener al menos 6 caracteres',true);
+  if(n1!==n2)return toast('Los nuevos PINs no coinciden',true);
+  const newHash=await sha256Hex(n1);
+  await setAdminPinHash(newHash);
+  ['i-admin-pin-cur','i-admin-pin-new1','i-admin-pin-new2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  toast('✅ PIN admin actualizado');
+}
 
 function normalizeBet(data){
   return {
@@ -1125,15 +1190,23 @@ async function flushQuestionInput(t){
 async function boot(){
   try{
     // Load everything in parallel
-    const [usersSnap, configSnap, betsSnap] = await Promise.all([
+    const [usersSnap, configSnap, betsSnap, authSnap] = await Promise.all([
       get(ref(db,'users')),
       get(ref(db,'config')),
       get(ref(db,'bets')),
+      get(ref(db,'auth/admin')),
     ]);
 
     USERS   = usersSnap.exists()  ? Object.values(usersSnap.val())  : [];
-    CONFIG  = configSnap.exists() ? {...CONFIG,...configSnap.val()}  : CONFIG;
+    if(configSnap.exists()){
+      const cfg=configSnap.val()||{};
+      // No mantenemos PINs antiguos en memoria si existieran de versiones anteriores.
+      delete cfg.adminPin;
+      delete cfg.adminPinHash;
+      CONFIG={...CONFIG,...cfg};
+    }
     BETS    = betsSnap.exists()   ? betsSnap.val()                  : {};
+    AUTH    = authSnap.exists()   ? {...AUTH,...normalizeAdminAuth(authSnap.val())} : AUTH;
 
     // First run: seed default users if none exist
     if(!USERS.length){
@@ -1166,7 +1239,8 @@ async function boot(){
       renderAll();
       restoreFocusedInputState(focused);
     });
-    onValue(ref(db,'config'), snap=>{ if(snap.exists()){CONFIG={...CONFIG,...snap.val()};lockUI();autoLockUI();phaseUI();renderAll();} });
+    onValue(ref(db,'config'), snap=>{ if(snap.exists()){const cfg=snap.val()||{};delete cfg.adminPin;delete cfg.adminPinHash;CONFIG={...CONFIG,...cfg};lockUI();autoLockUI();phaseUI();renderAll();} });
+    onValue(ref(db,'auth/admin'), snap=>{ AUTH = snap.exists() ? {...AUTH,...normalizeAdminAuth(snap.val())} : {adminPinHash:null,adminPinUpdatedAt:null}; renderAdminSecurityUI(); });
     onValue(ref(db,'users'), snap=>{
       USERS = snap.exists() ? Object.values(snap.val()) : [];
       fillSelect();
@@ -1215,13 +1289,33 @@ function doLogin(){
   saveSession();
   enterApp();
 }
-function doAdminLogin(){
+async function doAdminLogin(){
   const pin=document.getElementById('l-apin').value;
   const err=document.getElementById('l-err');
-  if(pin!==CONFIG.adminPin){err.style.color='var(--red)';err.textContent='❌ PIN de admin incorrecto';return;}
-  ses={user:'__admin__',isAdmin:true};
-  saveSession();
-  enterApp();
+  err.textContent='';
+  err.style.color='var(--red)';
+  if(!pin){err.textContent='Introduce el PIN de admin';return;}
+  try{
+    const hash=await sha256Hex(pin);
+
+    // Primera configuración: el PIN no está en el index.html.
+    // Si Firebase todavía no tiene huella, el primer acceso admin crea el PIN.
+    if(!AUTH.adminPinHash){
+      if(pin.length<6){err.textContent='Primer PIN admin: mínimo 6 caracteres';return;}
+      if(!confirm('No hay PIN de admin configurado en Firebase. ¿Quieres guardar este PIN como PIN de admin?'))return;
+      await setAdminPinHash(hash);
+      toast('🔐 PIN admin inicial guardado en Firebase');
+    }else if(hash!==AUTH.adminPinHash){
+      err.textContent='❌ PIN de admin incorrecto';
+      return;
+    }
+
+    ses={user:'__admin__',isAdmin:true};
+    saveSession();
+    enterApp();
+  }catch(e){
+    err.textContent='❌ Error validando PIN admin: '+e.message;
+  }
 }
 function userMustChangePin(){
   if(!ses.user||isResultEditor())return false;
@@ -1850,6 +1944,12 @@ function normalizeBackupData(raw){
   if(!users || !bets || !config)throw new Error('Faltan bloques obligatorios: users, bets o config.');
   return {users,bets,config};
 }
+function sanitizeConfigForBackup(cfg){
+  const out={...(cfg||{})};
+  delete out.adminPin;
+  delete out.adminPinHash;
+  return out;
+}
 function exportBackup(){
   if(!ses.isAdmin)return toast('Solo admin puede exportar backups',true);
   const usersObj = Object.fromEntries(USERS.map(u=>[u.name,u]));
@@ -1860,7 +1960,7 @@ function exportBackup(){
     exportedAtLocal:new Date().toLocaleString('es-ES'),
     users:usersObj,
     bets:BETS || {},
-    config:CONFIG || {}
+    config:sanitizeConfigForBackup(CONFIG || {})
   };
   const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a=document.createElement('a');
@@ -1891,11 +1991,11 @@ async function importBackupFile(file){
     await Promise.all([
       fbSet('users',data.users),
       fbSet('bets',data.bets),
-      fbSet('config',{...CONFIG,...data.config})
+      fbSet('config',sanitizeConfigForBackup({...CONFIG,...data.config}))
     ]);
     USERS=Object.values(data.users);
     BETS=data.bets;
-    CONFIG={...CONFIG,...data.config};
+    CONFIG=sanitizeConfigForBackup({...CONFIG,...data.config});
     ensureBet('__admin__');
     if(ses.user)ensureBet(ses.user);
     fillSelect();
@@ -2231,7 +2331,7 @@ function initTabsOverflowHint(){
   setTimeout(update,0);
   setTimeout(update,400);
 }
-function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();recalc();updateTabStatus();updatePreviewBar();bindBetControls();initTabsOverflowHint();}
+function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();recalc();updateTabStatus();updatePreviewBar();bindBetControls();initTabsOverflowHint();renderAdminSecurityUI();}
 
 // ── EVENT DELEGATION ──────────────────────────────
 document.addEventListener('click',async e=>{
@@ -2249,6 +2349,7 @@ document.addEventListener('click',async e=>{
   if(t.id==='b-export-backup'){exportBackup();return;}
   if(t.id==='b-import-backup'){openImportBackup();return;}
   if(t.id==='b-export-report'){exportBetsReportPdf();return;}
+  if(t.id==='b-change-admin-pin'){changeAdminPin();return;}
   if(t.id==='b-pin-ok'){doChangePin();return;}
   if(t.id==='b-pin-no'){closePinModal();return;}
   const tabTarget=t.closest('[data-tab]');
@@ -2334,6 +2435,7 @@ document.addEventListener('keydown',e=>{
   else if(id==='l-apin')doAdminLogin();
   else if(id==='i-newname'||id==='i-newppin')addPart();
   else if(['pin-cur','pin-new1','pin-new2'].includes(id))doChangePin();
+  else if(['i-admin-pin-cur','i-admin-pin-new1','i-admin-pin-new2'].includes(id))changeAdminPin();
 });
 
 
