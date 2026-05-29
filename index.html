@@ -164,6 +164,9 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .ainput:focus{outline:none;border-color:var(--gold)}
 .prow{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
 .prow:last-child{border-bottom:none}
+.paybox{display:flex;align-items:center;gap:6px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);border-radius:8px;padding:4px 8px;color:var(--text);font-size:.78rem;white-space:nowrap}
+.paybox input{accent-color:var(--gold);width:16px;height:16px}
+.paybox.paid{border-color:rgba(46,196,182,.45);background:rgba(46,196,182,.08);color:#9ff3e8}
 
 .admin-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:10px}
 .admin-mini{background:var(--darker);border:1px solid var(--border);border-radius:10px;padding:11px}
@@ -247,6 +250,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   .prow{flex-wrap:wrap;align-items:flex-start;gap:7px}
   .prow span:first-child{flex-basis:100%}
   .prow .btn{flex:1 1 46%;padding:7px 8px!important}
+  .prow .paybox{flex:1 1 100%;justify-content:flex-start;padding:7px 8px}
   .admin-tools{grid-template-columns:1fr}
   .bet-line{flex-direction:column;gap:2px}
   .bet-line span:last-child{text-align:left}
@@ -282,6 +286,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
     <div class="lsub">México · USA · Canadá</div>
     <div class="ltabs">
       <button class="ltab on" id="t-part">SOY PARTICIPANTE</button>
+      <button class="ltab" id="t-results">SOY RESULTADOS</button>
       <button class="ltab" id="t-admin">SOY ADMIN</button>
     </div>
     <form id="f-part" autocomplete="on">
@@ -290,6 +295,10 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       </select>
       <input class="lfield" id="l-pin" name="password" type="password" placeholder="Tu PIN personal" autocomplete="current-password">
       <button class="lbtn" id="b-login" type="submit">ENTRAR</button>
+    </form>
+    <form id="f-results" style="display:none" autocomplete="on">
+      <input class="lfield" id="l-rpin" name="results-password" type="password" placeholder="PIN de resultados" autocomplete="current-password">
+      <button class="lbtn" id="b-rlogin" type="submit">ACCEDER A RESULTADOS</button>
     </form>
     <form id="f-admin" style="display:none" autocomplete="on">
       <input class="lfield" id="l-apin" name="admin-password" type="password" placeholder="PIN de administrador" autocomplete="current-password">
@@ -449,11 +458,26 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       <div class="card">
         <div class="ch"><span class="ctitle">👥 PARTICIPANTES</span></div>
         <div class="cb">
+          <div class="info" style="margin-bottom:10px">Marca aquí quién ha pagado el Bizum de 20€ para participar. Este control es solo para gestión interna del admin.</div>
           <div id="c-parts" style="margin-bottom:12px"></div>
           <div style="display:flex;gap:9px;flex-wrap:wrap">
             <input class="ainput" id="i-newname" placeholder="Nombre" style="width:145px">
             <input class="ainput" id="i-newppin" placeholder="PIN (1234)" style="width:110px">
             <button class="btn" id="b-addpart">+ Añadir</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ctitle">🧑‍💻 ROL DE RESULTADOS</span></div>
+        <div class="cb">
+          <div class="info" style="margin-bottom:12px">
+            Este acceso solo permite introducir resultados oficiales de la porra. No puede gestionar participantes, backups, bloqueos ni ajustes de administración.
+          </div>
+          <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+            <input class="ainput" id="i-resultspin" type="password" placeholder="PIN de resultados" style="width:210px" autocomplete="new-password">
+            <button class="btn sec" id="b-set-resultspin">Guardar PIN</button>
+            <span id="s-resultspin" style="color:var(--muted);font-size:.83rem">PIN actual configurado</span>
           </div>
         </div>
       </div>
@@ -575,7 +599,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v28-20260525-pdf-report';
+const APP_VERSION = 'v30-20260525-pagos-bizum';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -778,7 +802,7 @@ function allTeams(){return Object.values(GROUPS).flat();}
 
 // ── APP STATE ─────────────────────────────────────
 let USERS=[];    // [{name,pin}] from Firebase
-let CONFIG={adminPin:'admin2026',betsLocked:false,autoLockDate:null,knockoutEnabled:false};
+let CONFIG={adminPin:'admin2026',resultsPin:'resultados2026',betsLocked:false,autoLockDate:null,knockoutEnabled:false};
 const POINTS_MATCH=10;
 const POINTS_GROUP=25;
 const POINTS_QUESTION=50;
@@ -786,7 +810,7 @@ const POINTS_KO_TEAM=20;
 const PARTICIPATION_FEE=20;
 let BETS={};     // {username: {matches,groups,knockout,questions}}
 const DEFAULT_USER_PIN='1234';
-let ses={user:null,isAdmin:false};
+let ses={user:null,isAdmin:false,isDataEntry:false};
 let forcePinChange=false;
 let ADMIN_VIEW_USER='';
 let ADMIN_PREVIEW_USER=''; // Admin editando la porra de un jugador
@@ -805,6 +829,7 @@ function saveSession(){
     localStorage.setItem(SESSION_KEY, JSON.stringify({
       user: ses.user,
       isAdmin: !!ses.isAdmin,
+      isDataEntry: !!ses.isDataEntry,
       lastActivity: Date.now(),
       version: APP_VERSION
     }));
@@ -859,14 +884,20 @@ function restoreStoredSession(){
   if(!data)return false;
 
   if(data.isAdmin && data.user==='__admin__'){
-    ses={user:'__admin__',isAdmin:true};
+    ses={user:'__admin__',isAdmin:true,isDataEntry:false};
+    saveSession();
+    return true;
+  }
+
+  if(data.isDataEntry && data.user==='__results__'){
+    ses={user:'__results__',isAdmin:false,isDataEntry:true};
     saveSession();
     return true;
   }
 
   const u=USERS.find(x=>x.name===data.user);
   if(u){
-    ses={user:u.name,isAdmin:false};
+    ses={user:u.name,isAdmin:false,isDataEntry:false};
     saveSession();
     return true;
   }
@@ -877,24 +908,27 @@ function restoreStoredSession(){
 
 function getReal(){return normalizeBet(BETS['__admin__']);}
 function getUserObj(name){return USERS.find(x=>x.name===name)||null;}
+function isResultEditor(){return !!(ses.isAdmin || ses.isDataEntry);}
+function isOfficialEditor(){return !!(isResultEditor() && !isAdminPlayerEdit());}
 function isUserBetLocked(name){return !!getUserObj(name)?.betLocked;}
 function isAdminPlayerEdit(){return !!(ses.isAdmin && ADMIN_PREVIEW_USER);}
-function isReadOnlyPreview(){return !!(!ses.isAdmin && PUBLIC_VIEW_USER);}
+function isReadOnlyPreview(){return !!(!isResultEditor() && PUBLIC_VIEW_USER);}
 function isAdminPreview(){return isReadOnlyPreview();}
 function activeUser(){
   if(isAdminPlayerEdit())return ADMIN_PREVIEW_USER;
   if(isReadOnlyPreview())return PUBLIC_VIEW_USER;
+  if(ses.isDataEntry)return '__admin__';
   return ses.user;
 }
 function canEdit(){
   if(isReadOnlyPreview())return false;
   if(isAdminPlayerEdit())return true;
-  if(ses.isAdmin)return true;
+  if(isResultEditor())return true;
   return !CONFIG.betsLocked && !isUserBetLocked(ses.user);
 }
 function lockMessage(){
   if(isReadOnlyPreview())return `👁️ Vista solo lectura de la porra de ${PUBLIC_VIEW_USER}. No puedes modificarla.`;
-  if(!ses.isAdmin && isUserBetLocked(ses.user))return '🔒 Tu porra está bloqueada por el admin. Puedes consultarla, pero no modificarla.';
+  if(!isResultEditor() && isUserBetLocked(ses.user))return '🔒 Tu porra está bloqueada por el admin. Puedes consultarla, pero no modificarla.';
   return '🔒 Apuestas cerradas. No puedes modificar pronósticos.';
 }
 
@@ -954,6 +988,7 @@ function ensureBet(u){
 function writableUser(){
   if(isReadOnlyPreview())return null;
   if(isAdminPlayerEdit())return ADMIN_PREVIEW_USER;
+  if(ses.isDataEntry)return '__admin__';
   return ses.user;
 }
 function normalizeGroupArray(arr){
@@ -1048,7 +1083,7 @@ async function handleGroupSelectChange(t){
 }
 async function handleKnockoutTeamChange(t){
   if(!t || !t.dataset.koteam)return false;
-  if(!isKnockoutEnabled() && !ses.isAdmin){toast('🔒 Eliminatoria todavía bloqueada',true);return true;}
+  if(!isKnockoutEnabled() && !isResultEditor()){toast('🔒 Eliminatoria todavía bloqueada',true);return true;}
   const user=writableUser();
   if(!user||!canEdit()){toast(isReadOnlyPreview()?'👁️ Vista solo lectura: no se modifica':'🔒 Cerradas',true);return true;}
 
@@ -1077,7 +1112,7 @@ async function handleQuestionInputChange(t){
   // El admin confirma resultados oficiales: se guardan al momento para que los
   // jugadores vean el +30 sin esperar. Los jugadores mantienen debounce para no
   // perder el foco mientras escriben.
-  if(ses.isAdmin && user==='__admin__'){
+  if(isOfficialEditor() && user==='__admin__'){
     persistBetChild(user,`questions/${qid}`,value,'pregunta');
   }else{
     const key=`${user}_${qid}`;
@@ -1156,7 +1191,7 @@ async function boot(){
       renderAll();
       restoreFocusedInputState(focused);
     });
-    onValue(ref(db,'config'), snap=>{ if(snap.exists()){CONFIG={...CONFIG,...snap.val()};lockUI();autoLockUI();phaseUI();renderAll();} });
+    onValue(ref(db,'config'), snap=>{ if(snap.exists()){CONFIG={...CONFIG,...snap.val()};lockUI();autoLockUI();resultsPinUI();phaseUI();renderAll();} });
     onValue(ref(db,'users'), snap=>{
       USERS = snap.exists() ? Object.values(snap.val()) : [];
       fillSelect();
@@ -1188,8 +1223,10 @@ function fillSelect(){
 }
 function switchLoginTab(mode){
   document.getElementById('t-part').className='ltab'+(mode==='part'?' on':'');
+  document.getElementById('t-results').className='ltab'+(mode==='results'?' on':'');
   document.getElementById('t-admin').className='ltab'+(mode==='admin'?' on':'');
   document.getElementById('f-part').style.display=mode==='part'?'':'none';
+  document.getElementById('f-results').style.display=mode==='results'?'':'none';
   document.getElementById('f-admin').style.display=mode==='admin'?'':'none';
   document.getElementById('l-err').textContent='';
 }
@@ -1201,7 +1238,15 @@ function doLogin(){
   if(!pin){err.style.color='var(--red)';err.textContent='Introduce tu PIN';return;}
   const u=USERS.find(x=>x.name===name);
   if(!u||u.pin!==pin){err.style.color='var(--red)';err.textContent='❌ PIN incorrecto';return;}
-  ses={user:name,isAdmin:false};
+  ses={user:name,isAdmin:false,isDataEntry:false};
+  saveSession();
+  enterApp();
+}
+function doResultsLogin(){
+  const pin=document.getElementById('l-rpin').value;
+  const err=document.getElementById('l-err');
+  if(pin!==CONFIG.resultsPin){err.style.color='var(--red)';err.textContent='❌ PIN de resultados incorrecto';return;}
+  ses={user:'__results__',isAdmin:false,isDataEntry:true};
   saveSession();
   enterApp();
 }
@@ -1209,12 +1254,12 @@ function doAdminLogin(){
   const pin=document.getElementById('l-apin').value;
   const err=document.getElementById('l-err');
   if(pin!==CONFIG.adminPin){err.style.color='var(--red)';err.textContent='❌ PIN de admin incorrecto';return;}
-  ses={user:'__admin__',isAdmin:true};
+  ses={user:'__admin__',isAdmin:true,isDataEntry:false};
   saveSession();
   enterApp();
 }
 function userMustChangePin(){
-  if(!ses.user||ses.isAdmin)return false;
+  if(!ses.user||isResultEditor())return false;
   const u=USERS.find(x=>x.name===ses.user);
   return !!(u && (u.mustChangePin || u.pin===DEFAULT_USER_PIN));
 }
@@ -1223,11 +1268,13 @@ function enterApp(){
   initSessionPersistence();
   document.getElementById('login-screen').classList.remove('on');
   document.getElementById('app').style.display='block';
-  document.getElementById('h-user').textContent=ses.isAdmin?'Admin':ses.user;
-  document.getElementById('h-badge').style.display=ses.isAdmin?'':'none';
+  document.getElementById('h-user').textContent=ses.isAdmin?'Admin':(ses.isDataEntry?'Resultados':ses.user);
+  document.getElementById('h-badge').style.display=isResultEditor()?'':'none';
+  document.getElementById('h-badge').textContent=ses.isAdmin?'ADMIN':'RESULTADOS';
   document.querySelectorAll('.adm').forEach(el=>el.style.display='none');
-  document.getElementById('hdr-fill-zone').style.display=ses.isAdmin?'flex':'none';
-  document.getElementById('b-mypin').style.display=ses.isAdmin?'none':'';
+  document.getElementById('hdr-fill-zone').style.display=isResultEditor()?'flex':'none';
+  document.getElementById('b-admin-settings').style.display=ses.isAdmin?'':'none';
+  document.getElementById('b-mypin').style.display=isResultEditor()?'none':'';
   ensureBet(ses.user);
   lockUI();autoLockUI();phaseUI();
   renderAll();
@@ -1242,11 +1289,11 @@ function doLogout(){
   forcePinChange=false;
   ADMIN_PREVIEW_USER='';
   PUBLIC_VIEW_USER='';
-  ses={user:null,isAdmin:false};
+  ses={user:null,isAdmin:false,isDataEntry:false};
   document.getElementById('app').style.display='none';
   document.getElementById('pin-modal').classList.remove('on');
   document.getElementById('login-screen').classList.add('on');
-  ['l-pin','l-apin'].forEach(id=>{document.getElementById(id).value='';});
+  ['l-pin','l-rpin','l-apin'].forEach(id=>{document.getElementById(id).value='';});
   document.getElementById('l-err').textContent='';
 }
 
@@ -1292,7 +1339,7 @@ async function doChangePin(){
 
 // ── TABS ──────────────────────────────────────────
 function showTab(tab){
-  if(tab==='elim' && !isKnockoutEnabled() && !ses.isAdmin){
+  if(tab==='elim' && !isKnockoutEnabled() && !isResultEditor()){
     toast('🔒 De momento la Eliminatoria no está abierta. Se activará cuando se conozcan los cruces de dieciseisavos.',true);
     return;
   }
@@ -1336,7 +1383,7 @@ function mrowHTML(m,u,locked){
 
     // Admin: marcamos el resultado oficial.
     // Participante: marcamos su apuesta.
-    const selected = (ses.isAdmin && !isAdminPlayerEdit()) ? realResult : bet;
+    const selected = isOfficialEditor() ? realResult : bet;
 
     if(selected === v){
       c += ` bs${k}`;
@@ -1364,7 +1411,7 @@ function mrowHTML(m,u,locked){
     rd = realResult;
   }
 
-  const pts = (!(ses.isAdmin && !isAdminPlayerEdit())) && realResult && bet
+  const pts = (!isOfficialEditor()) && realResult && bet
     ? (bet === realResult ? '+10' : '')
     : '';
 
@@ -1385,7 +1432,7 @@ function mrowHTML(m,u,locked){
 // ── RENDER GROUPS ─────────────────────────────────
 function renderGroups(){
   const u=activeUser(),dis=!canEdit();
-  const showPlayerPts = !!u && !(ses.isAdmin && !isAdminPlayerEdit());
+  const showPlayerPts = !!u && !isOfficialEditor();
   let html=dis?`<div class="lbanner">${lockMessage()}</div>`:'';
   html+=Object.entries(GROUPS).map(([g,teams])=>{
     const br=u?normalizeGroupArray(BETS[u]?.groups?.[g]):['','','',''];
@@ -1420,7 +1467,7 @@ function renderKnockout(){
   const c=document.getElementById('c-bracket');
   if(!c)return;
 
-  if(!isKnockoutEnabled() && !ses.isAdmin){
+  if(!isKnockoutEnabled() && !isResultEditor()){
     c.innerHTML=`<div class="lbanner" style="width:100%;margin:0">
       🔒 De momento la Eliminatoria no está abierta. Se activará cuando termine la fase de grupos y se conozcan los cruces de dieciseisavos.
     </div>`;
@@ -1428,7 +1475,7 @@ function renderKnockout(){
   }
 
   const u=activeUser(),dis=!canEdit();
-  const showPlayerPts = !!u && !(ses.isAdmin && !isAdminPlayerEdit());
+  const showPlayerPts = !!u && !isOfficialEditor();
 
   c.innerHTML=KO_ROUNDS.map(round=>{
     const items=round.matches.map((match,idx)=>{
@@ -1467,7 +1514,7 @@ function questionCompare(a,b){
 }
 function renderQuestions(){
   const u=activeUser(),dis=!canEdit();
-  const showPlayerPts = !!u && !(ses.isAdmin && !isAdminPlayerEdit());
+  const showPlayerPts = !!u && !isOfficialEditor();
   let html=dis?`<div class="lbanner">${lockMessage()}</div>`:'';
   html+=QUESTIONS.map(q=>{
     const bv=u?(BETS[u]?.questions?.[q.id]??''):'';
@@ -1490,7 +1537,7 @@ function renderQuestions(){
 }
 function updateQuestionPointsUI(){
   const u=activeUser();
-  const showPlayerPts = !!u && !(ses.isAdmin && !isAdminPlayerEdit());
+  const showPlayerPts = !!u && !isOfficialEditor();
   QUESTIONS.forEach(q=>{
     const qid=q.id;
     const input=document.querySelector(`.qinput[data-qid="${qid}"]`);
@@ -1566,7 +1613,7 @@ function recalc(){
   document.getElementById('c-scores').innerHTML=`<thead><tr>
     <th>#</th><th>Participante</th><th>Partidos</th><th>Grupos</th><th>Eliminatoria</th><th>Preguntas</th><th>TOTAL</th><th>Porra</th>
   </tr></thead><tbody>${rows.map((s,i)=>{
-    const showViewButton = ses.isAdmin || s.name !== ses.user;
+    const showViewButton = ses.isAdmin || (!isResultEditor() && s.name !== ses.user);
     const porraCell = showViewButton
       ? `<button class="btn sec" style="padding:3px 8px;font-size:.72rem" data-viewscore="${s.name}">Ver</button>`
       : `<span style="color:var(--muted);font-size:.78rem">Tu porra</span>`;
@@ -1588,8 +1635,13 @@ function renderParts(){
   c.innerHTML=USERS.map(u=>{
     const bet=normalizeBet(BETS[u.name]);
     const total=Object.keys(bet.matches||{}).length+Object.keys(bet.groups||{}).length+Object.keys(bet.knockout||{}).length+Object.keys(bet.questions||{}).length;
+    const paid=!!u.paid;
     return `<div class="prow">
       <span style="font-weight:600;flex:1">${u.name}</span>
+      <label class="paybox ${paid?'paid':''}" title="Bizum de 20€ ${paid?'pagado':'pendiente'}">
+        <input type="checkbox" data-paidpart="${u.name}" ${paid?'checked':''}>
+        <span>${paid?'💶 Pagado':'💶 Pendiente'}</span>
+      </label>
       <span style="color:var(--muted);font-size:.78rem;margin-right:8px">${total} bloques${u.mustChangePin?' · PIN inicial':''}${u.betLocked?' · 🔒 bloqueado':''}</span>
       <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-viewpart="${u.name}">Editar porra</button>
       <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-lockbets="${u.name}" data-lockstate="${u.betLocked?'0':'1'}">${u.betLocked?'Desbloquear':'Bloquear'}</button>
@@ -1635,6 +1687,20 @@ function renderSelectedUserBets(){
     <h4>Preguntas</h4>${qLines}
   `;
 }
+async function setParticipantPaid(name,paid){
+  const u=USERS.find(x=>x.name===name);
+  if(!u)return toast('Usuario no encontrado',true);
+  const next={...u,paid:!!paid};
+  try{
+    await fbSet(`users/${name}`,next);
+    USERS=USERS.map(x=>x.name===name?next:x);
+    renderParts();
+    toast(paid?`💶 Pago marcado para ${name}`:`💶 Pago desmarcado para ${name}`);
+  }catch(e){
+    toast('Error actualizando el pago: '+e.message,true);
+  }
+}
+
 async function resetUserPin(name){
   const u=USERS.find(x=>x.name===name);
   if(!u)return toast('Selecciona un usuario válido',true);
@@ -1681,7 +1747,7 @@ async function addPart(){
   if(pin.length<3)return toast('PIN mínimo 3 caracteres',true);
   if(USERS.find(u=>u.name===name))return toast('Ya existe ese nombre',true);
   try{
-    await fbSet(`users/${name}`,{name,pin,mustChangePin:true});
+    await fbSet(`users/${name}`,{name,pin,mustChangePin:true,paid:false});
     await fbSet(`bets/${name}`,{matches:{},groups:{},knockout:{},questions:{}});
     document.getElementById('i-newname').value='';
     document.getElementById('i-newppin').value='';
@@ -1709,7 +1775,7 @@ function phaseUI(){
   const enabled=isKnockoutEnabled();
   const tab=document.querySelector('.tab[data-tab="elim"]');
   if(tab){
-    const lockedForThisUser = !enabled && !ses.isAdmin;
+    const lockedForThisUser = !enabled && !isResultEditor();
     tab.classList.toggle('disabled',lockedForThisUser);
     tab.setAttribute('aria-disabled',lockedForThisUser?'true':'false');
   }
@@ -1732,6 +1798,23 @@ async function lockBets(){
 async function unlockBets(){
   try{await fbUpdate('config',{betsLocked:false});toast('🔓 Apuestas abiertas');}
   catch(e){toast('Error: '+e.message,true);}
+}
+function resultsPinUI(){
+  const inp=document.getElementById('i-resultspin');
+  const st=document.getElementById('s-resultspin');
+  if(inp)inp.value='';
+  if(st)st.textContent='PIN de resultados configurado';
+}
+async function setResultsPin(){
+  if(!ses.isAdmin)return toast('Solo admin puede cambiar el PIN de resultados',true);
+  const v=(document.getElementById('i-resultspin')?.value||'').trim();
+  if(!v || v.length<4)return toast('El PIN de resultados debe tener al menos 4 caracteres',true);
+  try{
+    await fbUpdate('config',{resultsPin:v});
+    const inp=document.getElementById('i-resultspin');
+    if(inp)inp.value='';
+    toast('✅ PIN de resultados actualizado');
+  }catch(e){toast('Error: '+e.message,true);}
 }
 function autoLockUI(){
   updateDeadlineHeader();
@@ -1760,7 +1843,7 @@ async function clearAutoLock(){
   catch(e){toast('Error: '+e.message,true);}
 }
 function checkAutoLock(){
-  if(!CONFIG.autoLockDate||CONFIG.betsLocked||ses.isAdmin)return;
+  if(!CONFIG.autoLockDate||CONFIG.betsLocked||isResultEditor())return;
   if(new Date()>=new Date(CONFIG.autoLockDate)){lockBets();}
 }
 
@@ -2042,7 +2125,7 @@ function bindBetControls(){
 function officialResultOf(v){return v&&typeof v==='object'?v.result:v;}
 function isGroupsCompleteFor(u){
   const b=BETS[u]?.matches||{};
-  if(ses.isAdmin && !isAdminPlayerEdit())return ALL.every(m=>!!officialResultOf(getReal().matches?.[m.id]));
+  if(isOfficialEditor())return ALL.every(m=>!!officialResultOf(getReal().matches?.[m.id]));
   return ALL.every(m=>['1','X','2'].includes(b[m.id]));
 }
 function isClassifCompleteFor(u){
@@ -2070,7 +2153,7 @@ function updateTabStatus(){
   const managedTabs=['grupos','clasif','elim','preg'];
 
   // El admin gestiona resultados confirmados: no mostramos avisos de pendiente/OK.
-  if(!ses.user || (ses.isAdmin && !isAdminPlayerEdit())){
+  if(!ses.user || isOfficialEditor()){
     managedTabs.forEach(tab=>{
       const el=document.querySelector(`.tab[data-tab="${tab}"]`);if(!el)return;
       const st=el.querySelector('.tab-status');
@@ -2155,7 +2238,7 @@ function exitUserPreview(){
   const wasAdmin=!!ADMIN_PREVIEW_USER;
   ADMIN_PREVIEW_USER='';
   PUBLIC_VIEW_USER='';
-  document.getElementById('h-user').textContent=ses.isAdmin?'Admin':ses.user;
+  document.getElementById('h-user').textContent=ses.isAdmin?'Admin':(ses.isDataEntry?'Resultados':ses.user);
   renderAll();
   showTab(wasAdmin?'admin':'marca');
 }
@@ -2200,12 +2283,13 @@ function initTabsOverflowHint(){
   setTimeout(update,0);
   setTimeout(update,400);
 }
-function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();recalc();updateTabStatus();updatePreviewBar();bindBetControls();initTabsOverflowHint();}
+function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();resultsPinUI();recalc();updateTabStatus();updatePreviewBar();bindBetControls();initTabsOverflowHint();}
 
 // ── EVENT DELEGATION ──────────────────────────────
 document.addEventListener('click',async e=>{
   const t=e.target;
   if(t.id==='t-part'){switchLoginTab('part');return;}
+  if(t.id==='t-results'){switchLoginTab('results');return;}
   if(t.id==='t-admin'){switchLoginTab('admin');return;}
   if(t.id==='b-mypin'){openPinModal();return;}
   if(t.id==='b-out'){doLogout();return;}
@@ -2218,6 +2302,7 @@ document.addEventListener('click',async e=>{
   if(t.id==='b-export-backup'){exportBackup();return;}
   if(t.id==='b-import-backup'){openImportBackup();return;}
   if(t.id==='b-export-report'){exportBetsReportPdf();return;}
+  if(t.id==='b-set-resultspin'){setResultsPin();return;}
   if(t.id==='b-pin-ok'){doChangePin();return;}
   if(t.id==='b-pin-no'){closePinModal();return;}
   const tabTarget=t.closest('[data-tab]');
@@ -2239,7 +2324,7 @@ document.addEventListener('click',async e=>{
     const mid = t.dataset.mid;
     const val = t.dataset.val;
 
-    if(ses.isAdmin && !isAdminPlayerEdit()){
+    if(isOfficialEditor()){
       const prev = BETS[userToWrite].matches?.[mid];
 
       // El admin introduce el resultado oficial 1/X/2.
@@ -2278,6 +2363,7 @@ document.addEventListener('click',async e=>{
 document.addEventListener('change',async e=>{
   if(e.__betHandled)return;
   const t=e.target;
+  if(t.dataset.paidpart){await setParticipantPaid(t.dataset.paidpart,t.checked);return;}
   if(t.id==='i-admin-user'){ADMIN_VIEW_USER=t.value;renderSelectedUserBets();return;}
   if(await handleGroupSelectChange(t))return;
   if(await handleKnockoutTeamChange(t))return;
@@ -2299,6 +2385,7 @@ document.addEventListener('keydown',e=>{
   if(e.key!=='Enter')return;
   const id=e.target.id;
   if(id==='l-pin')doLogin();
+  else if(id==='l-rpin')doResultsLogin();
   else if(id==='l-apin')doAdminLogin();
   else if(id==='i-newname'||id==='i-newppin')addPart();
   else if(['pin-cur','pin-new1','pin-new2'].includes(id))doChangePin();
