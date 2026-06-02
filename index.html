@@ -797,7 +797,7 @@ function buildMatches(){
     {"id": "70", "group": "J", "date": "2026-06-28", "time": "04:00", "home": "Jordania", "away": "Argentina"},
   ];
 }
-const ALL=buildMatches();
+const ALL=buildMatches().sort((a,b)=>`${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)||Number(a.id)-Number(b.id));
 function allTeams(){return Object.values(GROUPS).flat();}
 
 // ── APP STATE ─────────────────────────────────────
@@ -1418,11 +1418,16 @@ function renderMatches(){
   const byDate={};
   ALL.forEach(m=>{if(!byDate[m.date])byDate[m.date]=[];byDate[m.date].push(m);});
   let html=locked?`<div class="lbanner">${lockMessage()}</div>`:'';
-  html+=Object.entries(byDate).map(([date,ms])=>`
+  html+=Object.entries(byDate)
+    .sort(([dateA],[dateB])=>dateA.localeCompare(dateB))
+    .map(([date,ms])=>{
+      const orderedMatches=ms.slice().sort((a,b)=>a.time.localeCompare(b.time)||Number(a.id)-Number(b.id));
+      return `
     <div class="card">
       <div class="ch"><span class="ctitle">📅 ${fmtDate(date)}</span></div>
-      <div class="cb" style="padding:6px 13px">${ms.map(m=>mrowHTML(m,u,locked)).join('')}</div>
-    </div>`).join('');
+      <div class="cb" style="padding:6px 13px">${orderedMatches.map(m=>mrowHTML(m,u,locked)).join('')}</div>
+    </div>`;
+    }).join('');
   document.getElementById('c-matches').innerHTML=html;
 }
 function mrowHTML(m,u,locked){
