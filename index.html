@@ -163,6 +163,11 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .ainput{background:var(--darker);border:1px solid var(--border);color:var(--text);padding:7px 11px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:.88rem}
 .ainput:focus{outline:none;border-color:var(--gold)}
 .prow{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+
+.admin-complete-badge{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:999px;padding:3px 8px;font-size:.74rem;font-weight:700;white-space:nowrap;margin-right:6px}
+.admin-complete-badge.ok{color:#86efac;border-color:rgba(34,197,94,.55);background:rgba(34,197,94,.10)}
+.admin-complete-badge.warn{color:#fcd34d;border-color:rgba(245,158,11,.65);background:rgba(245,158,11,.10)}
+@media(max-width:760px){.admin-complete-badge{margin-left:0;margin-right:auto}.prow{align-items:flex-start}}
 .prow:last-child{border-bottom:none}
 .paybox{display:flex;align-items:center;gap:6px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);border-radius:8px;padding:4px 8px;color:var(--text);font-size:.78rem;white-space:nowrap}
 .paybox input{accent-color:var(--gold);width:16px;height:16px}
@@ -1693,6 +1698,44 @@ function recalc(){
 }
 
 // ── ADMIN: PARTICIPANTS ───────────────────────────
+function userSectionCompletion(name){
+  const bet=normalizeBet(BETS[name]);
+
+  const matchesOk = ALL.every(m=>['1','X','2'].includes(bet.matches?.[m.id]));
+
+  const groupsOk = Object.entries(GROUPS).every(([grp,teams])=>{
+    const arr=normalizeGroupArray(bet.groups?.[grp]);
+    if(arr.some(v=>!v))return false;
+    if(new Set(arr).size!==4)return false;
+    return arr.every(v=>teams.includes(v));
+  });
+
+  const questionsOk = QUESTIONS.every(q=>(bet.questions?.[q.id]||'').toString().trim()!=='');
+
+  const knockoutOk = !isKnockoutEnabled() || KO_ROUNDS.every(round=>round.matches.every(match=>{
+    const item=bet.knockout?.[match.sid]||{};
+    return !!item.teamA && !!item.teamB;
+  }));
+
+  const missing=[];
+  if(!matchesOk)missing.push('Fase de grupos');
+  if(!groupsOk)missing.push('Clasificaciones');
+  if(!questionsOk)missing.push('Preguntas');
+  if(isKnockoutEnabled()&&!knockoutOk)missing.push('Eliminatoria');
+
+  return {ok:matchesOk&&groupsOk&&questionsOk&&knockoutOk,missing};
+}
+function userCompletionBadge(name){
+  const st=userSectionCompletion(name);
+  if(st.ok){
+    return `<span class="admin-complete-badge ok" title="Porra completa">✅ Completa</span>`;
+  }
+  const tip=st.missing.length?`Falta: ${st.missing.join(', ')}`:'Porra incompleta';
+  return `<span class="admin-complete-badge warn" title="${escapeHtml(tip)}">⚠️ Incompleta</span>`;
+}
+function escapeHtml(str){
+  return (str||'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 function renderParts(){
   const c=document.getElementById('c-parts');if(!c)return;
   if(!USERS.length){c.innerHTML='<div style="color:var(--muted);font-size:.83rem">Sin usuarios.</div>';renderAdminUserTools();return;}
@@ -1702,6 +1745,7 @@ function renderParts(){
     const paid=!!u.paid;
     return `<div class="prow">
       <span style="font-weight:600;flex:1">${u.name}</span>
+      ${userCompletionBadge(u.name)}
       <label class="paybox ${paid?'paid':''}" title="Bizum de 20€ ${paid?'pagado':'pendiente'}">
         <input type="checkbox" data-paidpart="${u.name}" ${paid?'checked':''}>
         <span>${paid?'💶 Pagado':'💶 Pendiente'}</span>
