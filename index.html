@@ -604,7 +604,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v34-20260602-calendario-fase-grupos-corregido';
+const APP_VERSION = 'v37-20260605-vista-porras-solo-tras-cierre';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -923,6 +923,21 @@ function canEdit(){
   if(isAdminPlayerEdit())return true;
   if(isResultEditor())return true;
   return !CONFIG.betsLocked && !isUserBetLocked(ses.user);
+}
+function isPublicBetViewingOpen(){
+  if(ses.isAdmin)return true;
+  if(CONFIG.betsLocked)return true;
+  if(CONFIG.autoLockDate){
+    const t=new Date(CONFIG.autoLockDate).getTime();
+    return Number.isFinite(t) && Date.now()>=t;
+  }
+  return false;
+}
+function publicBetViewingMessage(){
+  if(CONFIG.autoLockDate){
+    return `🔒 Las porras de otros participantes estarán disponibles cuando se cierre el plazo: ${fmtDeadline(CONFIG.autoLockDate)}.`;
+  }
+  return '🔒 Las porras de otros participantes estarán disponibles cuando el admin cierre las apuestas.';
 }
 function lockMessage(){
   if(isReadOnlyPreview())return `👁️ Vista solo lectura de la porra de ${PUBLIC_VIEW_USER}. No puedes modificarla.`;
@@ -1679,13 +1694,23 @@ function renderPot(){
 function recalc(){
   renderPot();
   const rows=USERS.map(p=>({name:p.name,...calcScore(p.name)})).sort((a,b)=>b.tot-a.tot);
-  document.getElementById('c-scores').innerHTML=`<thead><tr>
+  const publicViewingOpen=isPublicBetViewingOpen();
+  const rankingNotice=!ses.isAdmin && !publicViewingOpen
+    ? `<div class="info" style="margin:0 0 10px 0">${publicBetViewingMessage()} Hasta entonces solo puedes ver tu propia porra.</div>`
+    : '';
+  document.getElementById('c-scores').innerHTML=`${rankingNotice}<thead><tr>
     <th>#</th><th>Participante</th><th>Partidos</th><th>Grupos</th><th>Eliminatoria</th><th>Preguntas</th><th>TOTAL</th><th>Porra</th>
   </tr></thead><tbody>${rows.map((s,i)=>{
-    const showViewButton = ses.isAdmin || (!isResultEditor() && s.name !== ses.user);
-    const porraCell = showViewButton
-      ? `<button class="btn sec" style="padding:3px 8px;font-size:.72rem" data-viewscore="${s.name}">Ver</button>`
-      : `<span style="color:var(--muted);font-size:.78rem">Tu porra</span>`;
+    let porraCell='';
+    if(ses.isAdmin){
+      porraCell=`<button class="btn sec" style="padding:3px 8px;font-size:.72rem" data-viewscore="${s.name}">Editar</button>`;
+    }else if(s.name===ses.user){
+      porraCell=`<span style="color:var(--muted);font-size:.78rem">Tu porra</span>`;
+    }else if(publicViewingOpen){
+      porraCell=`<button class="btn sec" style="padding:3px 8px;font-size:.72rem" data-viewscore="${s.name}">Ver</button>`;
+    }else{
+      porraCell=`<span style="color:var(--muted);font-size:.78rem" title="${escapeHtml(publicBetViewingMessage())}">🔒 Al cierre</span>`;
+    }
     return `<tr>
       <td class="${i===0?'r1':i===1?'r2':i===2?'r3':''}">${['🥇','🥈','🥉'][i]||i+1}</td>
       <td style="font-weight:600">${s.name}</td><td>${s.m}</td><td>${s.g}</td><td>${s.k}</td><td>${s.q}</td>
@@ -2325,6 +2350,10 @@ function enterUserPreview(name){
 function enterPublicUserView(name){
   if(!ses.user || ses.isAdmin)return;
   if(!USERS.some(u=>u.name===name))return toast('Usuario no encontrado',true);
+  if(!isPublicBetViewingOpen()){
+    toast(publicBetViewingMessage(),true);
+    return;
+  }
   PUBLIC_VIEW_USER=name;
   ensureBet(name);
   showTab('grupos');
@@ -2380,7 +2409,10 @@ function initTabsOverflowHint(){
   setTimeout(update,0);
   setTimeout(update,400);
 }
-function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();recalc();updateTabStatus();updatePreviewBar();bindBetControls();initTabsOverflowHint();renderAdminSecurityUI();}
+function renderAll(){
+  if(PUBLIC_VIEW_USER && !isPublicBetViewingOpen())PUBLIC_VIEW_USER='';
+  renderMatches();renderGroups();renderKnockout();renderQuestions();renderParts();renderSelectedUserBets();lockUI();autoLockUI();recalc();updateTabStatus();updatePreviewBar();bindBetControls();initTabsOverflowHint();renderAdminSecurityUI();
+}
 
 // ── EVENT DELEGATION ──────────────────────────────
 document.addEventListener('click',async e=>{
@@ -2404,7 +2436,11 @@ document.addEventListener('click',async e=>{
   const tabTarget=t.closest('[data-tab]');
   if(tabTarget){showTab(tabTarget.dataset.tab);return;}
   if(t.dataset.viewpart){ADMIN_VIEW_USER=t.dataset.viewpart;renderAdminUserTools();enterUserPreview(t.dataset.viewpart);return;}
-  if(t.dataset.viewscore){ses.isAdmin?enterUserPreview(t.dataset.viewscore):enterPublicUserView(t.dataset.viewscore);return;}
+  if(t.dataset.viewscore){
+    if(ses.isAdmin)enterUserPreview(t.dataset.viewscore);
+    else enterPublicUserView(t.dataset.viewscore);
+    return;
+  }
   if(t.dataset.lockbets){setUserBetLock(t.dataset.lockbets,t.dataset.lockstate==='1');return;}
   if(t.dataset.resetpin){resetUserPin(t.dataset.resetpin);return;}
   if(t.dataset.clearbets){clearUserBets(t.dataset.clearbets);return;}
