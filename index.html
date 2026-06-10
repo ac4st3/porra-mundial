@@ -172,6 +172,10 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .paybox{display:flex;align-items:center;gap:6px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);border-radius:8px;padding:4px 8px;color:var(--text);font-size:.78rem;white-space:nowrap}
 .paybox input{accent-color:var(--gold);width:16px;height:16px}
 .paybox.paid{border-color:rgba(46,196,182,.45);background:rgba(46,196,182,.08);color:#9ff3e8}
+.admin-part-filter{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:9px 10px;margin-bottom:12px}
+.admin-part-filter label{font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--gold);font-size:.9rem}
+.admin-part-filter .filter-count{color:var(--muted);font-size:.78rem;margin-left:auto}
+@media(max-width:760px){.admin-part-filter{align-items:flex-start}.admin-part-filter .filter-count{margin-left:0;width:100%}}
 
 .admin-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:10px}
 .admin-mini{background:var(--darker);border:1px solid var(--border);border-radius:10px;padding:11px}
@@ -462,6 +466,15 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
         <div class="ch"><span class="ctitle">👥 PARTICIPANTES</span></div>
         <div class="cb">
           <div class="info" style="margin-bottom:10px">Marca aquí quién ha pagado el Bizum de 20€ para participar. Este control es solo para gestión interna del admin.</div>
+          <div class="admin-part-filter">
+            <label for="i-part-filter">Filtrar jugadores</label>
+            <select class="ainput" id="i-part-filter" style="min-width:190px">
+              <option value="all">Todos</option>
+              <option value="incomplete">Solo incompletos</option>
+              <option value="complete">Solo completos</option>
+            </select>
+            <span class="filter-count" id="s-part-filter-count"></span>
+          </div>
           <div id="c-parts" style="margin-bottom:12px"></div>
           <div style="display:flex;gap:9px;flex-wrap:wrap">
             <input class="ainput" id="i-newname" placeholder="Nombre" style="width:145px">
@@ -604,7 +617,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v37-20260605-vista-porras-solo-tras-cierre';
+const APP_VERSION = 'v38-20260610-filtro-incompletas-admin';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -820,6 +833,7 @@ let ses={user:null,isAdmin:false};
 let forcePinChange=false;
 let ADMIN_VIEW_USER='';
 let ADMIN_PREVIEW_USER=''; // Admin editando la porra de un jugador
+let ADMIN_PART_FILTER='all';
 let PUBLIC_VIEW_USER='';   // Participante viendo la porra de otro jugador en solo lectura
 let _saveTimer=null;
 let QUESTION_SAVE_TIMERS={};
@@ -1763,8 +1777,37 @@ function escapeHtml(str){
 }
 function renderParts(){
   const c=document.getElementById('c-parts');if(!c)return;
-  if(!USERS.length){c.innerHTML='<div style="color:var(--muted);font-size:.83rem">Sin usuarios.</div>';renderAdminUserTools();return;}
-  c.innerHTML=USERS.map(u=>{
+  const filterEl=document.getElementById('i-part-filter');
+  if(filterEl){
+    filterEl.value=ADMIN_PART_FILTER;
+  }
+  if(!USERS.length){
+    c.innerHTML='<div style="color:var(--muted);font-size:.83rem">Sin usuarios.</div>';
+    const countEl=document.getElementById('s-part-filter-count');
+    if(countEl)countEl.textContent='0 jugadores';
+    renderAdminUserTools();return;
+  }
+
+  const enriched=USERS.map(u=>({user:u,completion:userSectionCompletion(u.name)}));
+  const shown=enriched.filter(x=>{
+    if(ADMIN_PART_FILTER==='complete')return x.completion.ok;
+    if(ADMIN_PART_FILTER==='incomplete')return !x.completion.ok;
+    return true;
+  });
+  const countEl=document.getElementById('s-part-filter-count');
+  if(countEl){
+    const total=USERS.length;
+    const complete=enriched.filter(x=>x.completion.ok).length;
+    const incomplete=total-complete;
+    const shownTxt=ADMIN_PART_FILTER==='all'?`${total} jugadores`:`Mostrando ${shown.length} de ${total}`;
+    countEl.textContent=`${shownTxt} · ✅ ${complete} completas · ⚠️ ${incomplete} incompletas`;
+  }
+  if(!shown.length){
+    c.innerHTML='<div style="color:var(--muted);font-size:.83rem;padding:8px 0">No hay jugadores que coincidan con este filtro.</div>';
+    renderAdminUserTools();return;
+  }
+
+  c.innerHTML=shown.map(({user:u})=>{
     const bet=normalizeBet(BETS[u.name]);
     const total=Object.keys(bet.matches||{}).length+Object.keys(bet.groups||{}).length+Object.keys(bet.knockout||{}).length+Object.keys(bet.questions||{}).length;
     const paid=!!u.paid;
@@ -2496,6 +2539,7 @@ document.addEventListener('change',async e=>{
   if(e.__betHandled)return;
   const t=e.target;
   if(t.dataset.paidpart){await setParticipantPaid(t.dataset.paidpart,t.checked);return;}
+  if(t.id==='i-part-filter'){ADMIN_PART_FILTER=t.value||'all';renderParts();return;}
   if(t.id==='i-admin-user'){ADMIN_VIEW_USER=t.value;renderSelectedUserBets();return;}
   if(await handleGroupSelectChange(t))return;
   if(await handleKnockoutTeamChange(t))return;
