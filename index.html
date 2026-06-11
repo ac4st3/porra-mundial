@@ -2207,14 +2207,6 @@ async function exportBetsReportPdf(){
     const { jsPDF } = await import('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/+esm');
     const generatedAt=new Date();
     const usersSorted=[...USERS].sort((a,b)=>a.name.localeCompare(b.name,'es'));
-    const payloadForHash={
-      generatedAt:generatedAt.toISOString(),
-      users:usersSorted.map(u=>({name:u.name,bet:normalizeBet(BETS[u.name])})),
-      config:CONFIG,
-      knockoutEnabled:isKnockoutEnabled()
-    };
-    const auditHash=await sha256Text(JSON.stringify(payloadForHash));
-
     const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
     const margin=12;
     const maxW=186;
@@ -2226,7 +2218,6 @@ async function exportBetsReportPdf(){
       doc.setFont('helvetica','normal');doc.setFontSize(9);
       doc.text(`Generado: ${generatedAt.toLocaleString('es-ES')}`,margin,y);y+=5;
       doc.text(`Participantes: ${usersSorted.length} | Bote: ${fmtMoney(potInfo().total)}`,margin,y);y+=5;
-      doc.text(`Hash auditoria SHA-256: ${auditHash.slice(0,32)}...${auditHash.slice(-16)}`,margin,y);y+=7;
       doc.setDrawColor(120);doc.line(margin,y,198,y);y+=6;
     }
     header();
