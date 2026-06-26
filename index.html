@@ -710,7 +710,7 @@ const KO_MATCHES={
   m103:{sid:'m103',num:103,date:'2026-07-18',time:'23:00',round:'third',side:'center',row:9,col:5,slotA:{label:'Perd. M101',type:'loser',match:'m101',finalSlot:'teamA'},slotB:{label:'Perd. M102',type:'loser',match:'m102',finalSlot:'teamB'}},
 };
 const KO_ROUNDS=[
-  {id:'r32',label:'DIECISEISAVOS',matches:['m73','m74','m75','m77','m81','m82','m83','m84','m76','m78','m79','m80','m85','m86','m87','m88'].map(id=>KO_MATCHES[id])},
+  {id:'r32',label:'16AVOS',matches:['m73','m74','m75','m77','m81','m82','m83','m84','m76','m78','m79','m80','m85','m86','m87','m88'].map(id=>KO_MATCHES[id])},
   {id:'r16',label:'OCTAVOS',matches:['m89','m90','m91','m92','m93','m94','m95','m96'].map(id=>KO_MATCHES[id])},
   {id:'qf',label:'CUARTOS',matches:['m97','m98','m99','m100'].map(id=>KO_MATCHES[id])},
   {id:'sf',label:'SEMIFINALES',matches:['m101','m102'].map(id=>KO_MATCHES[id])},
@@ -1649,7 +1649,7 @@ function renderKoCard(match,u,dis,showPlayerPts){
   };
   const sideClass=match.side==='right'?'ko-right':match.side==='center'?'ko-center':'ko-left';
   const finalClass=match.round==='final'?' ko-final-card':'';
-  const KO_ROUND_TAG={r32:'DIECISEISAVOS',r16:'OCTAVOS',qf:'CUARTOS',sf:'SEMIS',final:'FINAL',third:'3º/4º'};
+  const KO_ROUND_TAG={r32:'16AVOS',r16:'OCTAVOS',qf:'CUARTOS',sf:'SEMIS',final:'FINAL',third:'3º/4º'};
   const label=KO_ROUND_TAG[match.round]||'';
   const fixedNote=isFixedR32?'<div class="ko-fixed-msg">Cruce fijado por admin. Los dieciseisavos no puntúan.</div>':'';
   return `<div class="ko-card ${sideClass}${finalClass}" style="grid-column:${match.col};grid-row:${match.row+1}/span 1" data-match="${sid}">
