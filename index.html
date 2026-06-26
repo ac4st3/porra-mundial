@@ -596,7 +596,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v40-20260626-ranking-cabeceras-tabs';
+const APP_VERSION = 'v41-20260626-ko-window-only';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -914,15 +914,32 @@ function activeUser(){
   if(isReadOnlyPreview())return PUBLIC_VIEW_USER;
   return ses.user;
 }
-function canEdit(){
+function canEditTab(tab){
   if(isReadOnlyPreview())return false;
   if(isAdminPlayerEdit())return true;
   if(isResultEditor())return true;
-  return !CONFIG.betsLocked && !isUserBetLocked(ses.user);
+  if(!ses.user || isUserBetLocked(ses.user))return false;
+
+  // Ventana especial de eliminatoria:
+  // el domingo 28/06/2026 de 06:00 a 20:00 solo se puede rellenar Eliminatoria.
+  // Fase de grupos, clasificaciones y preguntas quedan cerradas aunque el cierre global no esté activo.
+  if(tab==='elim')return isKnockoutEnabled();
+  if(isKnockoutAutoWindow())return false;
+
+  return !CONFIG.betsLocked;
 }
-function lockMessage(){
+function canEdit(){
+  // Compatibilidad con llamadas antiguas: usa el estado general.
+  if(isReadOnlyPreview())return false;
+  if(isAdminPlayerEdit())return true;
+  if(isResultEditor())return true;
+  return !CONFIG.betsLocked && !isUserBetLocked(ses.user) && !isKnockoutAutoWindow();
+}
+function lockMessage(tab){
   if(isReadOnlyPreview())return `👁️ Vista solo lectura de la porra de ${PUBLIC_VIEW_USER}. No puedes modificarla.`;
   if(!isResultEditor() && isUserBetLocked(ses.user))return '🔒 Tu porra está bloqueada por el admin. Puedes consultarla, pero no modificarla.';
+  if(!isResultEditor() && isKnockoutAutoWindow() && tab && tab!=='elim')return '🔒 Esta sección ya está cerrada. En esta ventana solo se puede rellenar la Eliminatoria.';
+  if(tab==='elim' && !isKnockoutEnabled() && !isResultEditor())return '🔒 La Eliminatoria todavía no está abierta para participantes.';
   return '🔒 Apuestas cerradas. No puedes modificar pronósticos.';
 }
 
@@ -1096,7 +1113,7 @@ function restoreFocusedInputState(state){
 async function handleGroupSelectChange(t){
   if(!t || t.dataset.grp===undefined || t.dataset.pos===undefined)return false;
   const user=writableUser();
-  if(!user||!canEdit()){toast(isReadOnlyPreview()?'👁️ Vista solo lectura: no se modifica':'🔒 Cerradas',true);return true;}
+  if(!user||!canEditTab('clasif')){toast(isReadOnlyPreview()?'👁️ Vista solo lectura: no se modifica':lockMessage('clasif'),true);return true;}
 
   ensureBet(user);
   const grp=t.dataset.grp;
@@ -1126,7 +1143,7 @@ async function handleKnockoutTeamChange(t){
   if(!t || !t.dataset.koteam)return false;
   if(!isKnockoutEnabled() && !isResultEditor()){toast('🔒 Eliminatoria todavía bloqueada',true);return true;}
   const user=writableUser();
-  if(!user||!canEdit()){toast(isReadOnlyPreview()?'👁️ Vista solo lectura: no se modifica':'🔒 Cerradas',true);return true;}
+  if(!user||!canEditTab('elim')){toast(isReadOnlyPreview()?'👁️ Vista solo lectura: no se modifica':lockMessage('elim'),true);return true;}
 
   ensureBet(user);
   const sid=t.dataset.koteam;
@@ -1144,7 +1161,7 @@ async function handleKnockoutTeamChange(t){
 async function handleQuestionInputChange(t){
   if(!t || !t.dataset.qid)return false;
   const user=writableUser();
-  if(!user||!canEdit()){toast(isReadOnlyPreview()?'👁️ Vista solo lectura: no se modifica':'🔒 Cerradas',true);return true;}
+  if(!user||!canEditTab('preg')){toast(isReadOnlyPreview()?'👁️ Vista solo lectura: no se modifica':lockMessage('preg'),true);return true;}
 
   ensureBet(user);
   if(!BETS[user].questions)BETS[user].questions={};
@@ -1175,7 +1192,7 @@ async function handleQuestionInputChange(t){
 async function flushQuestionInput(t){
   if(!t || !t.dataset.qid)return false;
   const user=writableUser();
-  if(!user||!canEdit())return true;
+  if(!user||!canEditTab('preg'))return true;
   ensureBet(user);
   if(!BETS[user].questions)BETS[user].questions={};
   const qid=t.dataset.qid;
@@ -1418,7 +1435,7 @@ function showTab(tab){
 
 // ── RENDER MATCHES ────────────────────────────────
 function renderMatches(){
-  const u=activeUser(),locked=!canEdit();
+  const u=activeUser(),locked=!canEditTab('grupos');
   const byDate={};
 
   // Importante: el array ALL mantiene IDs oficiales FIFA, pero algunas correcciones
@@ -1431,7 +1448,7 @@ function renderMatches(){
 
   const sortedDates = Object.keys(byDate).sort((a,b)=>new Date(a+'T00:00:00')-new Date(b+'T00:00:00'));
 
-  let html=locked?`<div class="lbanner">${lockMessage()}</div>`:'';
+  let html=locked?`<div class="lbanner">${lockMessage('grupos')}</div>`:'';
   html+=sortedDates.map(date=>{
     const ms = byDate[date].slice().sort((a,b)=>{
       const da = new Date(`${a.date}T${a.time}:00`);
@@ -1511,9 +1528,9 @@ function mrowHTML(m,u,locked){
 
 // ── RENDER GROUPS ─────────────────────────────────
 function renderGroups(){
-  const u=activeUser(),dis=!canEdit();
+  const u=activeUser(),dis=!canEditTab('clasif');
   const showPlayerPts = !!u && !isOfficialEditor();
-  let html=dis?`<div class="lbanner">${lockMessage()}</div>`:'';
+  let html=dis?`<div class="lbanner">${lockMessage('clasif')}</div>`:'';
   html+=Object.entries(GROUPS).map(([g,teams])=>{
     const br=u?normalizeGroupArray(BETS[u]?.groups?.[g]):['','','',''];
     const rrArr=normalizeGroupArray(getReal().groups?.[g]);
@@ -1672,14 +1689,15 @@ function renderKnockout(){
     return;
   }
 
-  const u=activeUser(),dis=!canEdit();
+  const u=activeUser(),dis=!canEditTab('elim');
   const showPlayerPts = !!u && !isOfficialEditor();
   const titles=[
     [1,'Dieciseisavos'],[2,'Octavos'],[3,'Cuartos'],[4,'Semifinal'],[5,'Final / 3º-4º'],[6,'Semifinal'],[7,'Cuartos'],[8,'Octavos'],[9,'Dieciseisavos']
   ].map(([col,title])=>`<div class="ko-col-title" style="grid-column:${col}">${title}</div>`).join('');
   const cards=KO_RENDER_ORDER.map(id=>renderKoCard(KO_MATCHES[id],u,dis,showPlayerPts)).join('');
   const prepNote=isResultEditor()&&!isKnockoutEnabled()?`<div class="ko-blocked-note">🔒 La Eliminatoria sigue cerrada para jugadores. Puedes dejar preparado el cuadro; se abrirá automáticamente el domingo 28/06/2026 de 06:00 a 20:00, o manualmente si la activas desde admin.</div>`:'';
-  c.innerHTML=`${prepNote}${koCompletionPanel(u)}<div class="ko-note">Dieciseisavos: cruces fijos introducidos por admin y sin puntuación para jugadores. Desde octavos en adelante, cada desplegable muestra todos los equipos posibles que vienen de la rama anterior, para que la porra pueda rellenarse antes de que se jueguen las rondas. Puntuación: ${POINTS_KO_TEAM} pts por cada equipo acertado.</div><div class="ko-bracket-pro">${titles}${cards}</div>`;
+  const windowNote=(!isResultEditor()&&isKnockoutAutoWindow())?`<div class="info" style="margin-bottom:12px">⏰ Ventana especial de Eliminatoria abierta hasta las 20:00. El resto de secciones ya están cerradas y no se pueden modificar.</div>`:'';
+  c.innerHTML=`${prepNote}${windowNote}${koCompletionPanel(u)}<div class="ko-note">Dieciseisavos: cruces fijos introducidos por admin y sin puntuación para jugadores. Desde octavos en adelante, cada desplegable muestra todos los equipos posibles que vienen de la rama anterior, para que la porra pueda rellenarse antes de que se jueguen las rondas. Puntuación: ${POINTS_KO_TEAM} pts por cada equipo acertado.</div><div class="ko-bracket-pro">${titles}${cards}</div>`;
   bindBetControls();
 }
 
@@ -1688,9 +1706,9 @@ function questionCompare(a,b){
   return (a||'').toString().toLowerCase().trim() === (b||'').toString().toLowerCase().trim();
 }
 function renderQuestions(){
-  const u=activeUser(),dis=!canEdit();
+  const u=activeUser(),dis=!canEditTab('preg');
   const showPlayerPts = !!u && !isOfficialEditor();
-  let html=dis?`<div class="lbanner">${lockMessage()}</div>`:'';
+  let html=dis?`<div class="lbanner">${lockMessage('preg')}</div>`:'';
   html+=QUESTIONS.map(q=>{
     const bv=u?(BETS[u]?.questions?.[q.id]??''):'';
     const rv=getReal().questions?.[q.id]??'';
@@ -2525,7 +2543,7 @@ document.addEventListener('click',async e=>{
   if(t.id==='b-lock-userbets'){const name=document.getElementById('i-admin-user').value;const u=getUserObj(name);setUserBetLock(name,!u?.betLocked);return;}
   if(t.dataset.mid&&t.dataset.val){
     const userToWrite = writableUser();
-    if(!userToWrite||!canEdit())return toast(userToWrite?lockMessage():'Sin sesión',true);
+    if(!userToWrite||!canEditTab('grupos'))return toast(userToWrite?lockMessage('grupos'):'Sin sesión',true);
     ensureBet(userToWrite);
 
     const mid = t.dataset.mid;
