@@ -102,11 +102,13 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .grow:last-child{border-bottom:none}
 .gpos{color:var(--muted);font-size:.76rem;width:16px}
 .gpos.q{color:var(--gold);font-weight:700}
-.gsel{background:var(--darker);border:1px solid var(--border);color:var(--text);padding:4px 7px;border-radius:6px;font-family:'Barlow',sans-serif;font-size:.8rem;flex:1}
+.gsel{background:var(--darker);border:1px solid var(--border);color:var(--text);padding:4px 7px;border-radius:6px;font-family:'Barlow',sans-serif;font-size:.8rem;flex:1;width:100%}
+.gpick{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.gref{font-size:.7rem;color:var(--gold);min-height:14px;line-height:1.1}
 /* BRACKET */
 .bcon{overflow-x:auto;padding-bottom:14px;max-width:100%}
-.bracket{min-width:1380px}
-.ko-bracket-pro{display:grid;grid-template-columns:repeat(9,minmax(135px,1fr));grid-template-rows:34px repeat(8,minmax(92px,auto));gap:9px;align-items:center;padding:4px 0 12px}
+.bracket{min-width:1580px}
+.ko-bracket-pro{display:grid;grid-template-columns:repeat(9,minmax(145px,1fr));grid-template-rows:34px repeat(16,minmax(58px,auto));column-gap:12px;row-gap:5px;align-items:center;padding:4px 0 12px}
 .ko-col-title{grid-row:1;font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px;color:var(--gold);font-size:.78rem;text-align:center;border-bottom:1px solid var(--border);padding-bottom:6px;white-space:nowrap}
 .ko-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;align-self:center;position:relative;min-width:0}
 .ko-card::before{content:'';position:absolute;top:50%;width:9px;border-top:1px solid var(--border);opacity:.9}
@@ -114,6 +116,7 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .bmatch-head{display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center;background:rgba(201,168,76,.08);border-bottom:1px solid var(--border);padding:5px 7px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--gold);font-size:.76rem}
 .bmatch-time{color:var(--muted);font-family:'Barlow',sans-serif;font-size:.66rem;letter-spacing:0;text-align:center;white-space:nowrap}.bpath{color:var(--muted);font-family:'Barlow',sans-serif;font-size:.62rem;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.ko-side-label{font-family:'Bebas Neue',sans-serif;color:var(--gold);font-size:.72rem;letter-spacing:1px}
 .bteam{display:flex;align-items:center;padding:6px 7px;gap:7px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;overflow:hidden;background:rgba(255,255,255,.015)}
+.ko-fixed-msg{font-size:.7rem;color:var(--muted);padding:6px 7px;border-bottom:1px solid rgba(255,255,255,.04);line-height:1.25}
 .bteam:last-child{border-bottom:none}.bteam:hover{background:var(--card2)}.bteam.win{background:rgba(201,168,76,.18)}
 .slot-label{font-size:.6rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kosel{background:var(--darker);border:1px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:600;width:100%;cursor:pointer;outline:none;border-radius:5px;padding:4px 6px;min-width:0}.kosel:focus{border-color:var(--gold)}.kosel option{background:var(--card);color:var(--text)}
 .kopts{font-family:'Bebas Neue',sans-serif;color:var(--win);font-size:.78rem;min-width:24px;text-align:center;flex-shrink:0}.ko-help{margin-bottom:12px}.ko-note{font-size:.74rem;color:var(--muted);line-height:1.35;margin:0 0 10px}.ko-blocked-note{background:rgba(230,57,70,.15);border:1px solid var(--red);color:#fca5a5;border-radius:10px;padding:11px 16px;margin-bottom:12px;font-size:.84rem}
@@ -326,7 +329,8 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       <h3>4) Eliminatoria</h3>
       <ul>
         <li>La eliminatoria se abrirá cuando termine la fase de grupos y se conozcan los cruces de dieciseisavos.</li>
-        <li>En cada ronda solo hay que indicar qué equipos pasan a la siguiente fase; no se introducen rankinges.</li>
+        <li>Los dieciseisavos serán cruces fijos y no suman puntos.</li>
+        <li>Desde octavos en adelante solo hay que indicar qué equipos avanzan; no se introducen resultados.</li>
         <li>Cada equipo acertado en su posición exacta suma <strong>20 puntos</strong>.</li>
       </ul>
       <h3>5) Fases de la porra</h3>
@@ -654,51 +658,53 @@ const KO_LOCK_START_ISO='2026-06-28T06:00:00+02:00';
 const KO_LOCK_END_ISO='2026-06-28T20:00:00+02:00';
 
 const KO_MATCHES={
-  m73:{sid:'m73',num:73,date:'2026-06-28',time:'21:00',round:'r32',side:'left',row:3,col:1,slotA:{label:'2A',type:'pos',group:'A',pos:2},slotB:{label:'2B',type:'pos',group:'B',pos:2}},
+  m73:{sid:'m73',num:73,date:'2026-06-28',time:'21:00',round:'r32',side:'left',row:5,col:1,slotA:{label:'2A',type:'pos',group:'A',pos:2},slotB:{label:'2B',type:'pos',group:'B',pos:2}},
   m74:{sid:'m74',num:74,date:'2026-06-29',time:'22:30',round:'r32',side:'left',row:1,col:1,slotA:{label:'1E',type:'pos',group:'E',pos:1},slotB:{label:'3ABCDF',type:'third',groups:['A','B','C','D','F']}},
-  m75:{sid:'m75',num:75,date:'2026-06-30',time:'03:00',round:'r32',side:'left',row:4,col:1,slotA:{label:'1F',type:'pos',group:'F',pos:1},slotB:{label:'2C',type:'pos',group:'C',pos:2}},
-  m77:{sid:'m77',num:77,date:'2026-06-30',time:'23:00',round:'r32',side:'left',row:2,col:1,slotA:{label:'1I',type:'pos',group:'I',pos:1},slotB:{label:'3CDFGH',type:'third',groups:['C','D','F','G','H']}},
-  m81:{sid:'m81',num:81,date:'2026-07-02',time:'02:00',round:'r32',side:'left',row:7,col:1,slotA:{label:'1D',type:'pos',group:'D',pos:1},slotB:{label:'3BEFIJ',type:'third',groups:['B','E','F','I','J']}},
-  m82:{sid:'m82',num:82,date:'2026-07-01',time:'22:00',round:'r32',side:'left',row:8,col:1,slotA:{label:'1G',type:'pos',group:'G',pos:1},slotB:{label:'3AEHIJ',type:'third',groups:['A','E','H','I','J']}},
-  m83:{sid:'m83',num:83,date:'2026-07-03',time:'01:00',round:'r32',side:'left',row:5,col:1,slotA:{label:'2K',type:'pos',group:'K',pos:2},slotB:{label:'2L',type:'pos',group:'L',pos:2}},
-  m84:{sid:'m84',num:84,date:'2026-07-02',time:'21:00',round:'r32',side:'left',row:6,col:1,slotA:{label:'1H',type:'pos',group:'H',pos:1},slotB:{label:'2J',type:'pos',group:'J',pos:2}},
+  m75:{sid:'m75',num:75,date:'2026-06-30',time:'03:00',round:'r32',side:'left',row:7,col:1,slotA:{label:'1F',type:'pos',group:'F',pos:1},slotB:{label:'2C',type:'pos',group:'C',pos:2}},
+  m77:{sid:'m77',num:77,date:'2026-06-30',time:'23:00',round:'r32',side:'left',row:3,col:1,slotA:{label:'1I',type:'pos',group:'I',pos:1},slotB:{label:'3CDFGH',type:'third',groups:['C','D','F','G','H']}},
+  m81:{sid:'m81',num:81,date:'2026-07-02',time:'02:00',round:'r32',side:'left',row:13,col:1,slotA:{label:'1D',type:'pos',group:'D',pos:1},slotB:{label:'3BEFIJ',type:'third',groups:['B','E','F','I','J']}},
+  m82:{sid:'m82',num:82,date:'2026-07-01',time:'22:00',round:'r32',side:'left',row:15,col:1,slotA:{label:'1G',type:'pos',group:'G',pos:1},slotB:{label:'3AEHIJ',type:'third',groups:['A','E','H','I','J']}},
+  m83:{sid:'m83',num:83,date:'2026-07-03',time:'01:00',round:'r32',side:'left',row:9,col:1,slotA:{label:'2K',type:'pos',group:'K',pos:2},slotB:{label:'2L',type:'pos',group:'L',pos:2}},
+  m84:{sid:'m84',num:84,date:'2026-07-02',time:'21:00',round:'r32',side:'left',row:11,col:1,slotA:{label:'1H',type:'pos',group:'H',pos:1},slotB:{label:'2J',type:'pos',group:'J',pos:2}},
 
   m76:{sid:'m76',num:76,date:'2026-06-29',time:'19:00',round:'r32',side:'right',row:1,col:9,slotA:{label:'1C',type:'pos',group:'C',pos:1},slotB:{label:'2F',type:'pos',group:'F',pos:2}},
-  m78:{sid:'m78',num:78,date:'2026-06-30',time:'19:00',round:'r32',side:'right',row:2,col:9,slotA:{label:'2E',type:'pos',group:'E',pos:2},slotB:{label:'2I',type:'pos',group:'I',pos:2}},
-  m79:{sid:'m79',num:79,date:'2026-07-01',time:'03:00',round:'r32',side:'right',row:3,col:9,slotA:{label:'1A',type:'pos',group:'A',pos:1},slotB:{label:'3CEFHI',type:'third',groups:['C','E','F','H','I']}},
-  m80:{sid:'m80',num:80,date:'2026-07-01',time:'18:00',round:'r32',side:'right',row:4,col:9,slotA:{label:'1L',type:'pos',group:'L',pos:1},slotB:{label:'3EHIJK',type:'third',groups:['E','H','I','J','K']}},
-  m85:{sid:'m85',num:85,date:'2026-07-03',time:'05:00',round:'r32',side:'right',row:7,col:9,slotA:{label:'1B',type:'pos',group:'B',pos:1},slotB:{label:'3EFGIJ',type:'third',groups:['E','F','G','I','J']}},
-  m86:{sid:'m86',num:86,date:'2026-07-04',time:'00:00',round:'r32',side:'right',row:5,col:9,slotA:{label:'1J',type:'pos',group:'J',pos:1},slotB:{label:'2H',type:'pos',group:'H',pos:2}},
-  m87:{sid:'m87',num:87,date:'2026-07-04',time:'03:30',round:'r32',side:'right',row:8,col:9,slotA:{label:'1K',type:'pos',group:'K',pos:1},slotB:{label:'3DEIJL',type:'third',groups:['D','E','I','J','L']}},
-  m88:{sid:'m88',num:88,date:'2026-07-03',time:'20:00',round:'r32',side:'right',row:6,col:9,slotA:{label:'2D',type:'pos',group:'D',pos:2},slotB:{label:'2G',type:'pos',group:'G',pos:2}},
+  m78:{sid:'m78',num:78,date:'2026-06-30',time:'19:00',round:'r32',side:'right',row:3,col:9,slotA:{label:'2E',type:'pos',group:'E',pos:2},slotB:{label:'2I',type:'pos',group:'I',pos:2}},
+  m79:{sid:'m79',num:79,date:'2026-07-01',time:'03:00',round:'r32',side:'right',row:5,col:9,slotA:{label:'1A',type:'pos',group:'A',pos:1},slotB:{label:'3CEFHI',type:'third',groups:['C','E','F','H','I']}},
+  m80:{sid:'m80',num:80,date:'2026-07-01',time:'18:00',round:'r32',side:'right',row:7,col:9,slotA:{label:'1L',type:'pos',group:'L',pos:1},slotB:{label:'3EHIJK',type:'third',groups:['E','H','I','J','K']}},
+  m85:{sid:'m85',num:85,date:'2026-07-03',time:'05:00',round:'r32',side:'right',row:13,col:9,slotA:{label:'1B',type:'pos',group:'B',pos:1},slotB:{label:'3EFGIJ',type:'third',groups:['E','F','G','I','J']}},
+  m86:{sid:'m86',num:86,date:'2026-07-04',time:'00:00',round:'r32',side:'right',row:9,col:9,slotA:{label:'1J',type:'pos',group:'J',pos:1},slotB:{label:'2H',type:'pos',group:'H',pos:2}},
+  m87:{sid:'m87',num:87,date:'2026-07-04',time:'03:30',round:'r32',side:'right',row:15,col:9,slotA:{label:'1K',type:'pos',group:'K',pos:1},slotB:{label:'3DEIJL',type:'third',groups:['D','E','I','J','L']}},
+  m88:{sid:'m88',num:88,date:'2026-07-03',time:'20:00',round:'r32',side:'right',row:11,col:9,slotA:{label:'2D',type:'pos',group:'D',pos:2},slotB:{label:'2G',type:'pos',group:'G',pos:2}},
 
-  m89:{sid:'m89',num:89,date:'2026-07-04',time:'23:00',round:'r16',side:'left',row:1,col:2,slotA:{label:'Gan. M74',type:'winner',match:'m74'},slotB:{label:'Gan. M77',type:'winner',match:'m77'}},
-  m90:{sid:'m90',num:90,date:'2026-07-04',time:'19:00',round:'r16',side:'left',row:3,col:2,slotA:{label:'Gan. M73',type:'winner',match:'m73'},slotB:{label:'Gan. M75',type:'winner',match:'m75'}},
-  m93:{sid:'m93',num:93,date:'2026-07-06',time:'21:00',round:'r16',side:'left',row:5,col:2,slotA:{label:'Gan. M83',type:'winner',match:'m83'},slotB:{label:'Gan. M84',type:'winner',match:'m84'}},
-  m94:{sid:'m94',num:94,date:'2026-07-07',time:'02:00',round:'r16',side:'left',row:7,col:2,slotA:{label:'Gan. M81',type:'winner',match:'m81'},slotB:{label:'Gan. M82',type:'winner',match:'m82'}},
+  m89:{sid:'m89',num:89,date:'2026-07-04',time:'23:00',round:'r16',side:'left',row:2,col:2,slotA:{label:'Gan. M74',type:'winner',match:'m74'},slotB:{label:'Gan. M77',type:'winner',match:'m77'}},
+  m90:{sid:'m90',num:90,date:'2026-07-04',time:'19:00',round:'r16',side:'left',row:6,col:2,slotA:{label:'Gan. M73',type:'winner',match:'m73'},slotB:{label:'Gan. M75',type:'winner',match:'m75'}},
+  m93:{sid:'m93',num:93,date:'2026-07-06',time:'21:00',round:'r16',side:'left',row:10,col:2,slotA:{label:'Gan. M83',type:'winner',match:'m83'},slotB:{label:'Gan. M84',type:'winner',match:'m84'}},
+  m94:{sid:'m94',num:94,date:'2026-07-07',time:'02:00',round:'r16',side:'left',row:14,col:2,slotA:{label:'Gan. M81',type:'winner',match:'m81'},slotB:{label:'Gan. M82',type:'winner',match:'m82'}},
 
-  m91:{sid:'m91',num:91,date:'2026-07-05',time:'22:00',round:'r16',side:'right',row:1,col:8,slotA:{label:'Gan. M76',type:'winner',match:'m76'},slotB:{label:'Gan. M78',type:'winner',match:'m78'}},
-  m92:{sid:'m92',num:92,date:'2026-07-06',time:'02:00',round:'r16',side:'right',row:3,col:8,slotA:{label:'Gan. M79',type:'winner',match:'m79'},slotB:{label:'Gan. M80',type:'winner',match:'m80'}},
-  m95:{sid:'m95',num:95,date:'2026-07-07',time:'18:00',round:'r16',side:'right',row:5,col:8,slotA:{label:'Gan. M86',type:'winner',match:'m86'},slotB:{label:'Gan. M88',type:'winner',match:'m88'}},
-  m96:{sid:'m96',num:96,date:'2026-07-07',time:'22:00',round:'r16',side:'right',row:7,col:8,slotA:{label:'Gan. M85',type:'winner',match:'m85'},slotB:{label:'Gan. M87',type:'winner',match:'m87'}},
+  m91:{sid:'m91',num:91,date:'2026-07-05',time:'22:00',round:'r16',side:'right',row:2,col:8,slotA:{label:'Gan. M76',type:'winner',match:'m76'},slotB:{label:'Gan. M78',type:'winner',match:'m78'}},
+  m92:{sid:'m92',num:92,date:'2026-07-06',time:'02:00',round:'r16',side:'right',row:6,col:8,slotA:{label:'Gan. M79',type:'winner',match:'m79'},slotB:{label:'Gan. M80',type:'winner',match:'m80'}},
+  m95:{sid:'m95',num:95,date:'2026-07-07',time:'18:00',round:'r16',side:'right',row:10,col:8,slotA:{label:'Gan. M86',type:'winner',match:'m86'},slotB:{label:'Gan. M88',type:'winner',match:'m88'}},
+  m96:{sid:'m96',num:96,date:'2026-07-07',time:'22:00',round:'r16',side:'right',row:14,col:8,slotA:{label:'Gan. M85',type:'winner',match:'m85'},slotB:{label:'Gan. M87',type:'winner',match:'m87'}},
 
-  m97:{sid:'m97',num:97,date:'2026-07-09',time:'22:00',round:'qf',side:'left',row:2,col:3,slotA:{label:'Gan. M89',type:'winner',match:'m89'},slotB:{label:'Gan. M90',type:'winner',match:'m90'}},
-  m98:{sid:'m98',num:98,date:'2026-07-10',time:'21:00',round:'qf',side:'left',row:6,col:3,slotA:{label:'Gan. M93',type:'winner',match:'m93'},slotB:{label:'Gan. M94',type:'winner',match:'m94'}},
-  m99:{sid:'m99',num:99,date:'2026-07-11',time:'23:00',round:'qf',side:'right',row:2,col:7,slotA:{label:'Gan. M91',type:'winner',match:'m91'},slotB:{label:'Gan. M92',type:'winner',match:'m92'}},
-  m100:{sid:'m100',num:100,date:'2026-07-12',time:'03:00',round:'qf',side:'right',row:6,col:7,slotA:{label:'Gan. M95',type:'winner',match:'m95'},slotB:{label:'Gan. M96',type:'winner',match:'m96'}},
+  m97:{sid:'m97',num:97,date:'2026-07-09',time:'22:00',round:'qf',side:'left',row:4,col:3,slotA:{label:'Gan. M89',type:'winner',match:'m89'},slotB:{label:'Gan. M90',type:'winner',match:'m90'}},
+  m98:{sid:'m98',num:98,date:'2026-07-10',time:'21:00',round:'qf',side:'left',row:12,col:3,slotA:{label:'Gan. M93',type:'winner',match:'m93'},slotB:{label:'Gan. M94',type:'winner',match:'m94'}},
+  m99:{sid:'m99',num:99,date:'2026-07-11',time:'23:00',round:'qf',side:'right',row:4,col:7,slotA:{label:'Gan. M91',type:'winner',match:'m91'},slotB:{label:'Gan. M92',type:'winner',match:'m92'}},
+  m100:{sid:'m100',num:100,date:'2026-07-12',time:'03:00',round:'qf',side:'right',row:12,col:7,slotA:{label:'Gan. M95',type:'winner',match:'m95'},slotB:{label:'Gan. M96',type:'winner',match:'m96'}},
 
-  m101:{sid:'m101',num:101,date:'2026-07-14',time:'21:00',round:'sf',side:'left',row:4,col:4,slotA:{label:'Gan. M97',type:'winner',match:'m97'},slotB:{label:'Gan. M98',type:'winner',match:'m98'}},
-  m102:{sid:'m102',num:102,date:'2026-07-15',time:'21:00',round:'sf',side:'right',row:4,col:6,slotA:{label:'Gan. M99',type:'winner',match:'m99'},slotB:{label:'Gan. M100',type:'winner',match:'m100'}},
-  m104:{sid:'m104',num:104,date:'2026-07-19',time:'21:00',round:'final',side:'center',row:4,col:5,slotA:{label:'Gan. M101',type:'winner',match:'m101'},slotB:{label:'Gan. M102',type:'winner',match:'m102'}},
+  m101:{sid:'m101',num:101,date:'2026-07-14',time:'21:00',round:'sf',side:'left',row:8,col:4,slotA:{label:'Gan. M97',type:'winner',match:'m97'},slotB:{label:'Gan. M98',type:'winner',match:'m98'}},
+  m102:{sid:'m102',num:102,date:'2026-07-15',time:'21:00',round:'sf',side:'right',row:8,col:6,slotA:{label:'Gan. M99',type:'winner',match:'m99'},slotB:{label:'Gan. M100',type:'winner',match:'m100'}},
+  m104:{sid:'m104',num:104,date:'2026-07-19',time:'21:00',round:'final',side:'center',row:7,col:5,slotA:{label:'Gan. M101',type:'winner',match:'m101'},slotB:{label:'Gan. M102',type:'winner',match:'m102'}},
+  m103:{sid:'m103',num:103,date:'2026-07-18',time:'23:00',round:'third',side:'center',row:11,col:5,slotA:{label:'Perd. M101',type:'loser',match:'m101',finalSlot:'teamA'},slotB:{label:'Perd. M102',type:'loser',match:'m102',finalSlot:'teamB'}},
 };
 const KO_ROUNDS=[
   {id:'r32',label:'DIECISEISAVOS',matches:['m73','m74','m75','m77','m81','m82','m83','m84','m76','m78','m79','m80','m85','m86','m87','m88'].map(id=>KO_MATCHES[id])},
   {id:'r16',label:'OCTAVOS',matches:['m89','m90','m91','m92','m93','m94','m95','m96'].map(id=>KO_MATCHES[id])},
   {id:'qf',label:'CUARTOS',matches:['m97','m98','m99','m100'].map(id=>KO_MATCHES[id])},
   {id:'sf',label:'SEMIFINALES',matches:['m101','m102'].map(id=>KO_MATCHES[id])},
-  {id:'final',label:'FINAL',matches:['m104'].map(id=>KO_MATCHES[id])}
+  {id:'final',label:'FINAL',matches:['m104'].map(id=>KO_MATCHES[id])},
+  {id:'third',label:'3º/4º PUESTO',matches:['m103'].map(id=>KO_MATCHES[id])}
 ];
-const KO_RENDER_ORDER=['m74','m77','m73','m75','m83','m84','m81','m82','m89','m90','m93','m94','m97','m98','m101','m104','m102','m99','m100','m91','m92','m95','m96','m76','m78','m79','m80','m86','m88','m85','m87'];
+const KO_RENDER_ORDER=['m74','m77','m73','m75','m83','m84','m81','m82','m89','m90','m93','m94','m97','m98','m101','m104','m103','m102','m99','m100','m91','m92','m95','m96','m76','m78','m79','m80','m86','m88','m85','m87'];
 
 function buildMatches(){
   // Calendario oficial de fase de grupos convertido a horario peninsular español (CEST, UTC+2).
@@ -1111,6 +1117,7 @@ async function handleKnockoutTeamChange(t){
   ensureBet(user);
   const sid=t.dataset.koteam;
   const side=t.dataset.side;
+  if(KO_MATCHES[sid]?.round==='r32' && !isOfficialEditor()){toast('Los dieciseisavos los fija el admin y no se modifican en las porras de jugadores',true);return true;}
   if(!BETS[user].knockout)BETS[user].knockout={};
   if(!BETS[user].knockout[sid])BETS[user].knockout[sid]={};
   BETS[user].knockout[sid][side==='A'?'teamA':'teamB']=t.value || '';
@@ -1495,21 +1502,27 @@ function renderGroups(){
   let html=dis?`<div class="lbanner">${lockMessage()}</div>`:'';
   html+=Object.entries(GROUPS).map(([g,teams])=>{
     const br=u?normalizeGroupArray(BETS[u]?.groups?.[g]):['','','',''];
-    const rr=getReal().groups?.[g]??null;
+    const rrArr=normalizeGroupArray(getReal().groups?.[g]);
     const chosen=br.filter(v=>v&&v!=='');
     const dupes=chosen.filter((v,i)=>chosen.indexOf(v)!==i);
     const rows=[0,1,2,3].map(i=>{
       const val=br[i]??'';
-      const pts=showPlayerPts&&rr&&val?(normalizeGroupArray(rr)[i]===val?`+${POINTS_GROUP}`:''):'';
+      const realVal=rrArr[i]||'';
+      const ok=showPlayerPts&&realVal&&val===realVal;
+      const wrong=showPlayerPts&&realVal&&val&&val!==realVal;
+      const pts=ok?`+${POINTS_GROUP}`:'';
       const dup=val&&dupes.includes(val);
       return `<div class="grow">
         <span class="gpos ${i<2?'q':''}">${i+1}°</span>
-        <select class="gsel" style="${dup?'border-color:var(--red)':''}" data-grp="${g}" data-pos="${i}" ${dis?'disabled':''}>
-          <option value="">-- equipo --</option>
-          ${teams.map(t=>`<option value="${t}" ${t===val?'selected':''}>${t}</option>`).join('')}
-        </select>
+        <div class="gpick">
+          <select class="gsel" style="${dup?'border-color:var(--red)':wrong?'border-color:var(--lose);opacity:.85':''}" data-grp="${g}" data-pos="${i}" ${dis?'disabled':''}>
+            <option value="">-- equipo --</option>
+            ${teams.map(t=>`<option value="${t}" ${t===val?'selected':''}>${t}</option>`).join('')}
+          </select>
+          ${wrong?`<div class="gref">✓ ${realVal}</div>`:''}
+        </div>
         ${dup?'<span style="color:var(--red);font-size:.7rem">⚠️</span>':''}
-        <span style="font-family:\'Bebas Neue\';color:${pts?'var(--win)':'var(--muted)'};font-size:.82rem;min-width:22px;text-align:right">${pts}</span>
+        <span style="font-family:'Bebas Neue';color:${pts?'var(--win)':'var(--muted)'};font-size:.82rem;min-width:22px;text-align:right">${pts}</span>
       </div>`;
     }).join('');
     const warn=dupes.length?'<div style="background:rgba(230,57,70,.1);border-top:1px solid var(--red);padding:5px 11px;font-size:.75rem;color:#fca5a5">⚠️ Equipos repetidos — revisa la clasificación</div>':'';
@@ -1531,6 +1544,11 @@ function koClassificationArrayFor(group){
   const bet=koUserBet();
   return normalizeGroupArray(bet.groups?.[group]);
 }
+function koPrevBetForMatch(matchId){
+  const prev=KO_MATCHES[matchId];
+  if(prev?.round==='r32')return getReal().knockout?.[matchId] || {};
+  return koUserBet().knockout?.[matchId] || {};
+}
 function koOptionsForSlot(slot){
   if(!slot)return [];
   if(slot.type==='pos'){
@@ -1547,8 +1565,15 @@ function koOptionsForSlot(slot){
     return out;
   }
   if(slot.type==='winner'){
-    const prev=koUserBet().knockout?.[slot.match] || {};
+    const prev=koPrevBetForMatch(slot.match);
     return [prev.teamA,prev.teamB].filter((v,i,a)=>v && a.indexOf(v)===i);
+  }
+  if(slot.type==='loser'){
+    const prev=koPrevBetForMatch(slot.match);
+    const teams=[prev.teamA,prev.teamB].filter((v,i,a)=>v && a.indexOf(v)===i);
+    const finalPick=koUserBet().knockout?.m104?.[slot.finalSlot] || '';
+    const filtered=finalPick?teams.filter(t=>t!==finalPick):teams;
+    return filtered.length?filtered:teams;
   }
   return [];
 }
@@ -1558,18 +1583,22 @@ function koMatchDateTime(match){
   const dd=d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
   return `${dd} · ${match.time}`;
 }
+function koDisplayBetForMatch(match,u){
+  if(match.round==='r32' && !isOfficialEditor())return getReal().knockout?.[match.sid] || {};
+  return u?(BETS[u]?.knockout?.[match.sid]??{}):{};
+}
 function renderKoCard(match,u,dis,showPlayerPts){
   const sid=match.sid;
-  const bet=u?(BETS[u]?.knockout?.[sid]??{}):{};
+  const bet=koDisplayBetForMatch(match,u);
   const real=getReal().knockout?.[sid]??{};
+  const isFixedR32=match.round==='r32' && !isOfficialEditor();
   const teamRow=(side,slot)=>{
     const prop=side==='A'?'teamA':'teamB';
     const val=bet[prop]||'';
-    let opts=koOptionsForSlot(slot);
-    if(val && !opts.includes(val))opts=[val,...opts];
+    let opts=isFixedR32?(val?[val]:[]):koOptionsForSlot(slot);
     const realTeam=real[prop];
-    const teamPts=showPlayerPts && realTeam && val===realTeam;
-    const disabled=dis || opts.length===0;
+    const teamPts=showPlayerPts && match.round!=='r32' && realTeam && val===realTeam;
+    const disabled=dis || isFixedR32 || opts.length===0;
     return `<div class="bteam" data-ko="${sid}" data-side="${side}">
       <div style="display:flex;flex-direction:column;flex:1;min-width:0;gap:2px">
         <span class="slot-label">${koSlotLabel(slot)}</span>
@@ -1582,10 +1611,12 @@ function renderKoCard(match,u,dis,showPlayerPts){
     </div>`;
   };
   const sideClass=match.side==='right'?'ko-right':match.side==='center'?'ko-center':'ko-left';
+  const label=match.round==='final'?'FINAL':match.round==='third'?'3º/4º':'';
+  const fixedNote=isFixedR32?'<div class="ko-fixed-msg">Cruce fijado por admin. Los dieciseisavos no puntúan.</div>':'';
   return `<div class="ko-card ${sideClass}" style="grid-column:${match.col};grid-row:${match.row+1}/span 1" data-match="${sid}">
-    <div class="bmatch-head"><span>M${match.num}</span><span class="bmatch-time">${koMatchDateTime(match)}</span><span class="ko-side-label">${match.side==='center'?'FINAL':''}</span></div>
+    <div class="bmatch-head"><span>M${match.num}</span><span class="bmatch-time">${koMatchDateTime(match)}</span><span class="ko-side-label">${label}</span></div>
     <div class="bpath" style="padding:4px 7px;border-bottom:1px solid rgba(255,255,255,.04)">${koSlotLabel(match.slotA)} · ${koSlotLabel(match.slotB)}</div>
-    ${teamRow('A',match.slotA)}${teamRow('B',match.slotB)}
+    ${fixedNote}${teamRow('A',match.slotA)}${teamRow('B',match.slotB)}
   </div>`;
 }
 function renderKnockout(){
@@ -1602,11 +1633,11 @@ function renderKnockout(){
   const u=activeUser(),dis=!canEdit();
   const showPlayerPts = !!u && !isOfficialEditor();
   const titles=[
-    [1,'Dieciseisavos'],[2,'Octavos'],[3,'Cuartos'],[4,'Semifinal'],[5,'Final'],[6,'Semifinal'],[7,'Cuartos'],[8,'Octavos'],[9,'Dieciseisavos']
+    [1,'Dieciseisavos'],[2,'Octavos'],[3,'Cuartos'],[4,'Semifinal'],[5,'Final / 3º-4º'],[6,'Semifinal'],[7,'Cuartos'],[8,'Octavos'],[9,'Dieciseisavos']
   ].map(([col,title])=>`<div class="ko-col-title" style="grid-column:${col}">${title}</div>`).join('');
   const cards=KO_RENDER_ORDER.map(id=>renderKoCard(KO_MATCHES[id],u,dis,showPlayerPts)).join('');
   const prepNote=isResultEditor()&&!isKnockoutEnabled()?`<div class="ko-blocked-note">🔒 La Eliminatoria sigue cerrada para jugadores. Puedes dejar preparado el cuadro; se abrirá automáticamente el domingo 28/06/2026 de 06:00 a 20:00, o manualmente si la activas desde admin.</div>`:'';
-  c.innerHTML=`${prepNote}<div class="ko-note">Selecciona los equipos de cada cruce. En dieciseisavos las opciones salen de las clasificaciones; desde octavos cada desplegable queda limitado a los equipos del cruce anterior.</div><div class="ko-bracket-pro">${titles}${cards}</div>`;
+  c.innerHTML=`${prepNote}<div class="ko-note">Dieciseisavos: cruces fijos introducidos por admin y sin puntuación para jugadores. Desde octavos en adelante, cada desplegable queda limitado a los equipos del cruce anterior. Puntuación: ${POINTS_KO_TEAM} pts por cada equipo acertado.</div><div class="ko-bracket-pro">${titles}${cards}</div>`;
   bindBetControls();
 }
 
@@ -1680,6 +1711,7 @@ function calcScore(name){
     realArr.forEach((t,i)=>{if(t && betArr[i]===t){g+=POINTS_GROUP;tot+=POINTS_GROUP;}});
   });
   Object.entries(real.knockout||{}).forEach(([sid,r])=>{
+    if(KO_MATCHES[sid]?.round==='r32')return; // Dieciseisavos son cruces fijos y no puntúan
     const b=bet.knockout?.[sid]||{};
     if(r.teamA && b.teamA === r.teamA){k += POINTS_KO_TEAM; tot += POINTS_KO_TEAM;}
     if(r.teamB && b.teamB === r.teamB){k += POINTS_KO_TEAM; tot += POINTS_KO_TEAM;}
@@ -2232,6 +2264,7 @@ function isKnockoutCompleteFor(u){
   if(!isKnockoutEnabled())return true;
   const k=BETS[u]?.knockout||{};
   return KO_ROUNDS.every(round=>round.matches.every(match=>{
+    if(match.round==='r32')return true;
     const item=k[match.sid]||{};
     return !!item.teamA && !!item.teamB;
   }));
