@@ -111,6 +111,13 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .ko-bracket-pro{display:grid;grid-template-columns:repeat(9,minmax(145px,1fr));grid-template-rows:34px repeat(16,minmax(58px,auto));column-gap:12px;row-gap:5px;align-items:center;padding:4px 0 12px}
 .ko-col-title{grid-row:1;font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px;color:var(--gold);font-size:.78rem;text-align:center;border-bottom:1px solid var(--border);padding-bottom:6px;white-space:nowrap}
 .ko-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;align-self:center;position:relative;min-width:0}
+.ko-card.ko-final-card{border-color:var(--gold);box-shadow:0 0 0 1px rgba(201,168,76,.45),0 0 18px rgba(201,168,76,.18);transform:scale(1.08);z-index:4}
+.ko-card.ko-final-card .bmatch-head{background:rgba(201,168,76,.22);font-size:.86rem}
+.ko-card.ko-final-card .kosel{font-size:.86rem;padding:6px 8px}
+.ko-progress{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.ko-progress-pill{border:1px solid var(--border);background:var(--card);border-radius:999px;padding:6px 10px;font-size:.78rem;color:var(--muted)}
+.ko-progress-pill.ok{border-color:rgba(34,197,94,.55);color:#86efac;background:rgba(34,197,94,.08)}
+.ko-progress-pill.warn{border-color:rgba(245,158,11,.55);color:#fbbf24;background:rgba(245,158,11,.08)}
 .ko-card::before{content:'';position:absolute;top:50%;width:9px;border-top:1px solid var(--border);opacity:.9}
 .ko-card.ko-left::before{right:-10px}.ko-card.ko-right::before{left:-10px}.ko-card.ko-center::before{display:none}
 .bmatch-head{display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center;background:rgba(201,168,76,.08);border-bottom:1px solid var(--border);padding:5px 7px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--gold);font-size:.76rem}
@@ -225,7 +232,8 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   .bracket{min-width:0;width:100%}
   .ko-bracket-pro{display:block;min-width:0;width:100%;padding:0}
   .ko-col-title{display:none}
-  .ko-card{margin-bottom:10px;width:100%}
+  .ko-card{margin-bottom:10px;width:100%;transform:none!important}
+  .ko-progress{position:sticky;top:0;z-index:5;background:var(--darker);padding:4px 0}
   .ko-card::before{display:none}
   .bmatch-head{grid-template-columns:auto 1fr auto;padding:7px 8px}
   .bmatch-time{font-size:.72rem}
@@ -330,8 +338,9 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       <ul>
         <li>La eliminatoria se abrirá cuando termine la fase de grupos y se conozcan los cruces de dieciseisavos.</li>
         <li>Los dieciseisavos serán cruces fijos y no suman puntos.</li>
-        <li>Desde octavos en adelante solo hay que indicar qué equipos avanzan; no se introducen resultados.</li>
+        <li>Desde octavos en adelante solo hay que elegir los equipos que ocuparán cada cruce; no se introducen resultados.</li>
         <li>Cada equipo acertado en su posición exacta suma <strong>20 puntos</strong>.</li>
+        <li>Los desplegables muestran los equipos posibles que pueden llegar desde la rama anterior del cuadro.</li>
       </ul>
       <h3>5) Fases de la porra</h3>
       <ul>
@@ -694,7 +703,7 @@ const KO_MATCHES={
   m101:{sid:'m101',num:101,date:'2026-07-14',time:'21:00',round:'sf',side:'left',row:8,col:4,slotA:{label:'Gan. M97',type:'winner',match:'m97'},slotB:{label:'Gan. M98',type:'winner',match:'m98'}},
   m102:{sid:'m102',num:102,date:'2026-07-15',time:'21:00',round:'sf',side:'right',row:8,col:6,slotA:{label:'Gan. M99',type:'winner',match:'m99'},slotB:{label:'Gan. M100',type:'winner',match:'m100'}},
   m104:{sid:'m104',num:104,date:'2026-07-19',time:'21:00',round:'final',side:'center',row:7,col:5,slotA:{label:'Gan. M101',type:'winner',match:'m101'},slotB:{label:'Gan. M102',type:'winner',match:'m102'}},
-  m103:{sid:'m103',num:103,date:'2026-07-18',time:'23:00',round:'third',side:'center',row:11,col:5,slotA:{label:'Perd. M101',type:'loser',match:'m101',finalSlot:'teamA'},slotB:{label:'Perd. M102',type:'loser',match:'m102',finalSlot:'teamB'}},
+  m103:{sid:'m103',num:103,date:'2026-07-18',time:'23:00',round:'third',side:'center',row:9,col:5,slotA:{label:'Perd. M101',type:'loser',match:'m101',finalSlot:'teamA'},slotB:{label:'Perd. M102',type:'loser',match:'m102',finalSlot:'teamB'}},
 };
 const KO_ROUNDS=[
   {id:'r32',label:'DIECISEISAVOS',matches:['m73','m74','m75','m77','m81','m82','m83','m84','m76','m78','m79','m80','m85','m86','m87','m88'].map(id=>KO_MATCHES[id])},
@@ -1549,6 +1558,7 @@ function koPrevBetForMatch(matchId){
   if(prev?.round==='r32')return getReal().knockout?.[matchId] || {};
   return koUserBet().knockout?.[matchId] || {};
 }
+function uniqTeams(list){return (list||[]).filter((v,i,a)=>v && a.indexOf(v)===i);}
 function koOptionsForSlot(slot){
   if(!slot)return [];
   if(slot.type==='pos'){
@@ -1564,18 +1574,23 @@ function koOptionsForSlot(slot){
     });
     return out;
   }
-  if(slot.type==='winner'){
-    const prev=koPrevBetForMatch(slot.match);
-    return [prev.teamA,prev.teamB].filter((v,i,a)=>v && a.indexOf(v)===i);
-  }
-  if(slot.type==='loser'){
-    const prev=koPrevBetForMatch(slot.match);
-    const teams=[prev.teamA,prev.teamB].filter((v,i,a)=>v && a.indexOf(v)===i);
-    const finalPick=koUserBet().knockout?.m104?.[slot.finalSlot] || '';
-    const filtered=finalPick?teams.filter(t=>t!==finalPick):teams;
-    return filtered.length?filtered:teams;
+  // Para rondas posteriores los jugadores no saben todavía quién pasará.
+  // Por eso se ofrecen todos los equipos posibles que vienen de la rama anterior,
+  // no solo el equipo seleccionado en el cruce previo.
+  if(slot.type==='winner' || slot.type==='loser'){
+    return koPossibleTeamsForMatch(slot.match);
   }
   return [];
+}
+function koPossibleTeamsForMatch(matchId){
+  const prev=KO_MATCHES[matchId];
+  if(!prev)return [];
+  if(prev.round==='r32'){
+    const fixed=getReal().knockout?.[matchId] || {};
+    const fixedTeams=uniqTeams([fixed.teamA,fixed.teamB]);
+    if(fixedTeams.length)return fixedTeams;
+  }
+  return uniqTeams([...koOptionsForSlot(prev.slotA),...koOptionsForSlot(prev.slotB)]);
 }
 function koSlotLabel(slot){return slot?.label || 'Equipo';}
 function koMatchDateTime(match){
@@ -1603,7 +1618,7 @@ function renderKoCard(match,u,dis,showPlayerPts){
       <div style="display:flex;flex-direction:column;flex:1;min-width:0;gap:2px">
         <span class="slot-label">${koSlotLabel(slot)}</span>
         <select class="kosel" data-koteam="${sid}" data-side="${side}" ${disabled?'disabled':''}>
-          <option value="">${opts.length?'-- equipo --':'Completa cruces previos'}</option>
+          <option value="">${opts.length?'-- equipo --':'Completa clasificaciones/cruces previos'}</option>
           ${opts.map(t=>`<option value="${t}" ${val===t?'selected':''}>${t}</option>`).join('')}
         </select>
       </div>
@@ -1611,12 +1626,34 @@ function renderKoCard(match,u,dis,showPlayerPts){
     </div>`;
   };
   const sideClass=match.side==='right'?'ko-right':match.side==='center'?'ko-center':'ko-left';
+  const finalClass=match.round==='final'?' ko-final-card':'';
   const label=match.round==='final'?'FINAL':match.round==='third'?'3º/4º':'';
   const fixedNote=isFixedR32?'<div class="ko-fixed-msg">Cruce fijado por admin. Los dieciseisavos no puntúan.</div>':'';
-  return `<div class="ko-card ${sideClass}" style="grid-column:${match.col};grid-row:${match.row+1}/span 1" data-match="${sid}">
+  return `<div class="ko-card ${sideClass}${finalClass}" style="grid-column:${match.col};grid-row:${match.row+1}/span 1" data-match="${sid}">
     <div class="bmatch-head"><span>M${match.num}</span><span class="bmatch-time">${koMatchDateTime(match)}</span><span class="ko-side-label">${label}</span></div>
     <div class="bpath" style="padding:4px 7px;border-bottom:1px solid rgba(255,255,255,.04)">${koSlotLabel(match.slotA)} · ${koSlotLabel(match.slotB)}</div>
     ${fixedNote}${teamRow('A',match.slotA)}${teamRow('B',match.slotB)}
+  </div>`;
+}
+function koMatchCompleteForUser(match,u){
+  if(match.round==='r32')return true;
+  const item=BETS[u]?.knockout?.[match.sid] || {};
+  return !!item.teamA && !!item.teamB;
+}
+function koZoneCompleteForUser(u,zone){
+  if(!u)return false;
+  const matches=Object.values(KO_MATCHES).filter(m=>m.round!=='r32' && m.side===zone);
+  return matches.length ? matches.every(m=>koMatchCompleteForUser(m,u)) : false;
+}
+function koCompletionPanel(u){
+  if(!u || isOfficialEditor())return '';
+  const left=koZoneCompleteForUser(u,'left');
+  const center=koZoneCompleteForUser(u,'center');
+  const right=koZoneCompleteForUser(u,'right');
+  return `<div class="ko-progress">
+    <span class="ko-progress-pill ${left?'ok':'warn'}">${left?'✅':'⚠️'} Lado izquierdo ${left?'completo':'incompleto'}</span>
+    <span class="ko-progress-pill ${center?'ok':'warn'}">${center?'✅':'⚠️'} Final / 3º-4º ${center?'completo':'incompleto'}</span>
+    <span class="ko-progress-pill ${right?'ok':'warn'}">${right?'✅':'⚠️'} Lado derecho ${right?'completo':'incompleto'}</span>
   </div>`;
 }
 function renderKnockout(){
@@ -1637,7 +1674,7 @@ function renderKnockout(){
   ].map(([col,title])=>`<div class="ko-col-title" style="grid-column:${col}">${title}</div>`).join('');
   const cards=KO_RENDER_ORDER.map(id=>renderKoCard(KO_MATCHES[id],u,dis,showPlayerPts)).join('');
   const prepNote=isResultEditor()&&!isKnockoutEnabled()?`<div class="ko-blocked-note">🔒 La Eliminatoria sigue cerrada para jugadores. Puedes dejar preparado el cuadro; se abrirá automáticamente el domingo 28/06/2026 de 06:00 a 20:00, o manualmente si la activas desde admin.</div>`:'';
-  c.innerHTML=`${prepNote}<div class="ko-note">Dieciseisavos: cruces fijos introducidos por admin y sin puntuación para jugadores. Desde octavos en adelante, cada desplegable queda limitado a los equipos del cruce anterior. Puntuación: ${POINTS_KO_TEAM} pts por cada equipo acertado.</div><div class="ko-bracket-pro">${titles}${cards}</div>`;
+  c.innerHTML=`${prepNote}${koCompletionPanel(u)}<div class="ko-note">Dieciseisavos: cruces fijos introducidos por admin y sin puntuación para jugadores. Desde octavos en adelante, cada desplegable muestra todos los equipos posibles que vienen de la rama anterior, para que la porra pueda rellenarse antes de que se jueguen las rondas. Puntuación: ${POINTS_KO_TEAM} pts por cada equipo acertado.</div><div class="ko-bracket-pro">${titles}${cards}</div>`;
   bindBetControls();
 }
 
