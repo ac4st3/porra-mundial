@@ -138,6 +138,10 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 /* SCOREBOARD */
 .stable{width:100%;border-collapse:collapse}
 .stable th{background:var(--card2);padding:9px 12px;text-align:left;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--gold);font-size:.86rem;border-bottom:1px solid var(--border)}
+.stable th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+.stable th.sortable:hover{background:rgba(201,168,76,.12);color:var(--gold-l)}
+.stable th.sorted{box-shadow:inset 0 -2px 0 var(--gold)}
+.sort-arrow{font-size:.75rem;margin-left:4px;color:var(--gold-l)}
 .stable td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:.86rem}
 .stable tr:hover td{background:rgba(255,255,255,.03)}
 .r1{color:#FFD700}.r2{color:#C0C0C0}.r3{color:#CD7F32}
@@ -592,7 +596,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v36-20260602-eliminatoria-cuadro-programado';
+const APP_VERSION = 'v39-20260626-ranking-ordenable';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -814,6 +818,7 @@ let ADMIN_PREVIEW_USER=''; // Admin editando la porra de un jugador
 let PUBLIC_VIEW_USER='';   // Participante viendo la porra de otro jugador en solo lectura
 let _saveTimer=null;
 let QUESTION_SAVE_TIMERS={};
+let SCORE_SORT={key:'tot',dir:'desc'};
 
 const SESSION_KEY='porra_mundial_2026_session';
 const SESSION_TTL_MS=4*60*60*1000; // 4 horas de inactividad
@@ -1778,25 +1783,56 @@ function renderPot(){
     <div class="pot-prize"><b>🥈 2º · 30%</b><span>${fmtMoney(p.second)}</span></div>
     <div class="pot-prize"><b>🥉 3º · 10%</b><span>${fmtMoney(p.third)}</span></div>`;
 }
+function scoreSortLabel(key){
+  return {m:'Partidos',g:'Grupos',k:'Eliminatoria',q:'Preguntas',tot:'Total'}[key]||'Total';
+}
+function sortHeader(key,label){
+  const active=SCORE_SORT.key===key;
+  const arrow=active?(SCORE_SORT.dir==='desc'?'↓':'↑'):'';
+  return `<th class="sortable ${active?'sorted':''}" data-sortscore="${key}" title="Ordenar por ${label}">${label}${arrow?`<span class="sort-arrow">${arrow}</span>`:''}</th>`;
+}
 function recalc(){
   renderPot();
-  const rows=USERS.map(p=>({name:p.name,...calcScore(p.name)})).sort((a,b)=>b.tot-a.tot);
+
+  const overall=USERS
+    .map(p=>({name:p.name,...calcScore(p.name)}))
+    .sort((a,b)=>(b.tot-a.tot)||a.name.localeCompare(b.name,'es'));
+
+  const rankByName={};
+  overall.forEach((s,i)=>{rankByName[s.name]=i+1;});
+
+  const rows=[...overall].sort((a,b)=>{
+    const key=SCORE_SORT.key||'tot';
+    const dir=SCORE_SORT.dir==='asc'?1:-1;
+    const av=Number(a[key]||0), bv=Number(b[key]||0);
+    if(av!==bv)return (av-bv)*dir;
+    // Desempate: siempre por ranking general y luego nombre.
+    const ra=rankByName[a.name]||9999, rb=rankByName[b.name]||9999;
+    if(ra!==rb)return ra-rb;
+    return a.name.localeCompare(b.name,'es');
+  });
+
+  const sortedBy=SCORE_SORT.key==='tot'
+    ? 'Ordenado por ranking general'
+    : `Ordenado por ${scoreSortLabel(SCORE_SORT.key)} ${SCORE_SORT.dir==='desc'?'de mayor a menor':'de menor a mayor'}`;
+
   document.getElementById('c-scores').innerHTML=`<thead><tr>
-    <th>#</th><th>Participante</th><th>Partidos</th><th>Grupos</th><th>Eliminatoria</th><th>Preguntas</th><th>TOTAL</th><th>Porra</th>
-  </tr></thead><tbody>${rows.map((s,i)=>{
+    <th title="Puesto real en el ranking general">Ranking</th><th>Participante</th>${sortHeader('m','Partidos')}${sortHeader('g','Grupos')}${sortHeader('k','Eliminatoria')}${sortHeader('q','Preguntas')}${sortHeader('tot','TOTAL')}<th>Porra</th>
+  </tr></thead><tbody>${rows.map((s)=>{
+    const rank=rankByName[s.name]||'';
     const showViewButton = ses.isAdmin || (!isResultEditor() && s.name !== ses.user);
     const porraCell = showViewButton
       ? `<button class="btn sec" style="padding:3px 8px;font-size:.72rem" data-viewscore="${s.name}">Ver</button>`
       : `<span style="color:var(--muted);font-size:.78rem">Tu porra</span>`;
     return `<tr>
-      <td class="${i===0?'r1':i===1?'r2':i===2?'r3':''}">${['🥇','🥈','🥉'][i]||i+1}</td>
+      <td class="${rank===1?'r1':rank===2?'r2':rank===3?'r3':''}" title="Puesto real en el ranking general">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank}</td>
       <td style="font-weight:600">${s.name}</td><td>${s.m}</td><td>${s.g}</td><td>${s.k}</td><td>${s.q}</td>
       <td style="font-family:'Bebas Neue';font-size:1.05rem;color:var(--gold)">${s.tot}</td>
       <td>${porraCell}</td>
     </tr>`;
   }).join('')}</tbody>`;
   const ts=document.getElementById('s-marca-ts');
-  if(ts)ts.textContent='Actualizado: '+new Date().toLocaleString('es-ES');
+  if(ts)ts.textContent=sortedBy+' · Actualizado: '+new Date().toLocaleString('es-ES');
 }
 
 // ── ADMIN: PARTICIPANTS ───────────────────────────
@@ -2449,6 +2485,17 @@ function renderAll(){renderMatches();renderGroups();renderKnockout();renderQuest
 // ── EVENT DELEGATION ──────────────────────────────
 document.addEventListener('click',async e=>{
   const t=e.target;
+  const scoreSortTarget=t.closest('[data-sortscore]');
+  if(scoreSortTarget){
+    const key=scoreSortTarget.dataset.sortscore;
+    if(SCORE_SORT.key===key){
+      SCORE_SORT.dir=SCORE_SORT.dir==='desc'?'asc':'desc';
+    }else{
+      SCORE_SORT={key,dir:'desc'};
+    }
+    recalc();
+    return;
+  }
   if(t.id==='t-part'){switchLoginTab('part');return;}
   if(t.id==='t-admin'){switchLoginTab('admin');return;}
   if(t.id==='b-mypin'){openPinModal();return;}
