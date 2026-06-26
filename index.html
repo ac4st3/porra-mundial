@@ -348,7 +348,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       </ul>
       <h3>5) Fases de la porra</h3>
       <ul>
-        <li><strong>Fase 1:</strong> están activas Fase de grupos, Clasificaciones y Preguntas.</li>
+        <li><strong>Fase 1:</strong> están activas Fase de grupos, Clasificaciones y Preguntas. La Eliminatoria permanece bloqueada hasta que se conozcan los cruces.</li>
         <li><strong>Fase 2:</strong> se abrirá la Eliminatoria cuando estén definidos los cruces.</li>
       </ul>
       <h3>6) Precio y premios</h3>
@@ -399,8 +399,8 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
     <div class="tabs" id="tabs-scroll">
       <div class="tab on" data-tab="grupos"><span class="tab-label">FASE DE GRUPOS</span><span class="tab-status"></span></div>
       <div class="tab" data-tab="clasif"><span class="tab-label">CLASIFICACIONES</span><span class="tab-status"></span></div>
-      <div class="tab" data-tab="preg"><span class="tab-label">PREGUNTAS</span><span class="tab-status"></span></div>
       <div class="tab" data-tab="elim"><span class="tab-label">ELIMINATORIA</span><span class="tab-status"></span></div>
+      <div class="tab" data-tab="preg"><span class="tab-label">PREGUNTAS</span><span class="tab-status"></span></div>
       <div class="tab adm" data-tab="admin" style="display:none"><span class="tab-label">⚙️ ADMIN</span></div>
     </div>
     <div class="tabs-more" id="tabs-more" aria-hidden="true">›</div>
@@ -596,7 +596,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v39-20260626-ranking-ordenable';
+const APP_VERSION = 'v40-20260626-ranking-cabeceras-tabs';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -1784,7 +1784,7 @@ function renderPot(){
     <div class="pot-prize"><b>🥉 3º · 10%</b><span>${fmtMoney(p.third)}</span></div>`;
 }
 function scoreSortLabel(key){
-  return {m:'Partidos',g:'Grupos',k:'Eliminatoria',q:'Preguntas',tot:'Total'}[key]||'Total';
+  return {m:'Fase de grupos',g:'Clasificaciones',k:'Eliminatoria',q:'Preguntas',tot:'Total'}[key]||'Total';
 }
 function sortHeader(key,label){
   const active=SCORE_SORT.key===key;
@@ -1817,7 +1817,7 @@ function recalc(){
     : `Ordenado por ${scoreSortLabel(SCORE_SORT.key)} ${SCORE_SORT.dir==='desc'?'de mayor a menor':'de menor a mayor'}`;
 
   document.getElementById('c-scores').innerHTML=`<thead><tr>
-    <th title="Puesto real en el ranking general">Ranking</th><th>Participante</th>${sortHeader('m','Partidos')}${sortHeader('g','Grupos')}${sortHeader('k','Eliminatoria')}${sortHeader('q','Preguntas')}${sortHeader('tot','TOTAL')}<th>Porra</th>
+    <th title="Puesto real en el ranking general">Ranking</th><th>Participante</th>${sortHeader('m','FASE DE GRUPOS')}${sortHeader('g','CLASIFICACIONES')}${sortHeader('k','ELIMINATORIA')}${sortHeader('q','PREGUNTAS')}${sortHeader('tot','TOTAL')}<th>Porra</th>
   </tr></thead><tbody>${rows.map((s)=>{
     const rank=rankByName[s.name]||'';
     const showViewButton = ses.isAdmin || (!isResultEditor() && s.name !== ses.user);
