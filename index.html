@@ -1649,7 +1649,8 @@ function renderKoCard(match,u,dis,showPlayerPts){
   };
   const sideClass=match.side==='right'?'ko-right':match.side==='center'?'ko-center':'ko-left';
   const finalClass=match.round==='final'?' ko-final-card':'';
-  const label=match.round==='final'?'FINAL':match.round==='third'?'3º/4º':'';
+  const KO_ROUND_TAG={r32:'DIECISEISAVOS',r16:'OCTAVOS',qf:'CUARTOS',sf:'SEMIS',final:'FINAL',third:'3º/4º'};
+  const label=KO_ROUND_TAG[match.round]||'';
   const fixedNote=isFixedR32?'<div class="ko-fixed-msg">Cruce fijado por admin. Los dieciseisavos no puntúan.</div>':'';
   return `<div class="ko-card ${sideClass}${finalClass}" style="grid-column:${match.col};grid-row:${match.row+1}/span 1" data-match="${sid}">
     <div class="bmatch-head"><span>M${match.num}</span><span class="bmatch-time">${koMatchDateTime(match)}</span><span class="ko-side-label">${label}</span></div>
