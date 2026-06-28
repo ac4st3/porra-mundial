@@ -312,6 +312,27 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   }
 }
 
+
+/* Eliminatoria cerrada/visible debe comportarse visualmente como el resto de pestañas */
+.tab.blocked,
+.tab.blocked:hover,
+.tab.blocked.on{
+  opacity:1!important;
+  color:var(--muted)!important;
+}
+.tab.blocked.on{
+  color:var(--gold)!important;
+  border-bottom-color:var(--gold)!important;
+}
+.tab.blocked .tab-status{
+  color:var(--win)!important;
+  filter:none!important;
+}
+
+
+.tab.blocked:not(.on){color:var(--muted)!important}
+.tab.blocked.on{color:var(--gold)!important}
+
 </style>
 </head>
 <body>
@@ -643,7 +664,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION='v53';
+const APP_VERSION='v54';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
