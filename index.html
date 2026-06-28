@@ -61,6 +61,9 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .tab-status{display:inline-flex;align-items:center;justify-content:center;margin-left:8px;width:auto;height:auto;min-width:0;border:none;background:transparent!important;box-shadow:none!important;vertical-align:middle;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;font-size:.92rem;font-weight:400;letter-spacing:0;line-height:1;position:relative}
 .tab.incomplete .tab-status,.tab.blocked .tab-status{filter:none;color:inherit}
 .tab.done .tab-status{color:var(--win);font-family:'Barlow',sans-serif;font-size:.9rem;font-weight:800}
+/* La pestaña bloqueada no se apaga visualmente: el estado lo indica el icono ⛔ */
+.tab.blocked{opacity:1!important}
+
 .deadline-pill{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:.78rem;color:var(--muted);white-space:nowrap}
 .deadline-pill.has-date{border-color:var(--gold);color:var(--gold)}
 .rules-body{text-align:left;color:var(--text);font-size:.88rem;line-height:1.45}
@@ -640,7 +643,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION='v52';
+const APP_VERSION='v53';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
