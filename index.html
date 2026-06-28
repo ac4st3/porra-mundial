@@ -667,7 +667,7 @@ const QUESTIONS=[
   {id:'q7',label:'Primer expulsado'},{id:'q8',label:'MVP del torneo'},
   {id:'q9',label:'¿Hasta dónde llega España?'},
 ];
-const KO_LOCK_START_ISO='2026-06-28T06:00:00+02:00';
+const KO_LOCK_START_ISO='2026-06-28T08:00:00+02:00';
 const KO_LOCK_END_ISO='2026-06-28T20:00:00+02:00';
 
 const KO_MATCHES={
@@ -921,7 +921,7 @@ function canEditTab(tab){
   if(!ses.user || isUserBetLocked(ses.user))return false;
 
   // Ventana especial de eliminatoria:
-  // el domingo 28/06/2026 de 06:00 a 20:00 solo se puede rellenar Eliminatoria.
+  // el domingo 28/06/2026 de 08:00 a 20:00 solo se puede rellenar Eliminatoria.
   // Fase de grupos, clasificaciones y preguntas quedan cerradas aunque el cierre global no esté activo.
   if(tab==='elim')return isKnockoutEnabled();
   if(isKnockoutAutoWindow())return false;
@@ -1569,7 +1569,7 @@ function isKnockoutAutoWindow(){
   return now>=new Date(KO_LOCK_START_ISO).getTime() && now<=new Date(KO_LOCK_END_ISO).getTime();
 }
 function isKnockoutEnabled(){return CONFIG.knockoutEnabled===true || isKnockoutAutoWindow();}
-function koOpenWindowText(){return 'Se abrirá para participantes el domingo 28/06/2026 de 06:00 a 20:00. El primer partido de eliminatoria empieza a las 21:00.';}
+function koOpenWindowText(){return 'Se abrirá para participantes el domingo 28/06/2026 de 08:00 a 20:00. El primer partido de eliminatoria empieza a las 21:00.';}
 function koUserBet(){return normalizeBet(BETS[activeUser()]);}
 function koClassificationArrayFor(group){
   const bet=koUserBet();
@@ -1696,7 +1696,7 @@ function renderKnockout(){
     [1,'Dieciseisavos'],[2,'Octavos'],[3,'Cuartos'],[4,'Semifinal'],[5,'Final / 3º-4º'],[6,'Semifinal'],[7,'Cuartos'],[8,'Octavos'],[9,'Dieciseisavos']
   ].map(([col,title])=>`<div class="ko-col-title" style="grid-column:${col}">${title}</div>`).join('');
   const cards=KO_RENDER_ORDER.map(id=>renderKoCard(KO_MATCHES[id],u,dis,showPlayerPts)).join('');
-  const prepNote=isResultEditor()&&!isKnockoutEnabled()?`<div class="ko-blocked-note">🔒 La Eliminatoria sigue cerrada para jugadores. Puedes dejar preparado el cuadro; se abrirá automáticamente el domingo 28/06/2026 de 06:00 a 20:00, o manualmente si la activas desde admin.</div>`:'';
+  const prepNote=isResultEditor()&&!isKnockoutEnabled()?`<div class="ko-blocked-note">🔒 La Eliminatoria sigue cerrada para jugadores. Puedes dejar preparado el cuadro; se abrirá automáticamente el domingo 28/06/2026 de 08:00 a 20:00, o manualmente si la activas desde admin.</div>`:'';
   const windowNote=(!isResultEditor()&&isKnockoutAutoWindow())?`<div class="info" style="margin-bottom:12px">⏰ Ventana especial de Eliminatoria abierta hasta las 20:00. El resto de secciones ya están cerradas y no se pueden modificar.</div>`:'';
   c.innerHTML=`${prepNote}${windowNote}${koCompletionPanel(u)}<div class="ko-note">Dieciseisavos: cruces fijos introducidos por admin y sin puntuación para jugadores. Desde octavos en adelante, cada desplegable muestra todos los equipos posibles que vienen de la rama anterior, para que la porra pueda rellenarse antes de que se jueguen las rondas. Puntuación: ${POINTS_KO_TEAM} pts por cada equipo acertado.</div><div class="ko-bracket-pro">${titles}${cards}</div>`;
   bindBetControls();
@@ -2008,7 +2008,7 @@ function phaseUI(){
   const on=document.getElementById('b-enable-ko'),off=document.getElementById('b-disable-ko'),st=document.getElementById('s-ko-phase');
   if(on)on.style.display=enabled?'none':'';
   if(off)off.style.display=enabled?'':'none';
-  if(st)st.textContent=enabled?'✅ Eliminatoria abierta para participantes':'🔒 Eliminatoria cerrada para jugadores · apertura automática: 28/06/2026 de 06:00 a 20:00';
+  if(st)st.textContent=enabled?'✅ Eliminatoria abierta para participantes':'🔒 Eliminatoria cerrada para jugadores · apertura automática: 28/06/2026 de 08:00 a 20:00';
 }
 async function setKnockoutPhase(enabled){
   try{
