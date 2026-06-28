@@ -640,7 +640,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION='v48';
+const APP_VERSION='v50';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -750,7 +750,7 @@ const KO_MATCHES={
 
   m101:{sid:'m101',num:101,date:'2026-07-14',time:'21:00',round:'sf',side:'left',row:8,col:4,slotA:{label:'Gan. M97',type:'winner',match:'m97'},slotB:{label:'Gan. M98',type:'winner',match:'m98'}},
   m102:{sid:'m102',num:102,date:'2026-07-15',time:'21:00',round:'sf',side:'right',row:8,col:6,slotA:{label:'Gan. M99',type:'winner',match:'m99'},slotB:{label:'Gan. M100',type:'winner',match:'m100'}},
-  m104:{sid:'m104',num:104,date:'2026-07-19',time:'21:00',round:'final',side:'center',row:7,col:5,slotA:{label:'Gan. M101',type:'winner',match:'m101'},slotB:{label:'Gan. M102',type:'winner',match:'m102'}},
+  m104:{sid:'m104',num:104,date:'2026-07-19',time:'21:00',round:'final',side:'center',row:8,col:5,slotA:{label:'Gan. M101',type:'winner',match:'m101'},slotB:{label:'Gan. M102',type:'winner',match:'m102'}},
   m103:{sid:'m103',num:103,date:'2026-07-18',time:'23:00',round:'third',side:'center',row:9,col:5,slotA:{label:'Perd. M101',type:'loser',match:'m101',finalSlot:'teamA'},slotB:{label:'Perd. M102',type:'loser',match:'m102',finalSlot:'teamB'}},
 };
 const KO_ROUNDS=[
@@ -758,10 +758,9 @@ const KO_ROUNDS=[
   {id:'r16',label:'OCTAVOS',matches:['m89','m90','m91','m92','m93','m94','m95','m96'].map(id=>KO_MATCHES[id])},
   {id:'qf',label:'CUARTOS',matches:['m97','m98','m99','m100'].map(id=>KO_MATCHES[id])},
   {id:'sf',label:'SEMIFINALES',matches:['m101','m102'].map(id=>KO_MATCHES[id])},
-  {id:'final',label:'FINAL',matches:['m104'].map(id=>KO_MATCHES[id])},
-  {id:'third',label:'3º/4º PUESTO',matches:['m103'].map(id=>KO_MATCHES[id])}
+  {id:'final',label:'FINAL',matches:['m104'].map(id=>KO_MATCHES[id])}
 ];
-const KO_RENDER_ORDER=['m74','m77','m73','m75','m83','m84','m81','m82','m89','m90','m93','m94','m97','m98','m101','m104','m103','m102','m99','m100','m91','m92','m95','m96','m76','m78','m79','m80','m86','m88','m85','m87'];
+const KO_RENDER_ORDER=['m74','m77','m73','m75','m83','m84','m81','m82','m89','m90','m93','m94','m97','m98','m101','m104','m102','m99','m100','m91','m92','m95','m96','m76','m78','m79','m80','m86','m88','m85','m87'];
 
 function buildMatches(){
   // Calendario oficial de fase de grupos convertido a horario peninsular español (CEST, UTC+2).
@@ -1714,7 +1713,7 @@ function koMatchCompleteForUser(match,u){
 }
 function koZoneCompleteForUser(u,zone){
   if(!u)return false;
-  const matches=Object.values(KO_MATCHES).filter(m=>m.round!=='r32' && m.side===zone);
+  const matches=Object.values(KO_MATCHES).filter(m=>m.round!=='r32' && m.round!=='third' && m.side===zone);
   return matches.length ? matches.every(m=>koMatchCompleteForUser(m,u)) : false;
 }
 function koCompletionPanel(u){
@@ -1724,7 +1723,7 @@ function koCompletionPanel(u){
   const right=koZoneCompleteForUser(u,'right');
   return `<div class="ko-progress">
     <span class="ko-progress-pill ${left?'ok':'warn'}">${left?'✅':'⚠️'} Lado izquierdo ${left?'completo':'incompleto'}</span>
-    <span class="ko-progress-pill ${center?'ok':'warn'}">${center?'✅':'⚠️'} Final / 3º-4º ${center?'completo':'incompleto'}</span>
+    <span class="ko-progress-pill ${center?'ok':'warn'}">${center?'✅':'⚠️'} Final ${center?'completo':'incompleto'}</span>
     <span class="ko-progress-pill ${right?'ok':'warn'}">${right?'✅':'⚠️'} Lado derecho ${right?'completo':'incompleto'}</span>
   </div>`;
 }
@@ -1742,7 +1741,7 @@ function renderKnockout(){
   const u=activeUser(),dis=!canEditTab('elim');
   const showPlayerPts = !!u && !isOfficialEditor();
   const titles=[
-    [1,'Dieciseisavos'],[2,'Octavos'],[3,'Cuartos'],[4,'Semifinal'],[5,'Final / 3º-4º'],[6,'Semifinal'],[7,'Cuartos'],[8,'Octavos'],[9,'Dieciseisavos']
+    [1,'Dieciseisavos'],[2,'Octavos'],[3,'Cuartos'],[4,'Semifinal'],[5,'Final'],[6,'Semifinal'],[7,'Cuartos'],[8,'Octavos'],[9,'Dieciseisavos']
   ].map(([col,title])=>`<div class="ko-col-title" style="grid-column:${col}">${title}</div>`).join('');
   const cards=KO_RENDER_ORDER.map(id=>renderKoCard(KO_MATCHES[id],u,dis,showPlayerPts)).join('');
   const prepNote=isResultEditor()&&!isKnockoutEnabled()?`<div class="ko-blocked-note">🔒 La Eliminatoria sigue cerrada para jugadores. Puedes dejar preparado el cuadro; se abrirá automáticamente el domingo 28/06/2026 de 08:00 a 20:00, o manualmente si la activas desde admin.</div>`:'';
@@ -1758,7 +1757,7 @@ const KO_CONNECTORS=[
   ['m89','m97'],['m90','m97'],['m93','m98'],['m94','m98'],['m97','m101'],['m98','m101'],
   ['m76','m91'],['m78','m91'],['m79','m92'],['m80','m92'],['m86','m95'],['m88','m95'],['m85','m96'],['m87','m96'],
   ['m91','m99'],['m92','m99'],['m95','m100'],['m96','m100'],['m99','m102'],['m100','m102'],
-  ['m101','m104'],['m102','m104'],['m101','m103'],['m102','m103']
+  ['m101','m104'],['m102','m104']
 ];
 function drawKoConnectors(){
   const wrap=document.querySelector('#c-bracket .ko-bracket-wrap');
@@ -1862,7 +1861,7 @@ function calcScore(name){
     realArr.forEach((t,i)=>{if(t && betArr[i]===t){g+=POINTS_GROUP;tot+=POINTS_GROUP;}});
   });
   Object.entries(real.knockout||{}).forEach(([sid,r])=>{
-    if(KO_MATCHES[sid]?.round==='r32')return; // Dieciseisavos son cruces fijos y no puntúan
+    if(KO_MATCHES[sid]?.round==='r32' || KO_MATCHES[sid]?.round==='third')return; // Dieciseisavos y 3º/4º no puntúan
     const b=bet.knockout?.[sid]||{};
     if(r.teamA && b.teamA === r.teamA){k += POINTS_KO_TEAM; tot += POINTS_KO_TEAM;}
     if(r.teamB && b.teamB === r.teamB){k += POINTS_KO_TEAM; tot += POINTS_KO_TEAM;}
