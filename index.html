@@ -103,6 +103,7 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .gpos{color:var(--muted);font-size:.76rem;width:16px}
 .gpos.q{color:var(--gold);font-weight:700}
 .gsel{background:var(--darker);border:1px solid var(--border);color:var(--text);padding:4px 7px;border-radius:6px;font-family:'Barlow',sans-serif;font-size:.8rem;flex:1;width:100%}
+.gsel.empty-pick{border-color:var(--draw)!important;background:rgba(245,158,11,.14)!important;color:#fbbf24!important;box-shadow:0 0 0 1px rgba(245,158,11,.28)}
 .gpick{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
 .gref{font-size:.7rem;color:var(--gold);min-height:14px;line-height:1.1}
 /* BRACKET */
@@ -125,7 +126,7 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .bteam{display:flex;align-items:center;padding:6px 7px;gap:7px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;overflow:hidden;background:rgba(255,255,255,.015)}
 .ko-fixed-msg{font-size:.7rem;color:var(--muted);padding:6px 7px;border-bottom:1px solid rgba(255,255,255,.04);line-height:1.25}
 .bteam:last-child{border-bottom:none}.bteam:hover{background:var(--card2)}.bteam.win{background:rgba(201,168,76,.18)}
-.slot-label{font-size:.6rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kosel{background:var(--darker);border:1px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:600;width:100%;cursor:pointer;outline:none;border-radius:5px;padding:4px 6px;min-width:0}.kosel:focus{border-color:var(--gold)}.kosel option{background:var(--card);color:var(--text)}
+.slot-label{font-size:.6rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kosel{background:var(--darker);border:1px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:600;width:100%;cursor:pointer;outline:none;border-radius:5px;padding:4px 6px;min-width:0}.kosel.empty-pick{border-color:var(--draw)!important;background:rgba(245,158,11,.14)!important;color:#fbbf24!important;box-shadow:0 0 0 1px rgba(245,158,11,.28)}.kosel:focus{border-color:var(--gold)}.kosel option{background:var(--card);color:var(--text)}
 .kopts{font-family:'Bebas Neue',sans-serif;color:var(--win);font-size:.78rem;min-width:24px;text-align:center;flex-shrink:0}.ko-help{margin-bottom:12px}.ko-note{font-size:.74rem;color:var(--muted);line-height:1.35;margin:0 0 10px}.ko-blocked-note{background:rgba(230,57,70,.15);border:1px solid var(--red);color:#fca5a5;border-radius:10px;padding:11px 16px;margin-bottom:12px;font-size:.84rem}
 .bscore{display:none}
 .ko-score-pts{border-top:1px solid rgba(34,197,94,.35);padding:4px 8px;font-family:'Bebas Neue',sans-serif;color:var(--win);font-size:.78rem;text-align:center;background:rgba(34,197,94,.08)}
@@ -160,6 +161,9 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .paybox{display:flex;align-items:center;gap:6px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);border-radius:8px;padding:4px 8px;color:var(--text);font-size:.78rem;white-space:nowrap}
 .paybox input{accent-color:var(--gold);width:16px;height:16px}
 .paybox.paid{border-color:rgba(46,196,182,.45);background:rgba(46,196,182,.08);color:#9ff3e8}
+.complete-badge{display:inline-flex;align-items:center;gap:4px;border-radius:8px;padding:4px 8px;font-size:.76rem;white-space:nowrap;border:1px solid var(--border);background:var(--darker);color:var(--muted)}
+.complete-badge.ok{border-color:rgba(46,196,182,.45);background:rgba(46,196,182,.08);color:#9ff3e8}
+.complete-badge.warn{border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.08);color:#fbbf24}
 
 .admin-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:10px}
 .admin-mini{background:var(--darker);border:1px solid var(--border);border-radius:10px;padding:11px}
@@ -248,7 +252,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   .prow{flex-wrap:wrap;align-items:flex-start;gap:7px}
   .prow span:first-child{flex-basis:100%}
   .prow .btn{flex:1 1 46%;padding:7px 8px!important}
-  .prow .paybox{flex:1 1 100%;justify-content:flex-start;padding:7px 8px}
+  .prow .paybox,.prow .complete-badge{flex:1 1 100%;justify-content:flex-start;padding:7px 8px}
   .admin-tools{grid-template-columns:1fr}
   .bet-line{flex-direction:column;gap:2px}
   .bet-line span:last-child{text-align:left}
@@ -596,7 +600,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION = 'v41-20260626-ko-window-only';
+const APP_VERSION='v46';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -1546,7 +1550,7 @@ function renderGroups(){
       return `<div class="grow">
         <span class="gpos ${i<2?'q':''}">${i+1}°</span>
         <div class="gpick">
-          <select class="gsel" style="${dup?'border-color:var(--red)':wrong?'border-color:var(--lose);opacity:.85':''}" data-grp="${g}" data-pos="${i}" ${dis?'disabled':''}>
+          <select class="gsel${!val?' empty-pick':''}" style="${dup?'border-color:var(--red)':wrong?'border-color:var(--lose);opacity:.85':''}" data-grp="${g}" data-pos="${i}" ${dis?'disabled':''}>
             <option value="">-- equipo --</option>
             ${teams.map(t=>`<option value="${t}" ${t===val?'selected':''}>${t}</option>`).join('')}
           </select>
@@ -1568,6 +1572,9 @@ function isKnockoutAutoWindow(){
   const now=Date.now();
   return now>=new Date(KO_LOCK_START_ISO).getTime() && now<=new Date(KO_LOCK_END_ISO).getTime();
 }
+function isAfterKnockoutWindow(){return Date.now()>new Date(KO_LOCK_END_ISO).getTime();}
+function canPublicViewOtherBets(){return isAfterKnockoutWindow();}
+function isKnockoutRequiredForCompletion(){return isKnockoutEnabled() || isAfterKnockoutWindow();}
 function isKnockoutEnabled(){return CONFIG.knockoutEnabled===true || isKnockoutAutoWindow();}
 function koOpenWindowText(){return 'Se abrirá para participantes el domingo 28/06/2026 de 08:00 a 20:00. El primer partido de eliminatoria empieza a las 21:00.';}
 function koUserBet(){return normalizeBet(BETS[activeUser()]);}
@@ -1639,7 +1646,7 @@ function renderKoCard(match,u,dis,showPlayerPts){
     return `<div class="bteam" data-ko="${sid}" data-side="${side}">
       <div style="display:flex;flex-direction:column;flex:1;min-width:0;gap:2px">
         <span class="slot-label">${koSlotLabel(slot)}</span>
-        <select class="kosel" data-koteam="${sid}" data-side="${side}" ${disabled?'disabled':''}>
+        <select class="kosel${!val?' empty-pick':''}" data-koteam="${sid}" data-side="${side}" ${disabled?'disabled':''}>
           <option value="">${opts.length?'-- equipo --':'Completa clasificaciones/cruces previos'}</option>
           ${opts.map(t=>`<option value="${t}" ${val===t?'selected':''}>${t}</option>`).join('')}
         </select>
@@ -1839,10 +1846,16 @@ function recalc(){
     <th title="Puesto real en el ranking general">Ranking</th><th>Participante</th>${sortHeader('m','FASE DE GRUPOS')}${sortHeader('g','CLASIFICACIONES')}${sortHeader('k','ELIMINATORIA')}${sortHeader('q','PREGUNTAS')}${sortHeader('tot','TOTAL')}<th>Porra</th>
   </tr></thead><tbody>${rows.map((s)=>{
     const rank=rankByName[s.name]||'';
-    const showViewButton = ses.isAdmin || (!isResultEditor() && s.name !== ses.user);
-    const porraCell = showViewButton
-      ? `<button class="btn sec" style="padding:3px 8px;font-size:.72rem" data-viewscore="${s.name}">Ver</button>`
-      : `<span style="color:var(--muted);font-size:.78rem">Tu porra</span>`;
+    let porraCell='';
+    if(ses.isAdmin){
+      porraCell = `<button class="btn sec" style="padding:3px 8px;font-size:.72rem" data-viewscore="${s.name}">Ver</button>`;
+    }else if(s.name === ses.user){
+      porraCell = `<span style="color:var(--muted);font-size:.78rem">Tu porra</span>`;
+    }else if(canPublicViewOtherBets()){
+      porraCell = `<button class="btn sec" style="padding:3px 8px;font-size:.72rem" data-viewscore="${s.name}">Ver</button>`;
+    }else{
+      porraCell = `<span style="color:var(--muted);font-size:.78rem" title="Las porras de otros participantes se podrán ver cuando se cierre la ventana de Eliminatoria">Bloqueado</span>`;
+    }
     return `<tr>
       <td class="${rank===1?'r1':rank===2?'r2':rank===3?'r3':''}" title="Puesto real en el ranking general">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank}</td>
       <td style="font-weight:600">${s.name}</td><td>${s.m}</td><td>${s.g}</td><td>${s.k}</td><td>${s.q}</td>
@@ -1855,6 +1868,19 @@ function recalc(){
 }
 
 // ── ADMIN: PARTICIPANTS ───────────────────────────
+function completionSummaryFor(name){
+  const missing=[];
+  if(!isGroupsCompleteFor(name))missing.push('Fase de grupos');
+  if(!isClassifCompleteFor(name))missing.push('Clasificaciones');
+  if(!isQuestionsCompleteFor(name))missing.push('Preguntas');
+  if(isKnockoutRequiredForCompletion() && !isKnockoutCompleteFor(name))missing.push('Eliminatoria');
+  return {ok:missing.length===0,missing};
+}
+function completionBadgeFor(name){
+  const s=completionSummaryFor(name);
+  if(s.ok)return `<span class="complete-badge ok" title="Porra completa">✅ Completa</span>`;
+  return `<span class="complete-badge warn" title="Falta: ${s.missing.join(', ')}">⚠️ Falta: ${s.missing.join(', ')}</span>`;
+}
 function renderParts(){
   const c=document.getElementById('c-parts');if(!c)return;
   if(!USERS.length){c.innerHTML='<div style="color:var(--muted);font-size:.83rem">Sin usuarios.</div>';renderAdminUserTools();return;}
@@ -1868,6 +1894,7 @@ function renderParts(){
         <input type="checkbox" data-paidpart="${u.name}" ${paid?'checked':''}>
         <span>${paid?'💶 Pagado':'💶 Pendiente'}</span>
       </label>
+      ${completionBadgeFor(u.name)}
       <span style="color:var(--muted);font-size:.78rem;margin-right:8px">${total} bloques${u.mustChangePin?' · PIN inicial':''}${u.betLocked?' · 🔒 bloqueado':''}</span>
       <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-viewpart="${u.name}">Editar porra</button>
       <button class="btn sec" style="padding:3px 8px;font-size:.75rem" data-lockbets="${u.name}" data-lockstate="${u.betLocked?'0':'1'}">${u.betLocked?'Desbloquear':'Bloquear'}</button>
@@ -2443,6 +2470,7 @@ function enterUserPreview(name){
 }
 function enterPublicUserView(name){
   if(!ses.user || ses.isAdmin)return;
+  if(!canPublicViewOtherBets())return toast('🔒 Las porras de otros participantes se podrán ver cuando se cierre la ventana de apuestas de Eliminatoria.',true);
   if(!USERS.some(u=>u.name===name))return toast('Usuario no encontrado',true);
   PUBLIC_VIEW_USER=name;
   ensureBet(name);
