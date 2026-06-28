@@ -640,7 +640,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION='v50';
+const APP_VERSION='v51';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -2584,12 +2584,38 @@ function updatePreviewBar(){
 
 function updateDeadlineHeader(){
   const el=document.getElementById('s-deadline');if(!el)return;
+
+  // Durante la fase de Eliminatoria, el recuadro superior debe mostrar el
+  // límite real de esta sección, no el cierre antiguo de Fase de Grupos.
+  const koStart = new Date(KO_LOCK_START_ISO);
+  const koEnd = new Date(KO_LOCK_END_ISO);
+  const now = new Date();
+
+  if(now <= koEnd){
+    const sameDay =
+      now.getFullYear() === koEnd.getFullYear() &&
+      now.getMonth() === koEnd.getMonth() &&
+      now.getDate() === koEnd.getDate();
+
+    const dayText = sameDay
+      ? 'hoy'
+      : koEnd.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+    const timeText = koEnd.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+    el.textContent = `⏰ Límite Eliminatoria: ${dayText}, ${timeText}`;
+    el.classList.add('has-date');
+    el.title = `La sección Eliminatoria se cierra el ${koEnd.toLocaleString('es-ES')}`;
+    return;
+  }
+
   if(CONFIG.autoLockDate){
     el.textContent='⏰ Límite: '+fmtDeadline(CONFIG.autoLockDate);
     el.classList.add('has-date');
+    el.title='';
   }else{
     el.textContent='⏰ Límite: sin establecer';
     el.classList.remove('has-date');
+    el.title='';
   }
 }
 function openRulesModal(){document.getElementById('rules-modal').classList.add('on');}
