@@ -333,6 +333,21 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 .tab.blocked:not(.on){color:var(--muted)!important}
 .tab.blocked.on{color:var(--gold)!important}
 
+
+/* Eliminatoria consultable/cerrada: no debe parecer deshabilitada */
+.tab[data-tab="elim"].done,
+.tab[data-tab="elim"].done:hover,
+.tab[data-tab="elim"].on,
+.tab[data-tab="elim"].on:hover{
+  opacity:1!important;
+  filter:none!important;
+  cursor:pointer!important;
+}
+.tab[data-tab="elim"].done .tab-label,
+.tab[data-tab="elim"].on .tab-label{
+  color:inherit!important;
+}
+
 </style>
 </head>
 <body>
@@ -664,7 +679,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION='v54';
+const APP_VERSION='v56';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -990,7 +1005,11 @@ function canEditTab(tab){
   // Ventana especial de eliminatoria:
   // el domingo 28/06/2026 de 08:00 a 20:00 solo se puede rellenar Eliminatoria.
   // Fase de grupos, clasificaciones y preguntas quedan cerradas aunque el cierre global no esté activo.
-  if(tab==='elim')return isKnockoutEnabled();
+  if(tab==='elim'){
+    // Los jugadores solo pueden modificar Eliminatoria dentro de la ventana horaria exacta.
+    // Después de las 20:00 queda visible para consulta, pero bloqueada.
+    return isKnockoutAutoWindow();
+  }
   if(isKnockoutAutoWindow())return false;
 
   return !CONFIG.betsLocked;
@@ -1643,6 +1662,7 @@ function canPublicViewOtherBets(){return isAfterKnockoutWindow();}
 function isKnockoutRequiredForCompletion(){return isKnockoutEnabled() || isAfterKnockoutWindow();}
 function isKnockoutEnabled(){return CONFIG.knockoutEnabled===true || isKnockoutAutoWindow();}
 function isKnockoutVisible(){return isKnockoutEnabled() || isAfterKnockoutWindow();}
+function isKnockoutEditableForPlayers(){return isKnockoutAutoWindow();}
 function koOpenWindowText(){return 'Se abrirá para participantes el domingo 28/06/2026 de 08:00 a 20:00. El primer partido de eliminatoria empieza a las 21:00.';}
 function koUserBet(){return normalizeBet(BETS[activeUser()]);}
 function koClassificationArrayFor(group){
@@ -2134,9 +2154,12 @@ function lockUI(){
 }
 function phaseUI(){
   const enabled=isKnockoutEnabled();
+  const visible=isKnockoutVisible();
   const tab=document.querySelector('.tab[data-tab="elim"]');
   if(tab){
-    const lockedForThisUser = !enabled && !isResultEditor();
+    // Solo aparece deshabilitada antes de que sea visible para participantes.
+    // Una vez cerrada la ventana, debe verse como el resto: consultable pero no editable.
+    const lockedForThisUser = !visible && !isResultEditor();
     tab.classList.toggle('disabled',lockedForThisUser);
     tab.setAttribute('aria-disabled',lockedForThisUser?'true':'false');
   }
