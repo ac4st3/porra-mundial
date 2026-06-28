@@ -127,7 +127,7 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 .ko-fixed-msg{font-size:.7rem;color:var(--muted);padding:6px 7px;border-bottom:1px solid rgba(255,255,255,.04);line-height:1.25}
 .bteam:last-child{border-bottom:none}.bteam:hover{background:var(--card2)}.bteam.win{background:rgba(201,168,76,.18)}
 .slot-label{font-size:.6rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kosel{background:var(--darker);border:1px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:600;width:100%;cursor:pointer;outline:none;border-radius:5px;padding:4px 6px;min-width:0}.kosel.empty-pick{border-color:var(--draw)!important;background:rgba(245,158,11,.14)!important;color:#fbbf24!important;box-shadow:0 0 0 1px rgba(245,158,11,.28)}.kosel:focus{border-color:var(--gold)}.kosel option{background:var(--card);color:var(--text)}
-.kopts{font-family:'Bebas Neue',sans-serif;color:var(--win);font-size:.78rem;min-width:24px;text-align:center;flex-shrink:0}.ko-help{margin-bottom:12px}.ko-note{font-size:.74rem;color:var(--muted);line-height:1.35;margin:0 0 10px}.ko-blocked-note{background:rgba(230,57,70,.15);border:1px solid var(--red);color:#fca5a5;border-radius:10px;padding:11px 16px;margin-bottom:12px;font-size:.84rem}
+.kopts{font-family:'Bebas Neue',sans-serif;color:var(--win);font-size:.78rem;min-width:24px;text-align:center;flex-shrink:0}.ko-help{margin-bottom:12px}.ko-note{font-size:.74rem;color:var(--muted);line-height:1.35;margin:0 0 10px}.ko-mobile-hint{display:none;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.42);color:var(--gold-l);border-radius:10px;padding:8px 11px;margin:0 0 10px;font-size:.8rem}.ko-blocked-note{background:rgba(230,57,70,.15);border:1px solid var(--red);color:#fca5a5;border-radius:10px;padding:11px 16px;margin-bottom:12px;font-size:.84rem}
 .bscore{display:none}
 .ko-score-pts{border-top:1px solid rgba(34,197,94,.35);padding:4px 8px;font-family:'Bebas Neue',sans-serif;color:var(--win);font-size:.78rem;text-align:center;background:rgba(34,197,94,.08)}
 /* QUESTIONS */
@@ -236,17 +236,20 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   .qrow{flex-direction:column;align-items:stretch;gap:8px}
   .qinput{width:100%}
   .qrow > div:last-child{align-items:stretch!important}
-  .bcon{overflow-x:visible;padding-bottom:0}
-  .bracket{min-width:0;width:100%}
-  .ko-bracket-pro{display:block;min-width:0;width:100%;padding:0}
-  .ko-col-title{display:none}
-  .ko-card{margin-bottom:10px;width:100%;transform:none!important}
-  .ko-progress{position:sticky;top:0;z-index:5;background:var(--darker);padding:4px 0}
-  .ko-card::before{display:none}
-  .bmatch-head{grid-template-columns:auto 1fr auto;padding:7px 8px}
-  .bmatch-time{font-size:.72rem}
-  .bteam{padding:8px}
-  .kosel{font-size:.9rem;padding:7px 8px}
+  .bcon{overflow-x:auto;padding-bottom:12px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+  .bracket{min-width:1420px;width:1420px}
+  .ko-bracket-pro{display:grid;grid-template-columns:repeat(9,minmax(130px,1fr));grid-template-rows:34px repeat(16,minmax(62px,auto));column-gap:9px;row-gap:6px;min-width:1420px;width:1420px;padding:2px 2px 12px}
+  .ko-col-title{display:block;font-size:.72rem;padding-bottom:5px}
+  .ko-card{width:auto;transform:none!important;scroll-snap-align:start}
+  .ko-card.ko-final-card{transform:scale(1.03)!important}
+  .ko-progress{position:sticky;left:0;z-index:5;background:var(--darker);padding:4px 0;max-width:calc(100vw - 20px)}
+  .ko-mobile-hint{display:block;position:sticky;left:0;z-index:5;max-width:calc(100vw - 20px)}
+  .ko-note{position:sticky;left:0;max-width:calc(100vw - 20px)}
+  .ko-card::before{display:block}
+  .bmatch-head{grid-template-columns:auto 1fr auto;padding:6px 7px}
+  .bmatch-time{font-size:.68rem}
+  .bteam{padding:7px}
+  .kosel{font-size:.82rem;padding:6px 7px}
   .stable{min-width:650px}
   #p-marca .cb{overflow-x:auto}
   .prow{flex-wrap:wrap;align-items:flex-start;gap:7px}
@@ -600,7 +603,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION='v46';
+const APP_VERSION='v47';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -1705,7 +1708,7 @@ function renderKnockout(){
   const cards=KO_RENDER_ORDER.map(id=>renderKoCard(KO_MATCHES[id],u,dis,showPlayerPts)).join('');
   const prepNote=isResultEditor()&&!isKnockoutEnabled()?`<div class="ko-blocked-note">🔒 La Eliminatoria sigue cerrada para jugadores. Puedes dejar preparado el cuadro; se abrirá automáticamente el domingo 28/06/2026 de 08:00 a 20:00, o manualmente si la activas desde admin.</div>`:'';
   const windowNote=(!isResultEditor()&&isKnockoutAutoWindow())?`<div class="info" style="margin-bottom:12px">⏰ Ventana especial de Eliminatoria abierta hasta las 20:00. El resto de secciones ya están cerradas y no se pueden modificar.</div>`:'';
-  c.innerHTML=`${prepNote}${windowNote}${koCompletionPanel(u)}<div class="ko-note">Dieciseisavos: cruces fijos introducidos por admin y sin puntuación para jugadores. Desde octavos en adelante, cada desplegable muestra todos los equipos posibles que vienen de la rama anterior, para que la porra pueda rellenarse antes de que se jueguen las rondas. Puntuación: ${POINTS_KO_TEAM} pts por cada equipo acertado.</div><div class="ko-bracket-pro">${titles}${cards}</div>`;
+  c.innerHTML=`${prepNote}${windowNote}${koCompletionPanel(u)}<div class="ko-note">Dieciseisavos: cruces fijos introducidos por admin y sin puntuación para jugadores. Desde octavos en adelante, cada desplegable muestra todos los equipos posibles que vienen de la rama anterior, para que la porra pueda rellenarse antes de que se jueguen las rondas. Puntuación: ${POINTS_KO_TEAM} pts por cada equipo acertado.</div><div class="ko-mobile-hint">👉 Desliza horizontalmente para ver el cuadro completo y comprobar los cruces de izquierda, centro y derecha.</div><div class="ko-bracket-pro">${titles}${cards}</div>`;
   bindBetControls();
 }
 
