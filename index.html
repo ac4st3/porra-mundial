@@ -679,7 +679,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION='v56';
+const APP_VERSION='v57';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
@@ -2511,10 +2511,15 @@ function isClassifCompleteFor(u){
   });
 }
 function isKnockoutCompleteFor(u){
-  if(!isKnockoutEnabled())return true;
+  // Antes de que la Eliminatoria sea obligatoria, no cuenta como pendiente.
+  // Una vez abierta o pasada la ventana, sí debe comprobarse de verdad.
+  if(!isKnockoutRequiredForCompletion())return true;
+
   const k=BETS[u]?.knockout||{};
   return KO_ROUNDS.every(round=>round.matches.every(match=>{
+    // Dieciseisavos son cruces fijados por admin y no los rellena/puntúa el jugador.
     if(match.round==='r32')return true;
+
     const item=k[match.sid]||{};
     return !!item.teamA && !!item.teamB;
   }));
@@ -2540,7 +2545,7 @@ function updateTabStatus(){
   const status={
     grupos:{ok:isGroupsCompleteFor(activeUser()),tip:'Faltan partidos por apostar'},
     clasif:{ok:isClassifCompleteFor(activeUser()),tip:'Faltan clasificaciones por completar'},
-    elim:{ok:isKnockoutVisible()?isKnockoutCompleteFor(activeUser()):false,tip:isKnockoutVisible()?'Faltan equipos por completar':'De momento no se abrirá esta sección hasta saber cómo quedan los cruces de dieciseisavos'},
+    elim:{ok:isKnockoutRequiredForCompletion()?isKnockoutCompleteFor(activeUser()):false,tip:isKnockoutRequiredForCompletion()?'Faltan equipos por completar':'De momento no se abrirá esta sección hasta saber cómo quedan los cruces de dieciseisavos'},
     preg:{ok:isQuestionsCompleteFor(activeUser()),tip:'Faltan preguntas por responder'},
   };
 
