@@ -109,7 +109,11 @@ header h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3p
 /* BRACKET */
 .bcon{overflow-x:auto;padding-bottom:14px;max-width:100%}
 .bracket{min-width:1580px}
-.ko-bracket-pro{display:grid;grid-template-columns:repeat(9,minmax(145px,1fr));grid-template-rows:34px repeat(16,minmax(58px,auto));column-gap:12px;row-gap:5px;align-items:center;padding:4px 0 12px}
+.ko-bracket-wrap{position:relative;min-width:100%;width:max-content}
+.ko-svg-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible}
+.ko-svg-overlay path{stroke:rgba(201,168,76,.38);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.ko-svg-overlay path.soft{stroke:rgba(201,168,76,.26);stroke-dasharray:3 4}
+.ko-bracket-pro{position:relative;z-index:1;display:grid;grid-template-columns:repeat(9,minmax(145px,1fr));grid-template-rows:34px repeat(16,minmax(58px,auto));column-gap:12px;row-gap:5px;align-items:center;padding:4px 0 12px}
 .ko-col-title{grid-row:1;font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px;color:var(--gold);font-size:.78rem;text-align:center;border-bottom:1px solid var(--border);padding-bottom:6px;white-space:nowrap}
 .ko-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;align-self:center;position:relative;min-width:0}
 .ko-card.ko-final-card{border-color:var(--gold);box-shadow:0 0 0 1px rgba(201,168,76,.45),0 0 18px rgba(201,168,76,.18);transform:scale(1.08);z-index:4}
@@ -238,6 +242,8 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   .qrow > div:last-child{align-items:stretch!important}
   .bcon{overflow-x:auto;padding-bottom:12px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
   .bracket{min-width:1420px;width:1420px}
+  .ko-bracket-wrap{min-width:1420px;width:1420px}
+  .ko-svg-overlay path{stroke-width:2.6}
   .ko-bracket-pro{display:grid;grid-template-columns:repeat(9,minmax(130px,1fr));grid-template-rows:34px repeat(16,minmax(62px,auto));column-gap:9px;row-gap:6px;min-width:1420px;width:1420px;padding:2px 2px 12px}
   .ko-col-title{display:block;font-size:.72rem;padding-bottom:5px}
   .ko-card{width:auto;transform:none!important;scroll-snap-align:start}
@@ -1469,6 +1475,7 @@ function showTab(tab){
   if(tabEl)tabEl.classList.add('on');
   const rankingBtn=document.getElementById('b-ranking');
   if(rankingBtn)rankingBtn.classList.toggle('on',tab==='marca');
+  if(tab==='elim')requestAnimationFrame(drawKoConnectors);
 }
 
 // ── RENDER MATCHES ────────────────────────────────
@@ -1599,6 +1606,7 @@ function renderGroups(){
   }).join('');
   document.getElementById('c-groups').innerHTML=html;
   bindBetControls();
+  requestAnimationFrame(drawKoConnectors);
 }
 
 // ── RENDER KNOCKOUT ───────────────────────────────
@@ -1739,9 +1747,49 @@ function renderKnockout(){
   const cards=KO_RENDER_ORDER.map(id=>renderKoCard(KO_MATCHES[id],u,dis,showPlayerPts)).join('');
   const prepNote=isResultEditor()&&!isKnockoutEnabled()?`<div class="ko-blocked-note">🔒 La Eliminatoria sigue cerrada para jugadores. Puedes dejar preparado el cuadro; se abrirá automáticamente el domingo 28/06/2026 de 08:00 a 20:00, o manualmente si la activas desde admin.</div>`:'';
   const windowNote=(!isResultEditor()&&isKnockoutAutoWindow())?`<div class="info" style="margin-bottom:12px">⏰ Ventana especial de Eliminatoria abierta hasta las 20:00. El resto de secciones ya están cerradas y no se pueden modificar.</div>`:'';
-  c.innerHTML=`${prepNote}${windowNote}${koCompletionPanel(u)}<div class="ko-note">Dieciseisavos: cruces fijos introducidos por admin y sin puntuación para jugadores. Desde octavos en adelante, cada desplegable muestra todos los equipos posibles que vienen de la rama anterior, para que la porra pueda rellenarse antes de que se jueguen las rondas. Puntuación: ${POINTS_KO_TEAM} pts por cada equipo acertado.</div><div class="ko-mobile-hint">👉 Desliza horizontalmente para ver el cuadro completo y comprobar los cruces de izquierda, centro y derecha.</div><div class="ko-bracket-pro">${titles}${cards}</div>`;
+  c.innerHTML=`${prepNote}${windowNote}${koCompletionPanel(u)}<div class="ko-note">Dieciseisavos: cruces fijos introducidos por admin y sin puntuación para jugadores. Desde octavos en adelante, cada desplegable muestra todos los equipos posibles que vienen de la rama anterior, para que la porra pueda rellenarse antes de que se jueguen las rondas. Puntuación: ${POINTS_KO_TEAM} pts por cada equipo acertado.</div><div class="ko-mobile-hint">👉 Desliza horizontalmente para ver el cuadro completo y comprobar los cruces de izquierda, centro y derecha.</div><div class="ko-bracket-wrap"><svg class="ko-svg-overlay" id="ko-svg" aria-hidden="true"></svg><div class="ko-bracket-pro" id="ko-grid">${titles}${cards}</div></div>`;
   bindBetControls();
+  requestAnimationFrame(drawKoConnectors);
 }
+
+
+const KO_CONNECTORS=[
+  ['m74','m89'],['m77','m89'],['m73','m90'],['m75','m90'],['m83','m93'],['m84','m93'],['m81','m94'],['m82','m94'],
+  ['m89','m97'],['m90','m97'],['m93','m98'],['m94','m98'],['m97','m101'],['m98','m101'],
+  ['m76','m91'],['m78','m91'],['m79','m92'],['m80','m92'],['m86','m95'],['m88','m95'],['m85','m96'],['m87','m96'],
+  ['m91','m99'],['m92','m99'],['m95','m100'],['m96','m100'],['m99','m102'],['m100','m102'],
+  ['m101','m104'],['m102','m104'],['m101','m103'],['m102','m103']
+];
+function drawKoConnectors(){
+  const wrap=document.querySelector('#c-bracket .ko-bracket-wrap');
+  const svg=document.getElementById('ko-svg');
+  if(!wrap || !svg)return;
+  const wrapRect=wrap.getBoundingClientRect();
+  if(!wrapRect.width || !wrapRect.height)return;
+  svg.setAttribute('viewBox', `0 0 ${Math.max(1,wrapRect.width)} ${Math.max(1,wrapRect.height)}`);
+  svg.setAttribute('width', wrapRect.width);
+  svg.setAttribute('height', wrapRect.height);
+  let paths='';
+  const seen=new Set();
+  KO_CONNECTORS.forEach(([fromId,toId])=>{
+    const fromEl=wrap.querySelector(`[data-match="${fromId}"]`);
+    const toEl=wrap.querySelector(`[data-match="${toId}"]`);
+    if(!fromEl || !toEl)return;
+    const fr=fromEl.getBoundingClientRect();
+    const tr=toEl.getBoundingClientRect();
+    const targetOnRight=tr.left>fr.left;
+    const x1=targetOnRight?(fr.right-wrapRect.left):(fr.left-wrapRect.left);
+    const y1=(fr.top+fr.height/2)-wrapRect.top;
+    const x2=targetOnRight?(tr.left-wrapRect.left):(tr.right-wrapRect.left);
+    const y2=(tr.top+tr.height/2)-wrapRect.top;
+    const gap=Math.max(20, Math.abs(x2-x1)*0.38);
+    const midX=targetOnRight?x1+gap:x1-gap;
+    const d=`M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`;
+    paths += `<path d="${d}"/>`;
+  });
+  svg.innerHTML=paths;
+}
+window.addEventListener('resize', ()=>requestAnimationFrame(drawKoConnectors));
 
 // ── RENDER QUESTIONS ──────────────────────────────
 function questionCompare(a,b){
@@ -1769,6 +1817,7 @@ function renderQuestions(){
   }).join('');
   document.getElementById('c-questions').innerHTML=html;
   bindBetControls();
+  requestAnimationFrame(drawKoConnectors);
 }
 function updateQuestionPointsUI(){
   const u=activeUser();
