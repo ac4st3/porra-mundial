@@ -272,6 +272,37 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   .main{padding:10px 8px}
 }
 
+
+/* MOBILE KO HEADER FIX - avoid round label cut on small screens */
+@media(max-width:680px){
+  .bmatch-head{
+    grid-template-columns:auto minmax(0,1fr)!important;
+    grid-template-areas:
+      "num time"
+      "tag tag";
+    row-gap:4px;
+    column-gap:6px;
+  }
+  .bmatch-head > span:first-child{grid-area:num;white-space:nowrap}
+  .bmatch-head .bmatch-time{grid-area:time;text-align:right;min-width:0;font-size:.64rem;overflow:hidden;text-overflow:ellipsis}
+  .bmatch-head .ko-side-label{
+    grid-area:tag;
+    justify-self:start;
+    max-width:100%;
+    overflow:visible;
+    white-space:nowrap;
+    display:inline-flex;
+    align-items:center;
+    border:1px solid rgba(201,168,76,.45);
+    background:rgba(201,168,76,.12);
+    border-radius:999px;
+    padding:2px 7px;
+    font-size:.66rem;
+    letter-spacing:.8px;
+    line-height:1.05;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -603,7 +634,7 @@ const db  = getDatabase(app);
 // ── APP VERSION / CACHE CONTROL ───────────────────
 // Sube este valor cada vez que publiques una nueva versión en GitHub Pages.
 // Sirve para detectar si un navegador está usando una copia antigua en caché.
-const APP_VERSION='v47';
+const APP_VERSION='v48';
 window.APP_VERSION = APP_VERSION;
 
 function latestIndexUrl(){
